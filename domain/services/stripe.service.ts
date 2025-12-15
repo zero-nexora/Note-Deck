@@ -1,0 +1,86 @@
+import { Plan } from "@/db/enum";
+import { workspaceRepository } from "../repositories/workspace.repository";
+import { stripe, STRIPE_PLANS } from "@/lib/stripe";
+import Stripe from "stripe";
+import { db } from "@/db";
+import { workspaces } from "@/db/schema";
+import { eq } from "drizzle-orm";
+
+export const stripeService = {
+  create: async (workspaceId: string, plan: "pro" | "enterprise") => {
+    const workspace = await workspaceRepository.findById(workspaceId);
+
+    let customerId = workspace?.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        metadata: { workspaceId },
+      });
+
+      customerId = customer.id;
+
+      await db
+        .update(workspaces)
+        .set({ stripeCustomerId: customerId })
+        .where(eq(workspaces.id, workspaceId));
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: STRIPE_PLANS[plan].priceId, quantity: 1 }],
+      success_url: `${process.env.APP_URL}/billing/success`,
+      cancel_url: `${process.env.APP_URL}/billing/cancel`,
+      metadata: {
+        workspaceId,
+        plan,
+      },
+      subscription_data: {
+        metadata: {
+          workspaceId,
+          plan,
+        },
+      },
+    });
+
+    return session;
+  },
+
+  handleSubscriptionCreated: async (session: Stripe.Checkout.Session) => {
+    const workspaceId = session.metadata!.workspaceId;
+    const plan = session.metadata!.plan as Plan;
+
+    if (!workspaceId || !plan) {
+      throw new Error("Missing  subscription metadata");
+    }
+
+    await workspaceRepository.update({
+      id: workspaceId,
+      plan,
+      stripeSubscriptionId: session.subscription as string,
+      subscriptionStatus: "active",
+      limits: STRIPE_PLANS[plan].limits,
+    });
+  },
+
+  handleSubscriptionUpdated: async (subscription: Stripe.Subscription) => {
+    const workspaceId = subscription.metadata.workspaceId;
+    
+    await workspaceRepository.update({
+      id: workspaceId,
+      stripeSubscriptionId: subscription.id,
+      subscriptionStatus: subscription.status,
+    });
+  },
+
+  handleSubscriptionDeleted: async (subscription: Stripe.Subscription) => {
+    const workspaceId = subscription.metadata.workspaceId;
+
+    await workspaceRepository.update({
+      id: workspaceId,
+      plan: "free",
+      stripeSubscriptionId: null,
+      subscriptionStatus: "canceled",
+      limits: STRIPE_PLANS.free.limits,
+    });
+  },
+};

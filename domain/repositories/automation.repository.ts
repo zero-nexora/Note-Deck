@@ -1,0 +1,38 @@
+import { db } from "@/db";
+import { NewAutomation, UpdateAutomation } from "../types/automation.type";
+import { automations } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+
+export const automationRepository = {
+  create: async (data: NewAutomation) => {
+    const [automation] = await db.insert(automations).values(data).returning();
+
+    return automation;
+  },
+
+  findByBoardId: async (boardId: string) => {
+    return await db.query.automations.findMany({
+      where: and(
+        eq(automations.boardId, boardId),
+        eq(automations.isActive, true)
+      ),
+    });
+  },
+
+  update: async (data: UpdateAutomation) => {
+    const [updated] = await db
+      .update(automations)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(automations.id, data.id!))
+      .returning();
+
+    return updated;
+  },
+
+  delete: async (id: string) => {
+    await db.delete(automations).where(eq(automations.id, id));
+  },
+};
