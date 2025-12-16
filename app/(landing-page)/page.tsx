@@ -10,6 +10,7 @@ import { HeroSection } from "@/components/landing-page/hero-section"
 import { HowItWorkSection } from "@/components/landing-page/how-it-works-section"
 import { InteractiveCursorBackground } from "@/components/landing-page/interactive-cursor-background"
 import { LightBeams } from "@/components/landing-page/light-beams"
+import { Navbar } from "@/components/landing-page/navbar"
 import { ParticleBackground } from "@/components/landing-page/particle-background"
 import { PricingPreviewSection } from "@/components/landing-page/pricing-preview-section"
 import { PricingSection } from "@/components/landing-page/pricing-section"
@@ -17,7 +18,6 @@ import { RealtimeShowcase } from "@/components/landing-page/realtime-showcase"
 import { SocialProof } from "@/components/landing-page/social-proof"
 import { TestimonialsGallery } from "@/components/landing-page/testimonials-gallery"
 import { TestimonialsSection } from "@/components/landing-page/testimonials-section"
-import { Navbar } from "@/components/layout/navbar"
 
 const LandingPage = () => {
   return (
