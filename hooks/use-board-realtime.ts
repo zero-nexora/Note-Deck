@@ -39,8 +39,8 @@ export const useBoardRealtime = () => {
       draggingId: string,
       dragOffset: { x: number; y: number },
       pointer: { x: number; y: number },
-      sourceListId?: string,
-      sourcePosition?: number
+      sourceListId?: string | null,
+      sourcePosition?: number | null
     ) => {
       const dragState: DragState = {
         isDragging: true,
@@ -109,6 +109,7 @@ export const useBoardRealtime = () => {
     others: [...others],
     updateMyPresence,
 
+    updateCursor,
     setSelectedCard,
     setEditingCard,
 

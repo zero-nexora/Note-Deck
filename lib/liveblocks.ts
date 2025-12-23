@@ -1,10 +1,8 @@
-import { createClient } from "@liveblocks/client";
-import { createRoomContext } from "@liveblocks/react";
+"use client";
 
-export const liveblocksClient = createClient({
-  authEndpoint: "/api/liveblocks-auth",
-  throttle: 16,
-});
+import { createClient } from "@liveblocks/client";
+import { OpaqueClient } from "@liveblocks/core";
+import { createRoomContext } from "@liveblocks/react";
 
 export type DragState = {
   isDragging: boolean;
@@ -25,54 +23,77 @@ export type Presence = {
   user: {
     id: string;
     name: string;
-    avatar: string | null;
+    image: string | null;
     color: string;
   };
 };
 
-export type LiveCard = {
+type Storage = {
   id: string;
-  title: string;
+  workspaceId: string;
+  name: string;
   description: string | null;
   isArchived: boolean;
-  boardId: string;
-  listId: string;
-  position: number;
-  coverImage: string | null;
-
   createdAt: string;
   updatedAt: string;
-  dueDate: string | null;
-
+  lists: {
+    id: string;
+    name: string;
+    isArchived: boolean;
+    createdAt: string;
+    updatedAt: string;
+    boardId: string;
+    position: number;
+    cards: {
+      id: string;
+      description: string | null;
+      isArchived: boolean;
+      createdAt: string;
+      updatedAt: string;
+      boardId: string;
+      position: number;
+      listId: string;
+      title: string;
+      dueDate: string | null;
+      coverImage: string | null;
+      labels: {
+        id: string;
+        cardId: string;
+        labelId: string;
+        label: {
+          id: string;
+          name: string;
+          createdAt: string;
+          boardId: string;
+          color: string;
+        };
+      }[];
+      members: {
+        id: string;
+        cardId: string;
+        userId: string;
+        name: string;
+        image: string | null;
+      }[];
+    }[];
+  }[];
   labels: {
     id: string;
-    labelId: string;
+    boardId: string;
     name: string;
     color: string;
   }[];
-
   members: {
     id: string;
+    boardId: string;
+    userId: string;
     name: string;
-    avatar: string | null;
+    image: string | null;
   }[];
-};
-
-export type LiveList = {
-  id: string;
-  name: string;
-  boardId: string;
-  position: number;
-  isArchived: boolean;
-
-  createdAt: string;
-  updatedAt: string;
-
-  cards: LiveCard[];
-};
-
-export type Storage = {
-  lists: LiveList[];
+  workspace: {
+    id: string;
+    name: string;
+  };
 };
 
 export type UserMeta = {
@@ -88,6 +109,11 @@ export type RoomEvent = {
   type: "CARD_MOVED" | "CARD_UPDATED" | "LIST_MOVED";
   data: any;
 };
+
+export const liveblocksClient = createClient({
+  authEndpoint: "/api/liveblocks-auth",
+  throttle: 16,
+}) as OpaqueClient;
 
 export const {
   RoomProvider,

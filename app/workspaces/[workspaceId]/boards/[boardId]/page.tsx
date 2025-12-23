@@ -1,5 +1,6 @@
 import { findBoardByIdAction } from "@/app/actions/board.action";
 import { BoardContainer } from "@/components/board/board-container";
+import { requireAuth } from "@/lib/session";
 
 interface BoardsPageProps {
   params: Promise<{ boardId: string }>;
@@ -7,6 +8,7 @@ interface BoardsPageProps {
 
 const BoardsPage = async ({ params }: BoardsPageProps) => {
   const { boardId } = await params;
+  const user = await requireAuth();
 
   const result = await findBoardByIdAction(boardId);
 
@@ -16,7 +18,7 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
 
   return (
     <div className="flex-1 h-full">
-      <BoardContainer board={board} />
+      <BoardContainer board={board} user={user} />
     </div>
   );
 };

@@ -18,29 +18,18 @@ import {
   SortableContext,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useCard } from "@/hooks/use-card";
-import { useList } from "@/hooks/use-list";
-import { LiveCursors } from "./live-cursors";
-import { LiveDragOverlay } from "./live-drap-overlay";
-import { ListColumn } from "./list-comlumn";
-import { CreateListInput } from "@/domain/schemas/list.schema";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
 import { CardItem } from "./card-item";
+import { BoardListColumn } from "./board-list-column";
+import { CreateList } from "./create-list";
 
 interface BoardContentProps {
   board: BoardWithListColumnLabelAndMember;
 }
 
 export const BoardContent = ({ board }: BoardContentProps) => {
-
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"card" | "list" | null>(null);
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
-
-  const { moveCard } = useCard();
-  const { moveList, createList } = useList();
 
   const { startDragging, updateDragging, stopDragging } = useBoardRealtime();
 
@@ -49,20 +38,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       activationConstraint: { distance: 8 },
     })
   );
-
-  const [isAddingList, setIsAddingList] = useState(false);
-  const [newListTitle, setNewListTitle] = useState("");
-
-  const handleAddList = async () => {
-    const input: CreateListInput = {
-      boardId: board.id,
-      name: newListTitle,
-      position: board.lists.length,
-    };
-    await createList(input);
-    setNewListTitle("");
-    setIsAddingList(false);
-  };
 
   const resetDragState = () => {
     setActiveId(null);
@@ -140,38 +115,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       return;
     }
 
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    if (activeType === "card" && activeData?.card) {
-      const card = activeData.card;
-
-      if (overData?.type === "list") {
-        await moveCard({
-          id: card.id,
-          sourceListId: card.listId,
-          destinationListId: over.id as string,
-          position: 0,
-        });
-      }
-
-      if (overData?.type === "card") {
-        await moveCard({
-          id: card.id,
-          sourceListId: card.listId,
-          destinationListId: overData.card.listId,
-          position: overData.card.position,
-        });
-      }
-    }
-
-    if (activeType === "list" && activeData?.list && overData?.list) {
-      await moveList({
-        id: activeData.list.id,
-        position: overData.list.position,
-      });
-    }
-
     resetDragState();
   };
 
@@ -190,56 +133,17 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       onDragEnd={handleDragEnd}
     >
       <div className="relative h-full">
-        <LiveCursors />
-        <LiveDragOverlay board={board} />
-
-        <div className="flex-1 flex gap-4 p-4 overflow-x-auto h-full">
+        <div className="flex gap-4 p-4 overflow-x-auto h-full">
           <SortableContext
             items={board.lists.map((l) => l.id)}
             strategy={horizontalListSortingStrategy}
           >
             {board.lists.map((list) => (
-              <ListColumn key={list.id} list={list} />
+              <BoardListColumn key={list.id} list={list} />
             ))}
           </SortableContext>
 
-          <div className="w-72 shrink-0">
-            {isAddingList ? (
-              <div className="bg-secondary/50 rounded-xl border border-border/50 p-3 space-y-2">
-                <Input
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  placeholder="Enter list title..."
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddList();
-                    if (e.key === "Escape") setIsAddingList(false);
-                  }}
-                  autoFocus
-                />
-                <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleAddList}>
-                    Add list
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setIsAddingList(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setIsAddingList(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add another list
-              </Button>
-            )}
-          </div>
+          <CreateList board={board} />
         </div>
 
         <DragOverlay>

@@ -3,13 +3,15 @@
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
 import { BoardContent } from "./board-content";
+import { boardToStorage } from "@/lib/utils";
+import { User } from "@/domain/types/user.type";
 
 interface BoardContainerProps {
   board: BoardWithListColumnLabelAndMember;
+  user: User;
 }
 
-export const BoardContainer = ({ board }: BoardContainerProps) => {
-  const userColor = generateUserColor("");
+export const BoardContainer = ({ board, user }: BoardContainerProps) => {
   return (
     <RoomProvider
       id={board.id}
@@ -28,15 +30,13 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
           sourcePosition: null,
         },
         user: {
-          id: "",
-          name: "",
-          avatar: "",
-          color: "",
+          id: user.id,
+          name: user.name || "",
+          image: user.image,
+          color: generateUserColor(user.id),
         },
       }}
-      initialStorage={{
-        lists: [],
-      }}
+      initialStorage={boardToStorage(board)}
     >
       <BoardContent board={board} />
     </RoomProvider>
