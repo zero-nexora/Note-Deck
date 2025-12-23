@@ -1,9 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, ArrowRight, Bell, UserPlus, Tag, Move } from "lucide-react";
+import {
+  Zap,
+  ArrowRight,
+  Bell,
+  UserPlus,
+  Tag,
+  Move,
+  LucideIcon,
+} from "lucide-react";
 
-const automationExamples = [
+interface AutomationStep {
+  icon: LucideIcon;
+  text: string;
+}
+
+interface Automation {
+  trigger: AutomationStep;
+  action: AutomationStep;
+}
+
+const AUTOMATION_EXAMPLES: Automation[] = [
   {
     trigger: { icon: Move, text: "Card moved to Done" },
     action: { icon: Bell, text: "Notify team in Slack" },
@@ -14,17 +32,55 @@ const automationExamples = [
   },
 ];
 
+const AUTOMATION_BENEFITS = [
+  "50+ pre-built automation templates",
+  "Custom triggers based on any card action",
+  "Integrate with Slack, Email, and Webhooks",
+  "Scheduled automations for recurring tasks",
+];
+
+const ARROW_ANIMATION = {
+  animate: { x: [0, 5, 0] },
+  transition: { duration: 1.5, repeat: Infinity },
+};
+
+const SLIDE_IN_LEFT = {
+  initial: { opacity: 0, x: -30 },
+  whileInView: { opacity: 1, x: 0 },
+  viewport: { once: true },
+};
+
+const SLIDE_IN_RIGHT = {
+  initial: { opacity: 0, x: 30 },
+  whileInView: { opacity: 1, x: 0 },
+  viewport: { once: true },
+};
+
+const FADE_IN_UP = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
+const FADE_IN_RIGHT = {
+  initial: { opacity: 0, x: 20 },
+  whileInView: { opacity: 1, x: 0 },
+  viewport: { once: true },
+};
+
 export const AutomationSection = () => {
   return (
     <section className="py-24 px-4 relative">
+      {/* Background gradient */}
       <div className="absolute inset-0 bg-linear-to-t from-primary/5 via-transparent to-transparent" />
 
       <div className="max-w-7xl mx-auto relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Automation builder panel */}
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            initial={SLIDE_IN_LEFT.initial}
+            whileInView={SLIDE_IN_LEFT.whileInView}
+            viewport={SLIDE_IN_LEFT.viewport}
             className="order-2 lg:order-1"
           >
             <div className="glass-panel p-6 glow-effect">
@@ -34,50 +90,12 @@ export const AutomationSection = () => {
               </div>
 
               <div className="space-y-6">
-                {automationExamples.map((automation, index) => (
-                  <motion.div
+                {AUTOMATION_EXAMPLES.map((automation, index) => (
+                  <AutomationFlow
                     key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.2 }}
-                    className="flex items-center gap-4"
-                  >
-                    <div className="flex-1 bg-secondary/50 rounded-xl p-4">
-                      <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
-                        When
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                          <automation.trigger.icon className="w-5 h-5 text-amber-500" />
-                        </div>
-                        <span className="text-sm font-medium">
-                          {automation.trigger.text}
-                        </span>
-                      </div>
-                    </div>
-
-                    <motion.div
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <ArrowRight className="w-5 h-5 text-primary" />
-                    </motion.div>
-
-                    <div className="flex-1 bg-secondary/50 rounded-xl p-4">
-                      <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
-                        Then
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                          <automation.action.icon className="w-5 h-5 text-primary" />
-                        </div>
-                        <span className="text-sm font-medium">
-                          {automation.action.text}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
+                    automation={automation}
+                    index={index}
+                  />
                 ))}
               </div>
 
@@ -87,10 +105,11 @@ export const AutomationSection = () => {
             </div>
           </motion.div>
 
+          {/* Content section */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            initial={SLIDE_IN_RIGHT.initial}
+            whileInView={SLIDE_IN_RIGHT.whileInView}
+            viewport={SLIDE_IN_RIGHT.viewport}
             className="order-1 lg:order-2"
           >
             <span className="text-sm font-medium text-primary uppercase tracking-wider">
@@ -106,30 +125,112 @@ export const AutomationSection = () => {
             </p>
 
             <ul className="space-y-3">
-              {[
-                "50+ pre-built automation templates",
-                "Custom triggers based on any card action",
-                "Integrate with Slack, Email, and Webhooks",
-                "Scheduled automations for recurring tasks",
-              ].map((item, index) => (
-                <motion.li
-                  key={item}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center gap-3 text-muted-foreground"
-                >
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  </div>
-                  {item}
-                </motion.li>
+              {AUTOMATION_BENEFITS.map((benefit, index) => (
+                <BenefitItem key={benefit} benefit={benefit} index={index} />
               ))}
             </ul>
           </motion.div>
         </div>
       </div>
     </section>
+  );
+};
+
+interface AutomationFlowProps {
+  automation: Automation;
+  index: number;
+}
+
+const AutomationFlow = ({ automation, index }: AutomationFlowProps) => {
+  const animationDelay = index * 0.2;
+
+  return (
+    <motion.div
+      initial={FADE_IN_UP.initial}
+      whileInView={FADE_IN_UP.whileInView}
+      viewport={FADE_IN_UP.viewport}
+      transition={{ delay: animationDelay }}
+      className="flex items-center gap-4"
+    >
+      {/* Trigger step */}
+      <AutomationStep
+        step={automation.trigger}
+        label="When"
+        iconBgColor="bg-amber-500/20"
+        iconColor="text-amber-500"
+      />
+
+      {/* Arrow indicator */}
+      <motion.div
+        animate={ARROW_ANIMATION.animate}
+        transition={ARROW_ANIMATION.transition}
+      >
+        <ArrowRight className="w-5 h-5 text-primary" />
+      </motion.div>
+
+      {/* Action step */}
+      <AutomationStep
+        step={automation.action}
+        label="Then"
+        iconBgColor="bg-primary/20"
+        iconColor="text-primary"
+      />
+    </motion.div>
+  );
+};
+
+interface AutomationStepProps {
+  step: AutomationStep;
+  label: string;
+  iconBgColor: string;
+  iconColor: string;
+}
+
+const AutomationStep = ({
+  step,
+  label,
+  iconBgColor,
+  iconColor,
+}: AutomationStepProps) => {
+  const StepIcon = step.icon;
+
+  return (
+    <div className="flex-1 bg-secondary/50 rounded-xl p-4">
+      <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
+        {label}
+      </div>
+      <div className="flex items-center gap-3">
+        <div
+          className={`w-10 h-10 rounded-lg ${iconBgColor} flex items-center justify-center`}
+        >
+          <StepIcon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+        <span className="text-sm font-medium">{step.text}</span>
+      </div>
+    </div>
+  );
+};
+
+interface BenefitItemProps {
+  benefit: string;
+  index: number;
+}
+
+const BenefitItem = ({ benefit, index }: BenefitItemProps) => {
+  const animationDelay = index * 0.1;
+
+  return (
+    <motion.li
+      initial={FADE_IN_RIGHT.initial}
+      whileInView={FADE_IN_RIGHT.whileInView}
+      viewport={FADE_IN_RIGHT.viewport}
+      transition={{ delay: animationDelay }}
+      className="flex items-center gap-3 text-muted-foreground"
+    >
+      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-primary" />
+      </div>
+      {benefit}
+    </motion.li>
   );
 };

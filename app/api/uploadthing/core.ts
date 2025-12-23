@@ -17,7 +17,16 @@ export const ourFileRouter = {
       return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      return { uploadedBy: metadata.userId, file: file.url };
+      return {
+        uploadedBy: metadata.userId,
+        file: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          key: file.key,
+          url: file.url,
+        },
+      };
     }),
 } satisfies FileRouter;
 

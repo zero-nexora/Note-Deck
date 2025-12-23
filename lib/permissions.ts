@@ -10,7 +10,7 @@ export const checkWorkspacePermission = async (
 ): Promise<boolean> => {
   const member = await db.query.workspaceMembers.findFirst({
     where: and(
-      eq(workspaceMembers.id, workspaceId),
+      eq(workspaceMembers.workspaceId, workspaceId),
       eq(workspaceMembers.userId, userId)
     ),
   });
@@ -28,7 +28,7 @@ export const checkBoardPermission = async (
   requiredRole: Role
 ): Promise<boolean> => {
   const member = await db.query.boardMembers.findFirst({
-    where: and(eq(boardMembers.id, boardId), eq(boardMembers.userId, userId)),
+    where: and(eq(boardMembers.boardId, boardId), eq(boardMembers.userId, userId)),
   });
 
   if (!member) return false;

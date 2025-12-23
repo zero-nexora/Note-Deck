@@ -16,9 +16,16 @@ import {
   Layers,
   Settings,
   Cloud,
+  LucideIcon,
 } from "lucide-react";
 
-const faqs = [
+interface FAQ {
+  icon: LucideIcon;
+  question: string;
+  answer: string;
+}
+
+const FAQS: FAQ[] = [
   {
     icon: Zap,
     question: "How does real-time collaboration work?",
@@ -69,14 +76,21 @@ const faqs = [
   },
 ];
 
+const FADE_IN_UP = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
 export const FAQSection = () => {
   return (
     <section id="faq" className="py-24 px-4 relative">
       <div className="max-w-3xl mx-auto">
+        {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={FADE_IN_UP.initial}
+          whileInView={FADE_IN_UP.whileInView}
+          viewport={FADE_IN_UP.viewport}
           className="text-center mb-16"
         >
           <span className="text-sm font-medium text-primary uppercase tracking-wider">
@@ -90,34 +104,47 @@ export const FAQSection = () => {
           </p>
         </motion.div>
 
+        {/* FAQ accordion */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={FADE_IN_UP.initial}
+          whileInView={FADE_IN_UP.whileInView}
+          viewport={FADE_IN_UP.viewport}
         >
           <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
-              <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className="glass-panel border-none px-6 overflow-hidden"
-              >
-                <AccordionTrigger className="hover:no-underline py-5">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <faq.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <span className="font-semibold">{faq.question}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-5 pl-14">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
+            {FAQS.map((faq, index) => (
+              <FAQItem key={index} faq={faq} index={index} />
             ))}
           </Accordion>
         </motion.div>
       </div>
     </section>
+  );
+};
+
+interface FAQItemProps {
+  faq: FAQ;
+  index: number;
+}
+
+const FAQItem = ({ faq, index }: FAQItemProps) => {
+  const FAQIcon = faq.icon;
+
+  return (
+    <AccordionItem
+      value={`item-${index}`}
+      className="glass-panel border-none px-6 overflow-hidden"
+    >
+      <AccordionTrigger className="hover:no-underline py-5">
+        <div className="flex items-center gap-4 text-left">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <FAQIcon className="w-5 h-5 text-primary" />
+          </div>
+          <span className="font-semibold">{faq.question}</span>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent className="text-muted-foreground pb-5 pl-14">
+        {faq.answer}
+      </AccordionContent>
+    </AccordionItem>
   );
 };

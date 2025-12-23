@@ -53,8 +53,7 @@ export const stripeService = {
       throw new Error("Missing  subscription metadata");
     }
 
-    await workspaceRepository.update({
-      id: workspaceId,
+    await workspaceRepository.update(workspaceId, {
       plan,
       stripeSubscriptionId: session.subscription as string,
       subscriptionStatus: "active",
@@ -65,8 +64,7 @@ export const stripeService = {
   handleSubscriptionUpdated: async (subscription: Stripe.Subscription) => {
     const workspaceId = subscription.metadata.workspaceId;
     
-    await workspaceRepository.update({
-      id: workspaceId,
+    await workspaceRepository.update(workspaceId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status,
     });
@@ -75,8 +73,7 @@ export const stripeService = {
   handleSubscriptionDeleted: async (subscription: Stripe.Subscription) => {
     const workspaceId = subscription.metadata.workspaceId;
 
-    await workspaceRepository.update({
-      id: workspaceId,
+    await workspaceRepository.update(workspaceId, {
       plan: "free",
       stripeSubscriptionId: null,
       subscriptionStatus: "canceled",

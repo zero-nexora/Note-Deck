@@ -10,7 +10,7 @@ export const commentRepository = {
   },
 
   findById: async (id: string) => {
-    const comment = await db.query.comments.findFirst({
+    return await db.query.comments.findFirst({
       where: eq(comments.id, id),
       with: {
         user: true,
@@ -18,22 +18,16 @@ export const commentRepository = {
           with: {
             user: true,
             reactions: {
-              with: {
-                user: true,
-              },
+              with: { user: true },
             },
           },
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
         },
         reactions: {
-          with: {
-            user: true,
-          },
+          with: { user: true },
         },
       },
     });
-
-    return comment;
   },
 
   findByCardId: async (cardId: string) => {
@@ -45,30 +39,23 @@ export const commentRepository = {
           with: {
             user: true,
             reactions: {
-              with: {
-                user: true,
-              },
+              with: { user: true },
             },
           },
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
         },
         reactions: {
-          with: {
-            user: true,
-          },
+          with: { user: true },
         },
       },
       orderBy: (comments, { asc }) => [asc(comments.createdAt)],
     });
   },
 
-  update: async (data: UpdateComment) => {
+  update: async (id: string, data: UpdateComment) => {
     const [updated] = await db
       .update(comments)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(comments.id, data.id!))
       .returning();
 

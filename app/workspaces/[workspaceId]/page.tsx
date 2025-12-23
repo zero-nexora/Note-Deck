@@ -1,9 +1,5 @@
-import React from 'react'
+const WorkspacePage = async () => {
+  return <div className="min-h-screen"></div>;
+};
 
-const Page = () => {
-  return (
-    <div>Page</div>
-  )
-}
-
-export default Page
+export default WorkspacePage;

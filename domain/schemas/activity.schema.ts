@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { NewActivity } from "../types/activity.type";
 
-export const CreateActivitySchema: z.ZodType<NewActivity> = z.object({
+export const CreateActivitySchema = z.object({
   boardId: z.string(),
   cardId: z.string().nullable().optional(),
   userId: z.string(),

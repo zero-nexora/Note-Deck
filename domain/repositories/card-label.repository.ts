@@ -1,15 +1,25 @@
 import { db } from "@/db";
 import { cardLabels } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { NewCardLabel } from "../types/card-label.type";
 
 export const cardLabelRepository = {
-  add: async (cardId: string, labelId: string) => {
+  create: async (data: NewCardLabel) => {
     const [label] = await db
       .insert(cardLabels)
-      .values({ cardId, labelId })
+      .values(data)
       .returning();
 
     return label;
+  },
+
+  find: async (cardId: string, labelId: string) => {
+    return await db.query.cardLabels.findFirst({
+      where: and(
+        eq(cardLabels.cardId, cardId),
+        eq(cardLabels.labelId, labelId)
+      ),
+    });
   },
 
   remove: async (cardId: string, labelId: string) => {

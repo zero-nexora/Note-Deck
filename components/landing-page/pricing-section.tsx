@@ -3,7 +3,17 @@
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 
-const plans = [
+interface PricingPlan {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  cta: string;
+  popular: boolean;
+}
+
+const PRICING_PLANS: PricingPlan[] = [
   {
     name: "Free",
     price: "$0",
@@ -57,16 +67,29 @@ const plans = [
   },
 ];
 
+const FADE_IN_UP = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+};
+
+const BUTTON_HOVER = {
+  whileHover: { scale: 1.02 },
+  whileTap: { scale: 0.98 },
+};
+
 export const PricingSection = () => {
   return (
     <section id="pricing" className="py-24 px-4 relative">
+      {/* Background gradient */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-radial from-primary/10 to-transparent rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative">
+        {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={FADE_IN_UP.initial}
+          whileInView={FADE_IN_UP.whileInView}
+          viewport={FADE_IN_UP.viewport}
           className="text-center mb-16"
         >
           <span className="text-sm font-medium text-primary uppercase tracking-wider">
@@ -81,67 +104,81 @@ export const PricingSection = () => {
           </p>
         </motion.div>
 
+        {/* Pricing cards */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={`relative glass-panel p-8 card-hover ${
-                plan.popular ? "border-primary/50" : ""
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
-                    <Sparkles className="w-3 h-3" />
-                    Most Popular
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {plan.description}
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground text-sm ml-2">
-                  /{plan.period}
-                </span>
-              </div>
-
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm">
-                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <Check className="w-3 h-3 text-primary" />
-                    </div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`w-full py-3 rounded-xl font-semibold transition-all ${
-                  plan.popular
-                    ? "btn-gradient"
-                    : "bg-secondary hover:bg-secondary/80"
-                }`}
-              >
-                {plan.cta}
-              </motion.button>
-            </motion.div>
+          {PRICING_PLANS.map((plan, index) => (
+            <PricingPlanCard key={plan.name} plan={plan} index={index} />
           ))}
         </div>
       </div>
     </section>
+  );
+};
+
+interface PricingPlanCardProps {
+  plan: PricingPlan;
+  index: number;
+}
+
+const PricingPlanCard = ({ plan, index }: PricingPlanCardProps) => {
+  const animationDelay = index * 0.1;
+
+  return (
+    <motion.div
+      initial={FADE_IN_UP.initial}
+      whileInView={FADE_IN_UP.whileInView}
+      viewport={FADE_IN_UP.viewport}
+      transition={{ delay: animationDelay }}
+      className={`relative glass-panel p-8 card-hover ${
+        plan.popular ? "border-primary/50" : ""
+      }`}
+    >
+      {/* Popular badge */}
+      {plan.popular && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+            <Sparkles className="w-3 h-3" />
+            Most Popular
+          </div>
+        </div>
+      )}
+
+      {/* Plan header */}
+      <div className="mb-6">
+        <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+        <p className="text-muted-foreground text-sm">{plan.description}</p>
+      </div>
+
+      {/* Pricing */}
+      <div className="mb-6">
+        <span className="text-4xl font-bold">{plan.price}</span>
+        <span className="text-muted-foreground text-sm ml-2">
+          /{plan.period}
+        </span>
+      </div>
+
+      {/* Features list */}
+      <ul className="space-y-3 mb-8">
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-center gap-3 text-sm">
+            <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+              <Check className="w-3 h-3 text-primary" />
+            </div>
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      {/* CTA button */}
+      <motion.button
+        whileHover={BUTTON_HOVER.whileHover}
+        whileTap={BUTTON_HOVER.whileTap}
+        className={`w-full py-3 rounded-xl font-semibold transition-all ${
+          plan.popular ? "btn-gradient" : "bg-secondary hover:bg-secondary/80"
+        }`}
+      >
+        {plan.cta}
+      </motion.button>
+    </motion.div>
   );
 };

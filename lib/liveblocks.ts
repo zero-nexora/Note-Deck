@@ -30,16 +30,56 @@ export type Presence = {
   };
 };
 
+export type LiveCard = {
+  id: string;
+  title: string;
+  description: string | null;
+  isArchived: boolean;
+  boardId: string;
+  listId: string;
+  position: number;
+  coverImage: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+  dueDate: string | null;
+
+  labels: {
+    id: string;
+    labelId: string;
+    name: string;
+    color: string;
+  }[];
+
+  members: {
+    id: string;
+    name: string;
+    avatar: string | null;
+  }[];
+};
+
+export type LiveList = {
+  id: string;
+  name: string;
+  boardId: string;
+  position: number;
+  isArchived: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+
+  cards: LiveCard[];
+};
+
 export type Storage = {
-  cards: any;
-  lists: any;
+  lists: LiveList[];
 };
 
 export type UserMeta = {
   id: string;
   info: {
     name: string;
-    avatar?: string;
+    image?: string;
     email: string;
   };
 };

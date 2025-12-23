@@ -1,8 +1,10 @@
-import React from 'react'
+import { SettingLayout } from '@/components/setting/setting-layout'
 
 const Page = () => {
   return (
-    <div>Page</div>
+    <div>
+      <SettingLayout />
+    </div>
   )
 }
 

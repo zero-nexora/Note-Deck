@@ -1,27 +1,18 @@
-import { Role } from "@/db/enum";
 import { boardMemberRepository } from "../repositories/board-member.repository";
 import { activityRepository } from "../repositories/activity.repository";
+import { CreateBoardMemberInput } from "../schemas/borad-member.schema";
 
 export const boardMemberService = {
-  invite: async (
-    userId: string,
-    boardId: string,
-    invitedId: string,
-    role: Role
-  ) => {
-    const member = await boardMemberRepository.addMember(
-      boardId,
-      invitedId,
-      role
-    );
+  invite: async (userId: string, data: CreateBoardMemberInput) => {
+    const member = await boardMemberRepository.addMember(data);
 
     await activityRepository.create({
-      boardId,
+      boardId: data.boardId,
       userId,
       action: "member.added",
       entityType: "board_member",
-      entityId: boardId,
-      metadata: { userId: invitedId, role },
+      entityId: data.boardId,
+      metadata: { userId: data.userId, role: data.role },
     });
 
     return member;

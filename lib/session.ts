@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 
 export const getCurrentUser = async () => {
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as any).id as string | undefined;
+  const userId = session?.user.id;
   if (!userId) return null;
 
   return userRepository.findById(userId);

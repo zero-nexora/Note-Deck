@@ -1,6 +1,5 @@
 import {
   pgTable,
-  uuid,
   varchar,
   text,
   timestamp,
@@ -10,8 +9,10 @@ import {
   pgEnum,
   index,
   foreignKey,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { AdapterAccountType } from "@auth/core/adapters";
 
 export const roleEnum = pgEnum("role", ["admin", "normal", "observer"]);
 export const planEnum = pgEnum("plan", ["free", "pro", "enterprise"]);
@@ -24,56 +25,73 @@ export const notificationTypeEnum = pgEnum("notification_type", [
 ]);
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  name: varchar("name", { length: 255 }).notNull(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
+  email: text("email").unique(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   password: varchar("password", { length: 255 }).default(""),
-  emailVerified: timestamp("email_verified", { mode: "date" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const accounts = pgTable("accounts", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  type: text("type").notNull(),
-  provider: text("provider").notNull(),
-  providerAccountId: text("provider_account_id").notNull(),
-  refresh_token: text("refresh_token"),
-  access_token: text("access_token"),
-  expires_at: integer("expires_at"),
-  token_type: text("token_type"),
-  scope: text("scope"),
-  id_token: text("id_token"),
-  session_state: text("session_state"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccountType>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => [
+    {
+      compoundKey: primaryKey({
+        columns: [account.provider, account.providerAccountId],
+      }),
+    },
+  ]
+);
 
 export const sessions = pgTable("sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sessionToken: text("session_token").notNull().unique(),
-  userId: uuid("user_id")
+  sessionToken: text("sessionToken").primaryKey(),
+  userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const verificationTokens = pgTable("verification_tokens", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  identifier: text("identifier").notNull(),
-  token: text("token").notNull(),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
-});
+export const verificationTokens = pgTable(
+  "verificationTokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (verificationToken) => [
+    {
+      compositePk: primaryKey({
+        columns: [verificationToken.identifier, verificationToken.token],
+      }),
+    },
+  ]
+);
 
 export const workspaces = pgTable("workspaces", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
-  ownerId: uuid("owner_id")
+  ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   plan: planEnum("plan").notNull().default("free"),
@@ -90,11 +108,13 @@ export const workspaces = pgTable("workspaces", {
 export const workspaceMembers = pgTable(
   "workspace_members",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    workspaceId: uuid("workspace_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: roleEnum("role").notNull().default("normal"),
@@ -110,13 +130,14 @@ export const workspaceMembers = pgTable(
 );
 
 export const boards = pgTable("boards", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workspaceId: uuid("workspace_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  background: varchar("background", { length: 255 }),
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -125,11 +146,13 @@ export const boards = pgTable("boards", {
 export const boardMembers = pgTable(
   "board_members",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    boardId: uuid("board_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    boardId: text("board_id")
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     role: roleEnum("role").notNull().default("normal"),
@@ -143,8 +166,10 @@ export const boardMembers = pgTable(
 export const lists = pgTable(
   "lists",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    boardId: uuid("board_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    boardId: text("board_id")
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
@@ -164,11 +189,13 @@ export const lists = pgTable(
 export const cards = pgTable(
   "cards",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    listId: uuid("list_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    listId: text("list_id")
       .notNull()
       .references(() => lists.id, { onDelete: "cascade" }),
-    boardId: uuid("board_id")
+    boardId: text("board_id")
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 255 }).notNull(),
@@ -190,8 +217,10 @@ export const cards = pgTable(
 );
 
 export const labels = pgTable("labels", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  boardId: uuid("board_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  boardId: text("board_id")
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
@@ -202,11 +231,13 @@ export const labels = pgTable("labels", {
 export const cardLabels = pgTable(
   "card_labels",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cardId: uuid("card_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    cardId: text("card_id")
       .notNull()
       .references(() => cards.id, { onDelete: "cascade" }),
-    labelId: uuid("label_id")
+    labelId: text("label_id")
       .notNull()
       .references(() => labels.id, { onDelete: "cascade" }),
   },
@@ -218,11 +249,13 @@ export const cardLabels = pgTable(
 export const cardMembers = pgTable(
   "card_members",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cardId: uuid("card_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    cardId: text("card_id")
       .notNull()
       .references(() => cards.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -233,8 +266,10 @@ export const cardMembers = pgTable(
 );
 
 export const checklists = pgTable("checklists", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  cardId: uuid("card_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  cardId: text("card_id")
     .notNull()
     .references(() => cards.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }).notNull(),
@@ -243,8 +278,10 @@ export const checklists = pgTable("checklists", {
 });
 
 export const checklistItems = pgTable("checklist_items", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  checklistId: uuid("checklist_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  checklistId: text("checklist_id")
     .notNull()
     .references(() => checklists.id, { onDelete: "cascade" }),
   text: text("text").notNull(),
@@ -257,14 +294,16 @@ export const checklistItems = pgTable("checklist_items", {
 export const comments = pgTable(
   "comments",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    cardId: uuid("card_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    cardId: text("card_id")
       .notNull()
       .references(() => cards.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    parentId: uuid("parent_id"),
+    parentId: text("parent_id"),
     content: text("content").notNull(),
     mentions: jsonb("mentions").notNull().default([]),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -280,11 +319,13 @@ export const comments = pgTable(
 );
 
 export const commentReactions = pgTable("comment_reactions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  commentId: uuid("comment_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  commentId: text("comment_id")
     .notNull()
     .references(() => comments.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   emoji: varchar("emoji", { length: 10 }).notNull(),
@@ -292,11 +333,13 @@ export const commentReactions = pgTable("comment_reactions", {
 });
 
 export const attachments = pgTable("attachments", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  cardId: uuid("card_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  cardId: text("card_id")
     .notNull()
     .references(() => cards.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   fileName: varchar("file_name", { length: 255 }).notNull(),
@@ -311,17 +354,19 @@ export const attachments = pgTable("attachments", {
 export const activities = pgTable(
   "activities",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    boardId: uuid("board_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    boardId: text("board_id")
       .notNull()
       .references(() => boards.id, { onDelete: "cascade" }),
-    cardId: uuid("card_id").references(() => cards.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    cardId: text("card_id").references(() => cards.id, { onDelete: "cascade" }),
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     action: varchar("action", { length: 100 }).notNull(),
     entityType: varchar("entity_type", { length: 50 }).notNull(),
-    entityId: uuid("entity_id").notNull(),
+    entityId: text("entity_id").notNull(),
     metadata: jsonb("metadata").notNull().default({}),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -335,15 +380,17 @@ export const activities = pgTable(
 export const notifications = pgTable(
   "notifications",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: notificationTypeEnum("type").notNull(),
     title: varchar("title", { length: 255 }).notNull(),
     message: text("message").notNull(),
     entityType: varchar("entity_type", { length: 50 }),
-    entityId: uuid("entity_id"),
+    entityId: text("entity_id"),
     isRead: boolean("is_read").notNull().default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -353,8 +400,10 @@ export const notifications = pgTable(
 );
 
 export const automations = pgTable("automations", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  boardId: uuid("board_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  boardId: text("board_id")
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
@@ -368,16 +417,18 @@ export const automations = pgTable("automations", {
 export const auditLogs = pgTable(
   "audit_logs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    workspaceId: uuid("workspace_id")
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text("workspace_id")
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
+    userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     action: varchar("action", { length: 100 }).notNull(),
     entityType: varchar("entity_type", { length: 50 }).notNull(),
-    entityId: uuid("entity_id").notNull(),
+    entityId: text("entity_id").notNull(),
     metadata: jsonb("metadata").notNull().default({}),
     ipAddress: varchar("ip_address", { length: 45 }),
     userAgent: text("user_agent"),
@@ -389,8 +440,10 @@ export const auditLogs = pgTable(
 );
 
 export const userGroups = pgTable("user_groups", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  workspaceId: uuid("workspace_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text("workspace_id")
     .notNull()
     .references(() => workspaces.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
@@ -399,11 +452,13 @@ export const userGroups = pgTable("user_groups", {
 });
 
 export const userGroupMembers = pgTable("user_group_members", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  groupId: uuid("group_id")
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  groupId: text("group_id")
     .notNull()
     .references(() => userGroups.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 });

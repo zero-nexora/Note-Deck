@@ -19,14 +19,20 @@ export const automationRepository = {
     });
   },
 
-  update: async (data: UpdateAutomation) => {
+  findById: async (id: string) => {
+    return await db.query.automations.findFirst({
+      where: eq(automations.id, id),
+    });
+  },
+
+  update: async (id: string, data: UpdateAutomation) => {
     const [updated] = await db
       .update(automations)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(automations.id, data.id!))
+      .where(eq(automations.id, id))
       .returning();
 
     return updated;

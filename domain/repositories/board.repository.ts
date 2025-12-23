@@ -54,17 +54,24 @@ export const boardRepository = {
         eq(boards.isArchived, false)
       ),
       orderBy: (boards, { desc }) => [desc(boards.updatedAt)],
+      with: {
+        members: {
+          with: {
+            user: true,
+          },
+        },
+      },
     });
   },
 
-  update: async (data: UpdateBoard) => {
+  update: async (id: string, data: UpdateBoard) => {
     const [updated] = await db
       .update(boards)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(boards.id, data.id!))
+      .where(eq(boards.id, id))
       .returning();
 
     return updated;
@@ -75,6 +82,6 @@ export const boardRepository = {
   },
 
   archive: async (id: string) => {
-    return boardRepository.update({ id, isArchived: true });
+    return boardRepository.update(id, { isArchived: true });
   },
 };

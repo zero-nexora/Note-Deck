@@ -71,7 +71,7 @@ export const cardRepository = {
     });
   },
 
-  update: async (data: UpdateCard) => {
+  update: async (id: string, data: UpdateCard) => {
     const [updated] = await db
       .update(cards)
       .set({
@@ -89,7 +89,7 @@ export const cardRepository = {
   },
 
   archive: async (id: string) => {
-    return cardRepository.update({ id, isArchived: true });
+    return cardRepository.update(id, { isArchived: true });
   },
 
   move: async (cardId: string, destinationListId: string, position: number) => {

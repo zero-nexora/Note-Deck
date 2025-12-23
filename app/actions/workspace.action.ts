@@ -7,121 +7,88 @@ import {
   UpdateWorkspaceSchema,
 } from "@/domain/schemas/workspace.schema";
 import { workspaceService } from "@/domain/services/workspace.service";
-import { checkWorkspacePermission } from "@/lib/permissions";
 import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
 
-export const workspaceActions = {
-  create: async (formData: FormData) => {
-    try {
-      const user = await requireAuth();
-      const parsed = CreateWorkspaceSchema.safeParse({
-        name: formData.get("name")?.toString(),
-        slug: formData.get("slug")?.toString(),
-        ownerId: formData.get("ownerId")?.toString(),
-        plan: formData.get("plan")?.toString(),
-        stripeCustomerId: formData.get("stripeCustomerId")?.toString() ?? null,
-        stripeSubscriptionId:
-          formData.get("stripeSubscriptionId")?.toString() ?? null,
-        subscriptionStatus:
-          formData.get("subscriptionStatus")?.toString() ?? null,
-        limits: {
-          boards: formData.get("boards")
-            ? Number(formData.get("boards"))
-            : undefined,
-          cardsPerBoard: formData.get("cardsPerBoard")
-            ? Number(formData.get("cardsPerBoard"))
-            : undefined,
-          membersPerWorkspace: formData.get("membersPerWorkspace")
-            ? Number(formData.get("membersPerWorkspace"))
-            : undefined,
-        },
-      });
+export const createWorkspaceAction = async (input: CreateWorkspaceInput) => {
+  try {
+    const user = await requireAuth();
 
-      if (!parsed.success) {
-        return error("Invalid input", parsed.error.flatten());
-      }
+    const parsed = CreateWorkspaceSchema.safeParse({
+      name: input.name,
+      ownerId: user.id,
+    });
 
-      const data: CreateWorkspaceInput = parsed.data;
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
 
-      const workspace = await workspaceService.create(user.id, data);
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
 
-      return success("Workspace created successfully", workspace);
-    } catch (err: any) {
-      return error(err.message, err);
+      return error(message);
     }
-  },
 
-  findById: async (id: string) => {
-    try {
-      const user = await requireAuth();
-      const hasPermission = await checkWorkspacePermission(
-        user.id,
-        id,
-        "observer"
-      );
+    const validatedData: CreateWorkspaceInput = parsed.data;
 
-      if (!hasPermission) {
-        throw new Error("Permission denied");
-      }
+    const workspace = await workspaceService.create(user.id, validatedData);
 
-      const workspace = await workspaceService.findById(id);
+    return success("Workspace created successfully", workspace);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
 
-      return success("", workspace);
-    } catch (err: any) {
-      return error(err.message, err);
+export const findWorkspaceByIdAction = async (id: string) => {
+  try {
+    const user = await requireAuth();
+
+    const workspace = await workspaceService.findById(user.id, id);
+
+    return success("", workspace);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const findWorkspacesByUserAction = async () => {
+  try {
+    const user = await requireAuth();
+
+    const workspaces = await workspaceService.findByUserId(user.id);
+
+    return success("", workspaces);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const updateWorkspaceAction = async (
+  id: string,
+  input: UpdateWorkspaceInput
+) => {
+  try {
+    const user = await requireAuth();
+
+    const parsed = UpdateWorkspaceSchema.safeParse({
+      name: input.name?.toString(),
+      plan: input.plan,
+    });
+
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+
+      return error(message);
     }
-  },
 
-  findByUserId: async () => {
-    try {
-      const user = await requireAuth();
-      const workspace = workspaceService.findById(user.id);
+    const validatedData: UpdateWorkspaceInput = parsed.data;
 
-      return success("", workspace);
-    } catch (err: any) {
-      return error(err.message, err);
-    }
-  },
+    const workspace = await workspaceService.update(user.id, id, validatedData);
 
-  update: async (formData: FormData) => {
-    try {
-      const user = await requireAuth();
-
-      const parsed = UpdateWorkspaceSchema.safeParse({
-        name: formData.get("name")?.toString(),
-        slug: formData.get("slug")?.toString(),
-        ownerId: formData.get("ownerId")?.toString(),
-        plan: formData.get("plan")?.toString(),
-        stripeCustomerId: formData.get("stripeCustomerId")?.toString() ?? null,
-        stripeSubscriptionId:
-          formData.get("stripeSubscriptionId")?.toString() ?? null,
-        subscriptionStatus:
-          formData.get("subscriptionStatus")?.toString() ?? null,
-        limits: {
-          boards: formData.get("boards")
-            ? Number(formData.get("boards"))
-            : undefined,
-          cardsPerBoard: formData.get("cardsPerBoard")
-            ? Number(formData.get("cardsPerBoard"))
-            : undefined,
-          membersPerWorkspace: formData.get("membersPerWorkspace")
-            ? Number(formData.get("membersPerWorkspace"))
-            : undefined,
-        },
-      });
-
-      if (!parsed.success) {
-        return error("Invalid input", parsed.error.flatten());
-      }
-
-      const data: UpdateWorkspaceInput = parsed.data;
-
-      const workspace = await workspaceService.update(user.id, data);
-
-      return success("Workspace updated successfully", workspace);
-    } catch (err: any) {
-      return error(err.message, err);
-    }
-  },
+    return success("Workspace updated successfully", workspace);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
 };

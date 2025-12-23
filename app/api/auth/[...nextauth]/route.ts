@@ -1,15 +1,39 @@
-import NextAuth, { type AuthOptions } from "next-auth";
+import NextAuth, { DefaultSession, type AuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 
 import { db } from "@/db";
-import { SignInSchema } from "@/domain/schemas/auth.schema";
-import { authService } from "@/domain/services/auth.service";
+import { accounts, sessions, users, verificationTokens } from "@/db/schema";
+import { userRepository } from "@/domain/repositories/user.repository";
+import { verifyPassword } from "@/lib/bcrypt";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    id: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+  }
+}
 
 export const authOptions: AuthOptions = {
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+  }),
 
   session: {
     strategy: "jwt",
@@ -26,11 +50,12 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        const parsed = SignInSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const user = await authService.signIn(parsed.data);
+        const user = await userRepository.findByEmail(credentials.email);
         if (!user) return null;
+
+        const isValid = verifyPassword(credentials.password, user.password!);
+
+        if (!isValid) return null;
 
         return {
           id: user.id,

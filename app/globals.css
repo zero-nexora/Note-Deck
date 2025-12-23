@@ -105,7 +105,7 @@
     inset 0 0 0 1px hsl(260 20% 90% / 0.5);
   --shadow-button: 0 0 16px hsl(270 60% 55% / 0.25);
 
-  --sidebar-background: hsl(260 18% 97%);
+  --sidebar: hsl(0 0% 98%);
   --sidebar-foreground: hsl(252 25% 25%);
   --sidebar-primary: hsl(270 55% 50%);
   --sidebar-primary-foreground: hsl(260 20% 98%);
@@ -175,7 +175,7 @@
     inset 0 0 0 1px hsl(270 40% 30% / 0.2);
   --shadow-button: 0 0 20px hsl(270 70% 60% / 0.4);
 
-  --sidebar-background: hsl(0 0% 98%);
+  --sidebar: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(240 5.9% 10%);
   --sidebar-primary-foreground: hsl(0 0% 98%);
@@ -516,4 +516,13 @@
   max-width: 100%;
   margin: 0 auto;
   text-align: left;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

@@ -1,10 +1,10 @@
 import { db } from "@/db";
+import { checklistItems } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import {
   NewChecklistItem,
   UpdateChecklistItem,
 } from "../types/check-list-item.type";
-import { checklistItems } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 export const checklistItemRepository = {
   create: async (data: NewChecklistItem) => {
@@ -12,11 +12,27 @@ export const checklistItemRepository = {
     return item;
   },
 
-  update: async (data: UpdateChecklistItem) => {
+  findById: async (id: string) => {
+    return db.query.checklistItems.findFirst({
+      where: eq(checklistItems.id, id),
+    });
+  },
+
+  findByChecklistId: async (checklistId: string) => {
+    return db.query.checklistItems.findMany({
+      where: eq(checklistItems.checklistId, checklistId),
+      orderBy: (items, { asc }) => [asc(items.position)],
+    });
+  },
+
+  update: async (id: string, data: UpdateChecklistItem) => {
     const [updated] = await db
       .update(checklistItems)
-      .set(data)
-      .where(eq(checklistItems.id, data.id!))
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(checklistItems.id, id))
       .returning();
 
     return updated;

@@ -36,7 +36,7 @@ export const workspaceRepository = {
         workspace: {
           with: {
             owner: true,
-          },
+          }
         },
       },
     });
@@ -44,14 +44,22 @@ export const workspaceRepository = {
     return memberships.map((membership) => membership.workspace);
   },
 
-  update: async (data: UpdateWorkspace) => {
+  findBySlug: async (slug: string) => {
+    const workspace = await db.query.workspaces.findFirst({
+      where: eq(workspaces.slug, slug),
+    });
+
+    return workspace;
+  },
+
+  update: async (id: string, data: UpdateWorkspace) => {
     const [updated] = await db
       .update(workspaces)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(workspaces.id, data.id!))
+      .where(eq(workspaces.id, id))
       .returning();
 
     return updated;

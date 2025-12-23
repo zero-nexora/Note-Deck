@@ -24,14 +24,14 @@ export const listRepository = {
     return listsByBoard;
   },
 
-  update: async (data: UpdateList) => {
+  update: async (id: string, data: UpdateList) => {
     const [updated] = await db
       .update(lists)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(lists.id, data.id!))
+      .where(eq(lists.id, id))
       .returning();
 
     return updated;
@@ -42,7 +42,7 @@ export const listRepository = {
   },
 
   archive: async (id: string) => {
-    return listRepository.update({ id, isArchived: true });
+    return listRepository.update(id, { isArchived: true });
   },
 
   reorders: async (

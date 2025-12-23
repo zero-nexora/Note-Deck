@@ -3,9 +3,16 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Shield, Layers, Sparkles } from "lucide-react";
+import { Zap, Shield, Layers, Sparkles, LucideIcon } from "lucide-react";
 
-const features = [
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  gradient: string;
+}
+
+const FEATURES: Feature[] = [
   {
     icon: Zap,
     title: "Lightning Fast",
@@ -36,20 +43,43 @@ const features = [
   },
 ];
 
+const HEADER_ANIMATION = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6 },
+};
+
+const CARD_ANIMATION = {
+  initial: { opacity: 0, y: 50 },
+  hover: {
+    rotateX: -5,
+    rotateY: 5,
+    scale: 1.02,
+  },
+  spring: { type: "spring" as const, stiffness: 300, damping: 20 },
+};
+
+const ICON_SHAKE_ANIMATION = {
+  rotate: [0, -10, 10, -10, 0],
+  transition: { duration: 0.5 },
+};
+
 export const AdvancedFeaturesSection = () => {
   const headerRef = useRef(null);
   const isHeaderInView = useInView(headerRef, { once: true });
 
   return (
     <section className="py-24 px-4 relative overflow-hidden">
+      {/* Background gradient blur */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
       <div className="container mx-auto max-w-6xl relative z-10">
+        {/* Section header */}
         <motion.div
           ref={headerRef}
-          initial={{ opacity: 0, y: 30 }}
-          animate={isHeaderInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          initial={HEADER_ANIMATION.initial}
+          animate={isHeaderInView ? HEADER_ANIMATION.animate : {}}
+          transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
@@ -63,8 +93,9 @@ export const AdvancedFeaturesSection = () => {
           </p>
         </motion.div>
 
+        {/* Features grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          {features.map((feature, index) => (
+          {FEATURES.map((feature, index) => (
             <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
         </div>
@@ -73,53 +104,59 @@ export const AdvancedFeaturesSection = () => {
   );
 };
 
-const FeatureCard = ({
-  feature,
-  index,
-}: {
-  feature: (typeof features)[number];
+interface FeatureCardProps {
+  feature: Feature;
   index: number;
-}) => {
+}
+
+const FeatureCard = ({ feature, index }: FeatureCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const Icon = feature.icon;
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { once: true, margin: "-100px" });
+
+  const FeatureIcon = feature.icon;
+  const cardDelay = index * 0.15;
+
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
+      ref={cardRef}
+      initial={CARD_ANIMATION.initial}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.15 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      transition={{ duration: 0.6, delay: cardDelay }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="perspective-1000"
     >
       <motion.div
-        animate={{
-          rotateX: isHovered ? -5 : 0,
-          rotateY: isHovered ? 5 : 0,
-          scale: isHovered ? 1.02 : 1,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        animate={
+          isHovered
+            ? CARD_ANIMATION.hover
+            : { rotateX: 0, rotateY: 0, scale: 1 }
+        }
+        transition={CARD_ANIMATION.spring}
         className="transform-style-3d h-full"
       >
         <Card className="glass-card h-full border-border/30 overflow-hidden group">
           <div
             className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
           />
+
           <CardHeader className="relative z-10">
             <motion.div
-              animate={isHovered ? { rotate: [0, -10, 10, -10, 0] } : {}}
-              transition={{ duration: 0.5 }}
+              animate={isHovered ? ICON_SHAKE_ANIMATION : {}}
+              transition={ICON_SHAKE_ANIMATION.transition}
               className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 glow-border"
             >
-              <Icon className="w-7 h-7 text-primary" />
+              <FeatureIcon className="w-7 h-7 text-primary" />
             </motion.div>
             <CardTitle className="text-xl font-display text-foreground">
               {feature.title}
             </CardTitle>
           </CardHeader>
+
           <CardContent className="relative z-10">
             <p className="text-muted-foreground">{feature.description}</p>
           </CardContent>

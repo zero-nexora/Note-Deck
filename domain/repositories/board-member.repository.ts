@@ -2,13 +2,11 @@ import { db } from "@/db";
 import { Role } from "@/db/enum";
 import { boardMembers } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { NewBoardMember } from "../types/board-member.type";
 
 export const boardMemberRepository = {
-  addMember: async (boardId: string, userId: string, role: Role) => {
-    const [member] = await db
-      .insert(boardMembers)
-      .values({ boardId, userId, role })
-      .returning();
+  addMember: async (data: NewBoardMember) => {
+    const [member] = await db.insert(boardMembers).values(data).returning();
 
     return member;
   },

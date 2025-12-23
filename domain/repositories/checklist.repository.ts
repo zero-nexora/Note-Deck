@@ -10,6 +10,12 @@ export const checklistRepository = {
     return checklist;
   },
 
+  findById: async (id: string) => {
+    return db.query.checklists.findFirst({
+      where: eq(checklists.id, id),
+    });
+  },
+
   findByCardId: async (cardId: string) => {
     return await db.query.checklists.findMany({
       where: eq(checklists.cardId, cardId),
@@ -22,11 +28,11 @@ export const checklistRepository = {
     });
   },
 
-  update: async (data: UpdateChecklist) => {
+  update: async (id: string, data: UpdateChecklist) => {
     const [updated] = await db
       .update(checklists)
       .set(data)
-      .where(eq(checklists.id, data.id!))
+      .where(eq(checklists.id, id))
       .returning();
 
     return updated;

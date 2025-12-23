@@ -16,6 +16,12 @@ export const labelRepository = {
     });
   },
 
+  findById: async (id: string) => {
+    return await db.query.labels.findFirst({
+      where: eq(labels.id, id),
+    });
+  },
+
   update: async (data: UpdateLabel) => {
     const [updated] = await db
       .update(labels)

@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { NewAttachment, UpdateAttachment } from "../types/attachment.type";
 
-export const CreateAttachmentSchema: z.ZodType<NewAttachment> = z.object({
+export const CreateAttachmentSchema = z.object({
   cardId: z.string(),
   userId: z.string(),
   fileName: z.string(),
@@ -10,10 +9,9 @@ export const CreateAttachmentSchema: z.ZodType<NewAttachment> = z.object({
   fileSize: z.number(),
   uploadThingKey: z.string(),
   expiresAt: z.date().nullable().optional(),
-  createdAt: z.date().optional(),
 });
 
-export const UpdateAttachmentSchema: z.ZodType<UpdateAttachment> = z.object({
+export const UpdateAttachmentSchema = z.object({
   cardId: z.string().optional(),
   userId: z.string().optional(),
   fileName: z.string().optional(),
@@ -22,7 +20,6 @@ export const UpdateAttachmentSchema: z.ZodType<UpdateAttachment> = z.object({
   fileSize: z.number().optional(),
   uploadThingKey: z.string().optional(),
   expiresAt: z.date().nullable().optional(),
-  createdAt: z.date().optional(),
 });
 
 export type CreateAttachmentInput = z.infer<typeof CreateAttachmentSchema>;

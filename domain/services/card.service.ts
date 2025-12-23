@@ -1,11 +1,35 @@
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
+import { boardRepository } from "../repositories/board.repository";
+import { listRepository } from "../repositories/list.repository";
 import { CreateCardInput, UpdateCardInput } from "../schemas/card.schema";
 import { elasticsearchService } from "./elasticsearch.service";
+import { checkBoardPermission } from "@/lib/permissions";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
-    const card = await cardRepository.create(data);
+    const board = await boardRepository.findById(data.boardId);
+    if (!board) throw new Error("Board not found");
+
+    const list = await listRepository.findById(data.listId);
+    if (!list) throw new Error("List not found");
+
+    if (list.boardId !== data.boardId) {
+      throw new Error("List does not belong to board");
+    }
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      data.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const card = await cardRepository.create({
+      ...data,
+      title: data.title.trim(),
+      isArchived: false,
+    });
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -22,12 +46,39 @@ export const cardService = {
     return card;
   },
 
-  getById: async (cardId: string) => {
-    return await cardRepository.findById(cardId);
+  getById: async (userId: string, id: string) => {
+    const card = await cardRepository.findById(id);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "observer"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    return card;
   },
 
-  update: async (userId: string, data: UpdateCardInput) => {
-    const updated = await cardRepository.update(data);
+  update: async (userId: string, id: string, data: UpdateCardInput) => {
+    const card = await cardRepository.findById(id);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const list = await listRepository.findById(data.listId);
+    if (!list) throw new Error("List not found");
+
+    if (list.boardId !== card.boardId) {
+      throw new Error("Cannot move card to another board");
+    }
+
+    const updated = await cardRepository.update(id, data);
 
     await activityRepository.create({
       boardId: updated.boardId,
@@ -51,6 +102,27 @@ export const cardService = {
     destinationListId: string,
     position: number
   ) => {
+    const card = await cardRepository.findById(cardId);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    if (card.listId !== sourceListId) {
+      throw new Error("Source list does not match card list");
+    }
+
+    const destinationList = await listRepository.findById(destinationListId);
+    if (!destinationList) throw new Error("Destination list not found");
+
+    if (destinationList.boardId !== card.boardId) {
+      throw new Error("Cannot move card to another board");
+    }
+
     const moved = await cardRepository.move(
       cardId,
       destinationListId,
@@ -73,6 +145,16 @@ export const cardService = {
   },
 
   archive: async (userId: string, cardId: string) => {
+    const card = await cardRepository.findById(cardId);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "admin"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
     const archived = await cardRepository.archive(cardId);
 
     await activityRepository.create({
@@ -88,5 +170,19 @@ export const cardService = {
     await elasticsearchService.indexCard(archived.id);
 
     return archived;
+  },
+
+  delete: async (userId: string, cardId: string) => {
+    const card = await cardRepository.findById(cardId);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "admin"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    await cardRepository.delete(card.id);
   },
 };
