@@ -11,7 +11,7 @@ const WorkspaceLayout = async ({ children }: WorkspaceLayoutProps) => {
 
   if (!user) return redirect("/sign-in");
 
-  return <div className="h-screen">{children}</div>;
+  return <div className="h-screen w-full overflow-hidden">{children}</div>;
 };
 
 export default WorkspaceLayout;

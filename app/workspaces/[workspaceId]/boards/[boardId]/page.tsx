@@ -16,11 +16,7 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
 
   const board = result.data;
 
-  return (
-    <div className="flex-1 h-full">
-      <BoardContainer board={board} user={user} />
-    </div>
-  );
+  return <BoardContainer board={board} user={user} />;
 };
 
 export default BoardsPage;

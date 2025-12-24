@@ -76,14 +76,14 @@ const WorkspaceDetailLayout = async ({
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex h-full w-full overflow-hidden">
       <Sidebar
         workspaceId={workspaceId}
         workspaces={result.data as Workspace[]}
       />
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar notifications={mockNotifications} />
-        <main className="flex-1 overflow-y-auto p-4">{children}</main>
+        <main className="flex-1 overflow-hidden p-4">{children}</main>
       </div>
     </div>
   );
