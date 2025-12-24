@@ -82,7 +82,7 @@ const WorkspaceDetailLayout = async ({
         workspaces={result.data as Workspace[]}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar notifications={mockNotifications} />
+        <Navbar notifications={mockNotifications} workspaceId={workspaceId} />
         <main className="flex-1 overflow-hidden p-4">{children}</main>
       </div>
     </div>

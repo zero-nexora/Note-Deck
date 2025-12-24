@@ -2,7 +2,7 @@
 
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -37,7 +37,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<"card" | "list" | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
-  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const { startDragging, updateDragging, stopDragging } = useBoardRealtime();
 
@@ -53,7 +52,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
     setActiveId(null);
     setActiveType(null);
     setOverId(null);
-    dragStartPosRef.current = null;
   };
 
   const handleDragStart = useCallback(
@@ -67,7 +65,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       const rect = (
         event.activatorEvent.target as HTMLElement
       ).getBoundingClientRect();
-
       const pointerX = (event.activatorEvent as PointerEvent).clientX;
       const pointerY = (event.activatorEvent as PointerEvent).clientY;
 
@@ -77,8 +74,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
         x: pointerX - rect.left,
         y: pointerY - rect.top,
       };
-
-      dragStartPosRef.current = offset;
 
       if (data?.type === "card") {
         startDragging(
@@ -117,28 +112,208 @@ export const BoardContent = ({ board }: BoardContentProps) => {
     [updateDragging]
   );
 
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event;
 
-    setOverId(over.id);
+      if (!over) {
+        setOverId(null);
+        return;
+      }
 
-    const activeId = active.id;
-    const overId = over.id;
+      const activeId = active.id;
+      const overId = over.id;
 
-    if (activeId === overId) return;
+      if (activeId === overId) {
+        setOverId(null);
+        return;
+      }
 
-    const activeData = active.data.current;
-    const overData = over.data.current;
+      setOverId(overId);
 
-    if (activeData?.type !== "card") return;
+      const activeData = active.data.current;
+      const overData = over.data.current;
 
-    const activeCard = activeData.card;
-    const isOverCard = overData?.type === "card";
-    const isOverList = overData?.type === "list";
+      const isCardOverList =
+        activeData?.type === "card" && overData?.type === "list";
+      const isListOverCard =
+        activeData?.type === "list" && overData?.type === "card";
 
-    if (!isOverCard && !isOverList) return;
-  }, []);
+      if (isListOverCard) {
+        return;
+      }
+
+      if (activeData?.type === "card") {
+        const activeCard = activeData.card;
+        const sourceListId = activeCard.listId;
+
+        if (overData?.type === "card") {
+          const overCard = overData.card;
+          const destinationListId = overCard.listId;
+
+          if (sourceListId === destinationListId) {
+            const listIndex = board.lists.findIndex(
+              (l) => l.id === sourceListId
+            );
+            if (listIndex === -1) return;
+
+            const list = board.lists[listIndex];
+            const oldCardIndex = list.cards.findIndex(
+              (c) => c.id === activeCard.id
+            );
+            const newCardIndex = list.cards.findIndex(
+              (c) => c.id === overCard.id
+            );
+
+            if (
+              oldCardIndex !== -1 &&
+              newCardIndex !== -1 &&
+              oldCardIndex !== newCardIndex
+            ) {
+              const reorderedCards = arrayMove(
+                list.cards,
+                oldCardIndex,
+                newCardIndex
+              );
+
+              reorderedCards.forEach((card, index) => {
+                card.position = index;
+              });
+
+              list.cards.splice(0, list.cards.length, ...reorderedCards);
+            }
+          } else {
+            const sourceListIndex = board.lists.findIndex(
+              (l) => l.id === sourceListId
+            );
+            const destinationListIndex = board.lists.findIndex(
+              (l) => l.id === destinationListId
+            );
+
+            if (sourceListIndex === -1 || destinationListIndex === -1) return;
+
+            const sourceList = board.lists[sourceListIndex];
+            const destinationList = board.lists[destinationListIndex];
+
+            const sourceCardIndex = sourceList.cards.findIndex(
+              (c) => c.id === activeCard.id
+            );
+            const destinationCardIndex = destinationList.cards.findIndex(
+              (c) => c.id === overCard.id
+            );
+
+            if (sourceCardIndex === -1) return;
+
+            const cardAlreadyInDestination = destinationList.cards.some(
+              (c) => c.id === activeCard.id
+            );
+
+            if (cardAlreadyInDestination) {
+              const oldIndex = destinationList.cards.findIndex(
+                (c) => c.id === activeCard.id
+              );
+              const newIndex = destinationCardIndex;
+
+              if (oldIndex !== newIndex) {
+                const reorderedCards = arrayMove(
+                  destinationList.cards,
+                  oldIndex,
+                  newIndex
+                );
+
+                reorderedCards.forEach((card, index) => {
+                  card.position = index;
+                });
+
+                destinationList.cards.splice(
+                  0,
+                  destinationList.cards.length,
+                  ...reorderedCards
+                );
+              }
+            } else {
+              const [movedCard] = sourceList.cards.splice(sourceCardIndex, 1);
+
+              movedCard.listId = destinationListId;
+
+              const insertIndex =
+                destinationCardIndex !== -1
+                  ? destinationCardIndex
+                  : destinationList.cards.length;
+              destinationList.cards.splice(insertIndex, 0, movedCard);
+
+              sourceList.cards.forEach((card, index) => {
+                card.position = index;
+              });
+
+              destinationList.cards.forEach((card, index) => {
+                card.position = index;
+              });
+            }
+          }
+        }
+
+        if (isCardOverList) {
+          const destinationListId = overId as string;
+
+          if (sourceListId !== destinationListId) {
+            const sourceListIndex = board.lists.findIndex(
+              (l) => l.id === sourceListId
+            );
+            const destinationListIndex = board.lists.findIndex(
+              (l) => l.id === destinationListId
+            );
+
+            if (sourceListIndex === -1 || destinationListIndex === -1) return;
+
+            const sourceList = board.lists[sourceListIndex];
+            const destinationList = board.lists[destinationListIndex];
+
+            const sourceCardIndex = sourceList.cards.findIndex(
+              (c) => c.id === activeCard.id
+            );
+            if (sourceCardIndex === -1) return;
+
+            const cardAlreadyInDestination = destinationList.cards.some(
+              (c) => c.id === activeCard.id
+            );
+
+            if (!cardAlreadyInDestination) {
+              const [movedCard] = sourceList.cards.splice(sourceCardIndex, 1);
+
+              movedCard.listId = destinationListId;
+
+              destinationList.cards.push(movedCard);
+
+              sourceList.cards.forEach((card, index) => {
+                card.position = index;
+              });
+
+              destinationList.cards.forEach((card, index) => {
+                card.position = index;
+              });
+            }
+          }
+        }
+      }
+
+      if (activeData?.type === "list" && overData?.type === "list") {
+        const oldIndex = board.lists.findIndex((l) => l.id === activeId);
+        const newIndex = board.lists.findIndex((l) => l.id === overId);
+
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          const reorderedLists = arrayMove(board.lists, oldIndex, newIndex);
+
+          reorderedLists.forEach((list, index) => {
+            list.position = index;
+          });
+
+          board.lists.splice(0, board.lists.length, ...reorderedLists);
+        }
+      }
+    },
+    [board.lists]
+  );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -341,7 +516,7 @@ export const BoardContent = ({ board }: BoardContentProps) => {
             <LiveCursors />
             <LiveDragOverlay board={board} />
 
-            <div className="flex gap-4 p-4 h-full">
+            <div className="flex gap-4 p-4 h-full items-start">
               <SortableContext
                 items={board.lists.map((l) => l.id)}
                 strategy={horizontalListSortingStrategy}
@@ -353,10 +528,19 @@ export const BoardContent = ({ board }: BoardContentProps) => {
               <CreateList board={board} />
             </div>
 
-            <DragOverlay>
+            <DragOverlay
+              dropAnimation={{
+                duration: 200,
+                easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+              }}
+            >
               {activeCard ? (
-                <div className="rotate-3 opacity-90">
-                  <CardItem card={activeCard} />
+                <div className="cursor-grabbing">
+                  <CardItem card={activeCard} isDragging isOverlay />
+                </div>
+              ) : activeList ? (
+                <div className="cursor-grabbing opacity-90">
+                  <BoardListColumnOverlay list={activeList} />
                 </div>
               ) : null}
             </DragOverlay>
@@ -364,6 +548,35 @@ export const BoardContent = ({ board }: BoardContentProps) => {
         </DndContext>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
+    </div>
+  );
+};
+
+const BoardListColumnOverlay = ({
+  list,
+}: {
+  list: BoardWithListColumnLabelAndMember["lists"][number];
+}) => {
+  return (
+    <div className="w-72 shrink-0 flex flex-col glass-card">
+      <div className="p-3 border-b border-border/30">
+        <h3 className="font-semibold text-sm flex items-center gap-2">
+          <span className="truncate">{list.name}</span>
+          <span className="text-xs text-muted-foreground font-normal shrink-0 px-1.5 py-0.5 rounded-full bg-muted/50">
+            {list.cards.length}
+          </span>
+        </h3>
+      </div>
+      <div className="p-2 space-y-2 max-h-[300px] overflow-hidden">
+        {list.cards.slice(0, 3).map((card) => (
+          <CardItem key={card.id} card={card} isPreview />
+        ))}
+        {list.cards.length > 3 && (
+          <div className="text-xs text-muted-foreground text-center py-2 bg-muted/30 rounded">
+            +{list.cards.length - 3} more cards
+          </div>
+        )}
+      </div>
     </div>
   );
 };

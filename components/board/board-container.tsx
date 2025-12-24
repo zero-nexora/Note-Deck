@@ -36,7 +36,9 @@ export const BoardContainer = ({ board, user }: BoardContainerProps) => {
           color: generateUserColor(user.id),
         },
       }}
-      initialStorage={boardToStorage(board)}
+      initialStorage={{
+        board: boardToStorage(board),
+      }}
     >
       <BoardContent board={board} />
     </RoomProvider>

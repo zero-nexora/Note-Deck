@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@liveblocks/client";
-import { OpaqueClient } from "@liveblocks/core";
+import { LiveObject, OpaqueClient, LiveList } from "@liveblocks/core";
 import { createRoomContext } from "@liveblocks/react";
 
 export type DragState = {
@@ -28,72 +28,118 @@ export type Presence = {
   };
 };
 
-type Storage = {
-  id: string;
-  workspaceId: string;
-  name: string;
-  description: string | null;
-  isArchived: boolean;
-  createdAt: string;
-  updatedAt: string;
-  lists: {
+export type Storage = {
+  board: LiveObject<{
     id: string;
+    workspaceId: string;
     name: string;
+    description: string | null;
     isArchived: boolean;
     createdAt: string;
     updatedAt: string;
-    boardId: string;
-    position: number;
-    cards: {
+
+    lists: LiveList<
+      LiveObject<{
+        id: string;
+        boardId: string;
+        name: string;
+        position: number;
+        isArchived: boolean;
+        createdAt: string;
+        updatedAt: string;
+
+        cards: LiveList<
+          LiveObject<{
+            id: string;
+            boardId: string;
+            listId: string;
+            title: string;
+            description: string | null;
+            position: number;
+            dueDate: string | null;
+            coverImage: string | null;
+            isArchived: boolean;
+            createdAt: string;
+            updatedAt: string;
+
+            labels: LiveList<
+              LiveObject<{
+                id: string;
+                cardId: string;
+                labelId: string;
+                label: {
+                  id: string;
+                  boardId: string;
+                  name: string;
+                  color: string;
+                  createdAt: string;
+                };
+              }>
+            >;
+
+            members: LiveList<
+              LiveObject<{
+                id: string;
+                cardId: string;
+                userId: string;
+                createdAt: string;
+                user: {
+                  id: string;
+                  name: string | null;
+                  email: string | null;
+                  emailVerified: string | null;
+                  image: string | null;
+                  password: string | null;
+                };
+              }>
+            >;
+          }>
+        >;
+      }>
+    >;
+
+    labels: LiveList<
+      LiveObject<{
+        id: string;
+        boardId: string;
+        name: string;
+        color: string;
+        createdAt: string;
+      }>
+    >;
+
+    members: LiveList<
+      LiveObject<{
+        id: string;
+        boardId: string;
+        userId: string;
+        role: string;
+        createdAt: string;
+        user: {
+          id: string;
+          name: string | null;
+          email: string | null;
+          emailVerified: string | null;
+          image: string | null;
+          password: string | null;
+        };
+      }>
+    >;
+
+    workspace: {
       id: string;
-      description: string | null;
-      isArchived: boolean;
+      name: string;
+      slug: string;
+      ownerId: string;
+      plan: string;
+      stripeCustomerId: string | null;
+      stripeSubscriptionId: string | null;
+      subscriptionStatus: string | null;
+      limits: string | null;
       createdAt: string;
       updatedAt: string;
-      boardId: string;
-      position: number;
-      listId: string;
-      title: string;
-      dueDate: string | null;
-      coverImage: string | null;
-      labels: {
-        id: string;
-        cardId: string;
-        labelId: string;
-        label: {
-          id: string;
-          name: string;
-          createdAt: string;
-          boardId: string;
-          color: string;
-        };
-      }[];
-      members: {
-        id: string;
-        cardId: string;
-        userId: string;
-        name: string;
-        image: string | null;
-      }[];
-    }[];
-  }[];
-  labels: {
-    id: string;
-    boardId: string;
-    name: string;
-    color: string;
-  }[];
-  members: {
-    id: string;
-    boardId: string;
-    userId: string;
-    name: string;
-    image: string | null;
-  }[];
-  workspace: {
-    id: string;
-    name: string;
-  };
+    };
+  }>;
 };
 
 export type UserMeta = {
@@ -116,7 +162,6 @@ export const liveblocksClient = createClient({
 }) as OpaqueClient;
 
 export const {
-
   RoomProvider,
   useRoom,
   useMyPresence,

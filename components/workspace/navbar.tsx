@@ -8,6 +8,7 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,15 +27,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
+import { ThemeToggle } from "../common/theme-toggle";
+import { useWorkspaceMember } from "@/hooks/use-work-member";
+import { CreateWorkspaceMemberInput } from "@/domain/schemas/workspace-member.schema";
 
 interface NavbarProps {
   notifications: any[];
+  workspaceId: string;
 }
 
-export const Navbar = ({
-  notifications,
-}: NavbarProps) => {
+export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
+  const { inviteMember } = useWorkspaceMember();
+
+  const handleInviteMember = async () => {
+    const input: CreateWorkspaceMemberInput = {
+      userId: "",
+      workspaceId: workspaceId,
+      role: "observer",
+    };
+
+    await inviteMember(input);
+  };
   return (
     <div className="w-full h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-50">
       {/* Left side */}
@@ -47,6 +60,13 @@ export const Navbar = ({
 
       {/* Right side */}
       <div className="flex items-center gap-4">
+        <ThemeToggle />
+
+        <Button variant="outline" onClick={handleInviteMember}>
+          <UserPlus className="w-4 h-4 mr-2" />
+          Invite
+        </Button>
+
         {/* Notifications */}
         <Popover>
           <PopoverTrigger asChild>
@@ -56,21 +76,21 @@ export const Navbar = ({
               className="relative text-muted-foreground hover:text-foreground"
             >
               <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center gradient-primary text-primary-foreground text-xs border-0">
-                  {0}
-                </Badge>
+              <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center gradient-primary text-primary-foreground text-xs border-0">
+                {0}
+              </Badge>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="end">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h3 className="font-semibold">Notifications</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-primary"
-                >
-                  Mark all read
-                </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-primary"
+              >
+                Mark all read
+              </Button>
             </div>
             <div className="max-h-80 overflow-y-auto scrollbar-thin">
               {notifications?.length === 0 ? (

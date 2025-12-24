@@ -4,7 +4,7 @@ import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { cn } from "@/lib/utils";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, MessageSquare } from "lucide-react";
+import { Calendar, CheckSquare, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -13,9 +13,10 @@ interface CardItemProps {
   card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
   isDragging?: boolean;
   isPreview?: boolean;
+  isOverlay?: boolean;
 }
 
-export const CardItem = ({ card, isDragging, isPreview }: CardItemProps) => {
+export const CardItem = ({ card, isDragging, isPreview, isOverlay }: CardItemProps) => {
   const {
     attributes,
     listeners,
@@ -29,7 +30,7 @@ export const CardItem = ({ card, isDragging, isPreview }: CardItemProps) => {
       type: "card",
       card,
     },
-    disabled: isPreview,
+    disabled: isPreview || isOverlay,
   });
 
   const style = {
@@ -48,7 +49,7 @@ export const CardItem = ({ card, isDragging, isPreview }: CardItemProps) => {
       className={cn(
         "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200 cursor-grab active:cursor-grabbing",
         "hover:shadow-md hover:-translate-y-0.5",
-        isCardDragging && "opacity-40 shadow-xl scale-105 rotate-2",
+        isCardDragging && "opacity-40",
         isPreview && "pointer-events-none opacity-70"
       )}
     >
@@ -93,7 +94,6 @@ export const CardItem = ({ card, isDragging, isPreview }: CardItemProps) => {
         </h4>
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          {/* Due Date */}
           {card.dueDate && (
             <div
               className={cn(
@@ -108,18 +108,16 @@ export const CardItem = ({ card, isDragging, isPreview }: CardItemProps) => {
             </div>
           )}
 
-          {/* Description indicator */}
           {card.description && (
             <div className="flex items-center gap-1">
               <MessageSquare className="w-3 h-3" />
             </div>
           )}
 
-          {/* Checklist indicator (if you have this data) */}
-          {/* <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
             <CheckSquare className="w-3 h-3" />
             <span>2/5</span>
-          </div> */}
+          </div>
         </div>
 
         {card.members && card.members.length && (
