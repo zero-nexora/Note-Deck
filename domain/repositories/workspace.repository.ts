@@ -36,6 +36,7 @@ export const workspaceRepository = {
         workspace: {
           with: {
             owner: true,
+            members: true,
           }
         },
       },

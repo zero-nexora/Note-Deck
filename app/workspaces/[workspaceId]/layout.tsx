@@ -1,9 +1,7 @@
-import {
-  findWorkspacesByUserAction,
-} from "@/app/actions/workspace.action";
+import { findWorkspacesByUserAction } from "@/app/actions/workspace.action";
 import { Navbar } from "@/components/workspace/navbar";
 import { Sidebar } from "@/components/workspace/sidebar";
-import { Workspace } from "@/domain/types/workspace.type";
+import { WorkspaceWithMember } from "@/domain/types/workspace.type";
 import { getCurrentUser } from "@/lib/session";
 import { redirect } from "next/navigation";
 
@@ -75,15 +73,21 @@ const WorkspaceDetailLayout = async ({
     },
   ];
 
+  const currentWorkspace = result.data!.find(
+    (workspace: WorkspaceWithMember) => workspace.id === workspaceId
+  );
+
+  if (!currentWorkspace) return null;
+
   return (
     <div className="flex h-full w-full overflow-hidden">
       <Sidebar
         workspaceId={workspaceId}
-        workspaces={result.data as Workspace[]}
+        workspaces={result.data as WorkspaceWithMember[]}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar notifications={mockNotifications} workspaceId={workspaceId} />
-        <main className="flex-1 overflow-hidden p-4">{children}</main>
+        <Navbar notifications={mockNotifications} workspace={currentWorkspace} user={user} />
+        <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
     </div>
   );

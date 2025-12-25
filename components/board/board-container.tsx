@@ -4,6 +4,7 @@ import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
 import { BoardContent } from "./board-content";
 import { boardToStorage } from "@/lib/utils";
 import { User } from "@/domain/types/user.type";
+import { BoardHeader } from "./board-header";
 
 interface BoardContainerProps {
   board: BoardWithListColumnLabelAndMember;
@@ -39,7 +40,10 @@ export const BoardContainer = ({ board, user }: BoardContainerProps) => {
         board: boardToStorage(board),
       }}
     >
-      <BoardContent board={board} />
+      <div className="flex flex-col gap-5">
+        <BoardHeader board={board} />
+        <BoardContent board={board} />
+      </div>
     </RoomProvider>
   );
 };

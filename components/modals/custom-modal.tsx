@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
 
 export const CustomModal = () => {
   const { isOpen, data, close } = useModal();
@@ -23,7 +24,9 @@ export const CustomModal = () => {
             <DialogDescription>{data.description}</DialogDescription>
           )}
         </DialogHeader>
-          <div className="p-4 overflow-auto">{data?.children}</div>
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          {data?.children}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

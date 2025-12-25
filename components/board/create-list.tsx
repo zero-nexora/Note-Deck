@@ -3,8 +3,22 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { useList } from "@/hooks/use-list";
-import { CreateListInput } from "@/domain/schemas/list.schema";
+import {
+  CreateListInput,
+  CreateListSchema,
+} from "@/domain/schemas/list.schema";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Loading } from "../common/loading";
 
 interface CreateListProps {
   board: BoardWithListColumnLabelAndMember;
@@ -16,44 +30,64 @@ export const CreateList = ({ board }: CreateListProps) => {
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
 
-  const handleAddList = async () => {
-    const input: CreateListInput = {
+  const form = useForm<CreateListInput>({
+    resolver: zodResolver(CreateListSchema),
+    defaultValues: {
       boardId: board.id,
-      name: newListTitle,
+      name: "",
       position: board.lists.length,
-    };
-    await createList(input);
-    setNewListTitle("");
+    },
+  });
+
+  const handleSubmit = async (values: CreateListInput) => {
+    await createList(values);
     setIsAddingList(false);
+    form.reset();
   };
+
+  const isLoading = form.formState.isSubmitting;
 
   return (
     <div className="w-72 shrink-0">
       {isAddingList ? (
-        <div className="bg-secondary/50 rounded-xl border border-border/50 p-3 space-y-2">
-          <Input
-            value={newListTitle}
-            onChange={(e) => setNewListTitle(e.target.value)}
-            placeholder="Enter list title..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddList();
-              if (e.key === "Escape") setIsAddingList(false);
-            }}
-            autoFocus
-          />
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleAddList}>
-              Add list
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsAddingList(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-2"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter list title..."
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex items-center gap-2">
+              <Button type="submit" size="sm" disabled={isLoading}>
+                {isLoading ? <Loading /> : "Add list"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => setIsAddingList(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
       ) : (
         <Button
           variant="ghost"

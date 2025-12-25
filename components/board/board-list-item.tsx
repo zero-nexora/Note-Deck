@@ -10,18 +10,19 @@ import { BoardListCards } from "./board-list-cards";
 import { BoardListHeader } from "./board-list-header";
 import { BoardListFooter } from "./board-list-footer";
 import { ScrollArea } from "../ui/scroll-area";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardListItemProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
-  isActive?: boolean;
   isOverlay?: boolean;
 }
 
 export const BoardListItem = ({
   list,
-  isActive = false,
   isOverlay = false,
 }: BoardListItemProps) => {
+  const { open } = useConfirm();
+
   const {
     attributes,
     listeners,
@@ -54,7 +55,13 @@ export const BoardListItem = ({
   const { deleteList } = useList();
 
   const handleDeleteList = async () => {
-    await deleteList(list.id);
+    open({
+      title: "Delete list",
+      description: "Are you sure you want to delete this list?",
+      onConfirm: async () => {
+        await deleteList(list.id);
+      },
+    });
   };
 
   const setRefs = (element: HTMLDivElement | null) => {
@@ -68,17 +75,14 @@ export const BoardListItem = ({
     );
   }
 
-  if (isActive) {
-    return null;
-  }
-
   return (
     <div
       ref={setRefs}
       style={style}
       className={cn(
         "w-72 shrink-0 flex flex-col glass-card transition-all duration-200",
-        isDragging && "opacity-40",
+        // FIX: Khi dragging, chỉ giảm opacity, không ẩn hoàn toàn
+        isDragging && "opacity-30 scale-95",
         isOver && "ring-2 ring-primary/50 shadow-glow"
       )}
     >

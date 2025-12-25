@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Separator } from "../ui/separator";
-import { Workspace } from "@/domain/types/workspace.type";
+import { WorkspaceWithMember } from "@/domain/types/workspace.type";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,7 +28,7 @@ import {
 } from "../ui/dropdown-menu";
 
 interface SidebarProps {
-  workspaces: Workspace[];
+  workspaces: WorkspaceWithMember[];
   workspaceId: string;
 }
 

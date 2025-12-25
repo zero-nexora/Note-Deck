@@ -155,7 +155,10 @@ export function useBoardDragDrop({
     (activeId: UniqueIdentifier, overId: UniqueIdentifier) => {
       const oldIndex = findListIndex(activeId as string);
       const newIndex = findListIndex(overId as string);
-      reorderItems(board.lists, oldIndex, newIndex);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        reorderItems(board.lists, oldIndex, newIndex);
+      }
     },
     [board.lists, findListIndex]
   );
@@ -247,29 +250,10 @@ export function useBoardDragDrop({
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
-      const { active, over } = event;
-
       stopDragging();
-
-      if (!over || active.id === over.id) {
-        resetDragState();
-        return;
-      }
-
-      const activeData = active.data.current;
-      const overData = over.data.current;
-
-      if (activeData?.type === "list" && overData?.type === "list") {
-        handleListDrag(active.id, over.id);
-      }
-
-      if (activeData?.type === "card") {
-        handleCardDrag(activeData.card, overData, over.id);
-      }
-
       resetDragState();
     },
-    [stopDragging, resetDragState, handleCardDrag, handleListDrag]
+    [stopDragging, resetDragState]
   );
 
   return {

@@ -4,7 +4,7 @@ import {
   createWorkspaceAction,
   updateWorkspaceAction,
 } from "@/app/actions/workspace.action";
-import { CreateWorkspaceInput } from "@/domain/schemas/workspace.schema";
+import { CreateWorkspaceInput, UpdateWorkspaceInput } from "@/domain/schemas/workspace.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -27,12 +27,13 @@ export function useWorkspace() {
     }
   };
 
-  const updateWorkspace = async (id: string, input: CreateWorkspaceInput) => {
+  const updateWorkspace = async (id: string, input: UpdateWorkspaceInput) => {
     try {
       const result = await updateWorkspaceAction(id, input);
 
       if (result.success) {
         toast.success(result.message);
+        router.refresh();
       } else {
         toast.error(result.message);
       }

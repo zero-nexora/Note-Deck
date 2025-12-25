@@ -28,39 +28,106 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../common/theme-toggle";
-import { useWorkspaceMember } from "@/hooks/use-work-member";
+import { useWorkspaceMember } from "@/hooks/use-workspace-member";
 import { CreateWorkspaceMemberInput } from "@/domain/schemas/workspace-member.schema";
+import { WorkspaceWithMember } from "@/domain/types/workspace.type";
+import { UserSession } from "@/domain/types/user.type";
+import { useState } from "react";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { useForm } from "react-hook-form";
+import {
+  UpdateWorkspaceInput,
+  UpdateWorkspaceSchema,
+} from "@/domain/schemas/workspace.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Input } from "../ui/input";
 
 interface NavbarProps {
   notifications: any[];
-  workspaceId: string;
+  workspace: WorkspaceWithMember;
+  user: UserSession;
 }
 
-export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
+export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   const { inviteMember } = useWorkspaceMember();
+  const { updateWorkspace } = useWorkspace();
+
+  const form = useForm<UpdateWorkspaceInput>({
+    resolver: zodResolver(UpdateWorkspaceSchema),
+    defaultValues: {
+      name: workspace.name,
+      plan: workspace.plan,
+    },
+  });
 
   const handleInviteMember = async () => {
     const input: CreateWorkspaceMemberInput = {
       userId: "f0f0a2d2-d7ab-4141-b7ee-3025252dc31d",
-      workspaceId: workspaceId,
+      workspaceId: workspace.id,
       role: "observer",
     };
 
     await inviteMember(input);
   };
 
+  const handleSubmit = async (values: UpdateWorkspaceInput) => {
+    await updateWorkspace(workspace.id, values);
+    setIsEditing(false);
+    form.reset();
+  };
+
+  const isLoading = form.formState.isSubmitting;
+
   return (
     <div className="w-full h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-50">
-      <div className="flex items-center gap-4">
-        <Link href="/" className="text-xl font-bold">
-          MyApp
-        </Link>
+      {/* LEFT */}
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col leading-tight">
+          {isEditing ? (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-2"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Board Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          autoFocus
+                          className="text-2xl font-bold h-auto py-1 px-2 border-primary/50 focus-visible:ring-primary"
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
+          ) : (
+            <span className="font-semibold text-sm text-foreground" onDoubleClick={() => setIsEditing(true)}>
+              {workspace.name}
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {workspace.plan ?? "Free plan"}
+          </span>
+        </div>
       </div>
 
+      {/* RIGHT */}
       <div className="flex items-center gap-4">
         <ThemeToggle />
 
-        <Button variant="outline" onClick={handleInviteMember}>
+        <Button variant="ghost" onClick={handleInviteMember}>
           <UserPlus className="w-4 h-4 mr-2" />
           Invite
         </Button>
@@ -74,7 +141,7 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
             >
               <Bell className="w-5 h-5" />
               <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center gradient-primary text-primary-foreground text-xs border-0">
-                {0}
+                {notifications?.length ?? 0}
               </Badge>
             </Button>
           </PopoverTrigger>
@@ -134,27 +201,41 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="w-8 h-8 border-2 border-primary/20">
-                <AvatarImage src={""} alt={""} />
+                <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
                 <AvatarFallback className="gradient-primary text-primary-foreground text-xs">
-                  {""
-                    .split(" ")
-                    .map((n: any) => n[0])
+                  {user.name
+                    ?.split(" ")
+                    .map((n) => n[0])
                     .join("")}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-              <div className="flex flex-col">
-                <span>{"name"}</span>
-                <span className="text-xs text-muted-foreground font-normal">
-                  {"email"}
-                </span>
+              <div className="flex items-center gap-3">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={user.image ?? ""} />
+                  <AvatarFallback>
+                    {user.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{user.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
+                </div>
               </div>
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem asChild>
               <Link
                 href="/profile"
@@ -164,6 +245,7 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
                 Profile
               </Link>
             </DropdownMenuItem>
+
             <DropdownMenuItem asChild>
               <Link
                 href="/settings"
@@ -173,11 +255,14 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
                 Settings
               </Link>
             </DropdownMenuItem>
+
             <DropdownMenuItem className="flex items-center gap-2">
               <HelpCircle className="w-4 h-4" />
               Help & Support
             </DropdownMenuItem>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem className="text-destructive focus:text-destructive flex items-center gap-2">
               <LogOut className="w-4 h-4" />
               Sign out

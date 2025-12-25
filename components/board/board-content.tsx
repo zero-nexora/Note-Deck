@@ -10,11 +10,10 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 import { BoardLists } from "./board-lists";
-import { BoardOverlay } from "./board-overlay";
 import { LiveCursors } from "./live-cursors";
 import { LiveDragOverlay } from "./live-drap-overlay";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { BoardHeader } from "./board-header";
+import { BoardOverlay } from "./board-overlay";
 
 interface BoardContentProps {
   board: BoardWithListColumnLabelAndMember;
@@ -26,7 +25,6 @@ export const BoardContent = ({ board }: BoardContentProps) => {
   const {
     activeId,
     activeType,
-    overId,
     handleDragStart,
     handleDragMove,
     handleDragOver,
@@ -58,8 +56,7 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       : null;
 
   return (
-    <ScrollArea className="h-[calc(100vh-80px)]">
-      <BoardHeader />
+    <ScrollArea className="h-[calc(100vh-250px)]">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -72,7 +69,7 @@ export const BoardContent = ({ board }: BoardContentProps) => {
           <LiveCursors />
           <LiveDragOverlay board={board} />
 
-          <BoardLists board={board} activeId={activeId} overId={overId} />
+          <BoardLists board={board} />
 
           <BoardOverlay activeCard={activeCard} activeList={activeList} />
         </div>

@@ -1,6 +1,11 @@
 "use client";
 
-import { useRoom, useMyPresence, useOthers } from "@/lib/liveblocks";
+import {
+  useRoom,
+  useMyPresence,
+  useOthers,
+  useBroadcastEvent,
+} from "@/lib/liveblocks";
 import { useEffect, useCallback } from "react";
 import type { DragState } from "@/lib/liveblocks";
 
@@ -8,6 +13,7 @@ export const useBoardRealtime = () => {
   const room = useRoom();
   const [myPresence, updateMyPresence] = useMyPresence();
   const others = useOthers();
+  const broadcast = useBroadcastEvent();
 
   const updateCursor = useCallback(
     (cursor: { x: number; y: number } | null) => {
@@ -53,8 +59,18 @@ export const useBoardRealtime = () => {
       };
 
       updateMyPresence({ dragState });
+
+      broadcast({
+        type: type === "card" ? "CARD_MOVED" : "LIST_MOVED",
+        data: {
+          action: "drag_start",
+          id: draggingId,
+          sourceListId,
+          sourcePosition,
+        },
+      });
     },
-    [updateMyPresence]
+    [updateMyPresence, broadcast]
   );
 
   const updateDragging = useCallback(
@@ -72,6 +88,21 @@ export const useBoardRealtime = () => {
   );
 
   const stopDragging = useCallback(() => {
+    const currentDragState = myPresence.dragState;
+
+    if (currentDragState.isDragging) {
+      broadcast({
+        type:
+          currentDragState.dragType === "card" ? "CARD_MOVED" : "LIST_MOVED",
+        data: {
+          action: "drag_end",
+          id: currentDragState.draggingId,
+          sourceListId: currentDragState.sourceListId,
+          sourcePosition: currentDragState.sourcePosition,
+        },
+      });
+    }
+
     updateMyPresence({
       dragState: {
         isDragging: false,
@@ -83,7 +114,7 @@ export const useBoardRealtime = () => {
         sourcePosition: null,
       },
     });
-  }, [updateMyPresence]);
+  }, [myPresence.dragState, updateMyPresence, broadcast]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -103,11 +134,40 @@ export const useBoardRealtime = () => {
     };
   }, [updateCursor]);
 
+  const activeDraggers = useCallback(() => {
+    const draggers: Array<{
+      connectionId: number;
+      user: any;
+      dragState: DragState;
+    }> = [];
+
+    others.forEach((other) => {
+      if (other.presence.dragState.isDragging) {
+        draggers.push({
+          connectionId: other.connectionId,
+          user: other.presence.user,
+          dragState: other.presence.dragState,
+        });
+      }
+    });
+
+    if (myPresence.dragState.isDragging) {
+      draggers.push({
+        connectionId: -1,
+        user: myPresence.user,
+        dragState: myPresence.dragState,
+      });
+    }
+
+    return draggers;
+  }, [others, myPresence]);
+
   return {
     room,
     myPresence,
     others: [...others],
     updateMyPresence,
+    activeDraggers,
 
     updateCursor,
     setSelectedCard,
