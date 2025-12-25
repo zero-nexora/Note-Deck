@@ -3,22 +3,25 @@
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useList } from "@/hooks/use-list";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { CreateCard } from "./create-card";
 import { useDroppable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import { BoardListColumnHeader } from "./board-list-column-header";
-import { BoardListColumnCards } from "./board-list-column-cards";
+import { BoardListCards } from "./board-list-cards";
+import { BoardListHeader } from "./board-list-header";
+import { BoardListFooter } from "./board-list-footer";
+import { ScrollArea } from "../ui/scroll-area";
 
-interface BoardListColumnProps {
+interface BoardListItemProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
   isActive?: boolean;
+  isOverlay?: boolean;
 }
 
-export const BoardListColumn = ({
+export const BoardListItem = ({
   list,
   isActive = false,
-}: BoardListColumnProps) => {
+  isOverlay = false,
+}: BoardListItemProps) => {
   const {
     attributes,
     listeners,
@@ -32,6 +35,7 @@ export const BoardListColumn = ({
       type: "list",
       list,
     },
+    disabled: isOverlay,
   });
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -58,6 +62,12 @@ export const BoardListColumn = ({
     setDroppableRef(element);
   };
 
+  if (isOverlay) {
+    return (
+      <div className="w-72 h-[400px] shrink-0 bg-card/40 rounded-2xl border-2 border-primary/50 backdrop-blur-sm pointer-events-none" />
+    );
+  }
+
   if (isActive) {
     return null;
   }
@@ -72,17 +82,17 @@ export const BoardListColumn = ({
         isOver && "ring-2 ring-primary/50 shadow-glow"
       )}
     >
-      <BoardListColumnHeader
+      <BoardListHeader
         list={list}
         dragHandleProps={{ attributes, listeners }}
         onDelete={handleDeleteList}
       />
 
-      <BoardListColumnCards list={list} />
+      <ScrollArea className="h-[calc(100vh-270px)]">
+        <BoardListCards list={list} />
+      </ScrollArea>
 
-      <div className="p-2 border-t border-border/30">
-        <CreateCard list={list} />
-      </div>
+      <BoardListFooter list={list} />
     </div>
   );
 };

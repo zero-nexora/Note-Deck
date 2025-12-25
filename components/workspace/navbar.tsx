@@ -41,24 +41,22 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
 
   const handleInviteMember = async () => {
     const input: CreateWorkspaceMemberInput = {
-      userId: "",
+      userId: "f0f0a2d2-d7ab-4141-b7ee-3025252dc31d",
       workspaceId: workspaceId,
       role: "observer",
     };
 
     await inviteMember(input);
   };
+
   return (
     <div className="w-full h-16 flex items-center justify-between px-6 border-b border-border bg-background sticky top-0 z-50">
-      {/* Left side */}
       <div className="flex items-center gap-4">
         <Link href="/" className="text-xl font-bold">
           MyApp
         </Link>
-        {/* Add other left-side elements here */}
       </div>
 
-      {/* Right side */}
       <div className="flex items-center gap-4">
         <ThemeToggle />
 
@@ -67,7 +65,6 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
           Invite
         </Button>
 
-        {/* Notifications */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -133,7 +130,6 @@ export const Navbar = ({ notifications, workspaceId }: NavbarProps) => {
           </PopoverContent>
         </Popover>
 
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">

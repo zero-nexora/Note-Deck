@@ -1,5 +1,4 @@
 "use client";
-
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
 import { BoardContent } from "./board-content";

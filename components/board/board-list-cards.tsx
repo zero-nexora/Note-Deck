@@ -1,15 +1,16 @@
+"use client";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CardItem } from "./card-item";
+import { BoardCardItem } from "./board-card-item";
 
-interface BoardListColumnCardsProps {
+interface BoardListCardsProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
 }
 
-export const BoardListColumnCards = ({ list }: BoardListColumnCardsProps) => {
+export const BoardListCards = ({ list }: BoardListCardsProps) => {
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
       <div className="space-y-2 p-2 min-h-[100px]">
@@ -18,7 +19,7 @@ export const BoardListColumnCards = ({ list }: BoardListColumnCardsProps) => {
           strategy={verticalListSortingStrategy}
         >
           {list.cards.map((card) => (
-            <CardItem key={card.id} card={card} />
+            <BoardCardItem key={card.id} card={card} />
           ))}
         </SortableContext>
 

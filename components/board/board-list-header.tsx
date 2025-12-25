@@ -1,10 +1,12 @@
+"use client";
+
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
-import { DraggableAttributes } from "@dnd-kit/core";
-import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { ActionsMenu } from "../common/actions-menu";
 import { GripVertical } from "lucide-react";
+import { DraggableAttributes } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
-interface BoardListColumnHeaderProps {
+interface BoardListHeaderProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
   dragHandleProps: {
     attributes: DraggableAttributes;
@@ -13,11 +15,11 @@ interface BoardListColumnHeaderProps {
   onDelete: () => void;
 }
 
-export const BoardListColumnHeader = ({
+export const BoardListHeader = ({
   list,
   dragHandleProps,
   onDelete,
-}: BoardListColumnHeaderProps) => {
+}: BoardListHeaderProps) => {
   return (
     <div className="p-3 flex items-center justify-between border-b border-border/30 bg-background/30">
       <div className="flex items-center gap-2 flex-1 min-w-0">
