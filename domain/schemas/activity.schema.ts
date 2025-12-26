@@ -1,14 +1,39 @@
-import { z } from "zod";
+import z from "zod";
+import { JsonValue } from "./common.schem";
 
-export const CreateActivitySchema = z.object({
-  boardId: z.string(),
-  cardId: z.string().nullable().optional(),
-  userId: z.string(),
-  action: z.string(),
-  entityType: z.string(),
-  entityId: z.string(),
-  metadata: z.record(z.string(), z.any()).optional(),
-  createdAt: z.date().optional(),
+export const LogBoardActionSchema = z.object({
+  boardId: z.string().min(1),
+  action: z.string().min(1),
+  entityType: z.string().min(1),
+  entityId: z.string().min(1),
+  metadata: JsonValue.optional().default({}),
 });
 
-export type CreateActivityInput = z.infer<typeof CreateActivitySchema>;
+export const LogListActionSchema = z.object({
+  boardId: z.string().min(1),
+  listId: z.string().min(1),
+  action: z.string().min(1),
+  entityType: z.string().min(1),
+  entityId: z.string().min(1),
+  metadata: JsonValue.optional().default({}),
+});
+
+export const LogCardActionSchema = z.object({
+  boardId: z.string().min(1),
+  cardId: z.string().min(1),
+  action: z.string().min(1),
+  entityType: z.string().min(1),
+  entityId: z.string().min(1),
+  metadata: JsonValue.optional().default({}),
+});
+
+export const ReadActivitySchema = z.object({
+  boardId: z.string().optional(),
+  cardId: z.string().optional(),
+  limit: z.number().int().positive().optional().default(100),
+});
+
+export type LogBoardActionInput = z.infer<typeof LogBoardActionSchema>;
+export type LogListActionInput = z.infer<typeof LogListActionSchema>;
+export type LogCardActionInput = z.infer<typeof LogCardActionSchema>;
+export type ReadActivityInput = z.infer<typeof ReadActivitySchema>;

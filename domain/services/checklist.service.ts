@@ -1,35 +1,35 @@
-import { activityRepository } from "../repositories/activity.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
+import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
+import { checkBoardPermission } from "@/lib/permissions";
 import {
   CreateChecklistInput,
+  DeleteChecklistInput,
+  ReorderChecklistInput,
   UpdateChecklistInput,
 } from "../schemas/check-list.schema";
-import { checkBoardPermission } from "@/lib/permissions";
 
 export const checklistService = {
-  create: async (
-    userId: string,
-    boardId: string,
-    data: CreateChecklistInput
-  ) => {
-    if (!userId) throw new Error("Unauthenticated");
-
+  create: async (userId: string, data: CreateChecklistInput) => {
     const card = await cardRepository.findById(data.cardId);
     if (!card) throw new Error("Card not found");
 
-    if (card.boardId !== boardId) {
-      throw new Error("Card does not belong to board");
-    }
-
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const checklist = await checklistRepository.create(data);
+    const maxPosition = await checklistRepository.getMaxPosition(data.cardId);
+    const checklist = await checklistRepository.create({
+      ...data,
+      position: maxPosition + 1,
+    });
 
     await activityRepository.create({
-      boardId,
-      cardId: checklist.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
       action: "checklist.created",
       entityType: "checklist",
@@ -40,110 +40,93 @@ export const checklistService = {
     return checklist;
   },
 
-  findById: async (userId: string, id: string) => {
-    if (!userId) throw new Error("Unauthenticated");
-
+  update: async (userId: string, id: string, data: UpdateChecklistInput) => {
     const checklist = await checklistRepository.findById(id);
     if (!checklist) throw new Error("Checklist not found");
 
-    return checklist;
-  },
-
-  findByCardId: async (userId: string, cardId: string) => {
-    const card = await cardRepository.findById(cardId);
+    const card = await cardRepository.findById(checklist.cardId);
     if (!card) throw new Error("Card not found");
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "observer"
+      "normal"
     );
-    
     if (!hasPermission) throw new Error("Permission denied");
 
-    const checklists = await checklistRepository.findByCardId(cardId);
-
-    return checklists;
-  },
-
-  update: async (
-    userId: string,
-    boardId: string,
-    id: string,
-    data: UpdateChecklistInput
-  ) => {
-    if (!userId) throw new Error("Unauthenticated");
-
-    const checklist = await checklistRepository.findById(id);
-    if (!checklist) throw new Error("Checklist not found");
-
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
-    if (!hasPermission) throw new Error("Permission denied");
+    if (data.title !== undefined && data.title.trim() === "") {
+      throw new Error("Checklist title cannot be empty");
+    }
 
     const updated = await checklistRepository.update(id, data);
 
     await activityRepository.create({
-      boardId,
-      cardId: checklist.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
       action: "checklist.updated",
       entityType: "checklist",
-      entityId: checklist.id,
+      entityId: id,
       metadata: data,
     });
 
     return updated;
   },
 
-  move: async (
-    userId: string,
-    boardId: string,
-    checklistId: string,
-    position: number
-  ) => {
-    if (!userId) throw new Error("Unauthenticated");
-
-    const checklist = await checklistRepository.findById(checklistId);
+  reorder: async (userId: string, data: ReorderChecklistInput) => {
+    const checklist = await checklistRepository.findById(data.id);
     if (!checklist) throw new Error("Checklist not found");
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    const card = await cardRepository.findById(checklist.cardId);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const updated = await checklistRepository.update(checklistId, {
-      position,
+    const updated = await checklistRepository.update(data.id, {
+      position: data.position,
     });
 
     await activityRepository.create({
-      boardId,
-      cardId: checklist.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
-      action: "checklist.moved",
+      action: "checklist.reordered",
       entityType: "checklist",
-      entityId: checklist.id,
-      metadata: { position },
+      entityId: data.id,
+      metadata: { position: data.position },
     });
 
     return updated;
   },
 
-  delete: async (userId: string, boardId: string, id: string) => {
-    if (!userId) throw new Error("Unauthenticated");
-
-    const checklist = await checklistRepository.findById(id);
+  delete: async (userId: string, data: DeleteChecklistInput) => {
+    const checklist = await checklistRepository.findById(data.id);
     if (!checklist) throw new Error("Checklist not found");
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "admin");
+    const card = await cardRepository.findById(checklist.cardId);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    await checklistRepository.delete(id);
+    await checklistRepository.delete(data.id);
 
     await activityRepository.create({
-      boardId,
-      cardId: checklist.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
       action: "checklist.deleted",
       entityType: "checklist",
-      entityId: checklist.id,
+      entityId: data.id,
       metadata: { title: checklist.title },
     });
   },

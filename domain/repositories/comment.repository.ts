@@ -24,7 +24,9 @@ export const commentRepository = {
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
         },
         reactions: {
-          with: { user: true },
+          with: {
+            user: true,
+          },
         },
       },
     });
@@ -45,7 +47,9 @@ export const commentRepository = {
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
         },
         reactions: {
-          with: { user: true },
+          with: {
+            user: true,
+          },
         },
       },
       orderBy: (comments, { asc }) => [asc(comments.createdAt)],
@@ -55,8 +59,11 @@ export const commentRepository = {
   update: async (id: string, data: UpdateComment) => {
     const [updated] = await db
       .update(comments)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(comments.id, data.id!))
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(comments.id, id))
       .returning();
 
     return updated;

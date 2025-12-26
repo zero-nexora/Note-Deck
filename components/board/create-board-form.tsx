@@ -14,7 +14,7 @@ import { Loading } from "../common/loading";
 import {
   CreateBoardInput,
   CreateBoardSchema,
-} from "@/domain/schemas/borad.schema";
+} from "@/domain/schemas/board.schema";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

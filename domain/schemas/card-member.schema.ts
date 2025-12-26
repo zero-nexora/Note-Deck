@@ -1,8 +1,14 @@
 import { z } from "zod";
 
-export const CreateCardMemberSchema = z.object({
-  cardId: z.string(),
-  userId: z.string(),
+export const AddCardMemberSchema = z.object({
+  cardId: z.string().min(1),
+  userId: z.string().min(1),
 });
 
-export type CreateCardMemberInput = z.infer<typeof CreateCardMemberSchema>;
+export const RemoveCardMemberSchema = z.object({
+  cardId: z.string().min(1),
+  userId: z.string().min(1),
+});
+
+export type AddCardMemberInput = z.infer<typeof AddCardMemberSchema>;
+export type RemoveCardMemberInput = z.infer<typeof RemoveCardMemberSchema>;

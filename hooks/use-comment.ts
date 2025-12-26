@@ -7,108 +7,62 @@ import {
 } from "@/app/actions/comment.action";
 import {
   CreateCommentInput,
+  DeleteCommentInput,
   UpdateCommentInput,
 } from "@/domain/schemas/comment.schema";
-import { Comment } from "@/domain/types/comment.type";
-import { ActionResult } from "@/lib/response";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function useComment() {
   const router = useRouter();
 
-  const [createLoading, setCreateLoading] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const [createState, setCreateState] = useState<ActionResult<Comment>>({
-    success: false,
-    message: "",
-  });
-
-  const [updateState, setUpdateState] = useState<ActionResult<Comment>>({
-    success: false,
-    message: "",
-  });
-
-  const [deleteState, setDeleteState] = useState<ActionResult<unknown>>({
-    success: false,
-    message: "",
-  });
-
-  const createComment = async (boardId: string, input: CreateCommentInput) => {
-    setCreateLoading(true);
+  const createComment = async (input: CreateCommentInput) => {
     try {
-      const result = await createCommentAction(boardId, input);
-      setCreateState(result);
-    } finally {
-      setCreateLoading(false);
+      const result = await createCommentAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const updateComment = async (
-    boardId: string,
-    id: string,
-    input: UpdateCommentInput
-  ) => {
-    setUpdateLoading(true);
+  const updateComment = async (id: string, input: UpdateCommentInput) => {
     try {
-      const result = await updateCommentAction(boardId, id, input);
-      setUpdateState(result);
-    } finally {
-      setUpdateLoading(false);
+      const result = await updateCommentAction(id, input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const deleteComment = async (boardId: string, commentId: string) => {
-    setDeleteLoading(true);
+  const deleteComment = async (input: DeleteCommentInput) => {
     try {
-      const result = await deleteCommentAction(boardId, commentId);
-      setDeleteState(result);
-    } finally {
-      setDeleteLoading(false);
+      const result = await deleteCommentAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
-
-  useEffect(() => {
-    if (!createState.message) return;
-
-    createState.success
-      ? toast.success(createState.message)
-      : toast.error(createState.message);
-
-    if (createState.success) router.refresh();
-  }, [createState, router]);
-
-  useEffect(() => {
-    if (!updateState.message) return;
-
-    updateState.success
-      ? toast.success(updateState.message)
-      : toast.error(updateState.message);
-
-    if (updateState.success) router.refresh();
-  }, [updateState, router]);
-
-  useEffect(() => {
-    if (!deleteState.message) return;
-
-    deleteState.success
-      ? toast.success(deleteState.message)
-      : toast.error(deleteState.message);
-
-    if (deleteState.success) router.refresh();
-  }, [deleteState, router]);
 
   return {
     createComment,
-    createCommentPending: createLoading,
 
     updateComment,
-    updateCommentPending: updateLoading,
 
     deleteComment,
-    deleteCommentPending: deleteLoading,
   };
 }

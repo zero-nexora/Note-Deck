@@ -1,26 +1,18 @@
 import { z } from "zod";
 
 export const CreateAttachmentSchema = z.object({
-  cardId: z.string(),
-  userId: z.string(),
-  fileName: z.string(),
-  fileUrl: z.string(),
-  fileType: z.string(),
-  fileSize: z.number(),
-  uploadThingKey: z.string(),
-  expiresAt: z.date().nullable().optional(),
+  cardId: z.string().min(1),
+  fileName: z.string().min(1),
+  fileUrl: z.string().url(),
+  fileType: z.string().min(1),
+  fileSize: z.number().int().positive(),
+  uploadThingKey: z.string().min(1),
+  expiresAt: z.date().optional(),
 });
 
-export const UpdateAttachmentSchema = z.object({
-  cardId: z.string().optional(),
-  userId: z.string().optional(),
-  fileName: z.string().optional(),
-  fileUrl: z.string().optional(),
-  fileType: z.string().optional(),
-  fileSize: z.number().optional(),
-  uploadThingKey: z.string().optional(),
-  expiresAt: z.date().nullable().optional(),
+export const DeleteAttachmentSchema = z.object({
+  id: z.string().min(1),
 });
 
 export type CreateAttachmentInput = z.infer<typeof CreateAttachmentSchema>;
-export type UpdateAttachmentInput = z.infer<typeof UpdateAttachmentSchema>;
+export type DeleteAttachmentInput = z.infer<typeof DeleteAttachmentSchema>;

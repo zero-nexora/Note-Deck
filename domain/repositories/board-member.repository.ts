@@ -5,13 +5,33 @@ import { and, eq } from "drizzle-orm";
 import { NewBoardMember } from "../types/board-member.type";
 
 export const boardMemberRepository = {
-  addMember: async (data: NewBoardMember) => {
+  add: async (data: NewBoardMember) => {
     const [member] = await db.insert(boardMembers).values(data).returning();
 
     return member;
   },
 
-  removeMember: async (boardId: string, userId: string) => {
+  findByBoardId: async (boardId: string) => {
+    const members = await db.query.boardMembers.findMany({
+      where: eq(boardMembers.boardId, boardId),
+      with: {
+        user: true,
+      },
+    });
+    return members;
+  },
+
+  findByBoardIdAndUserId: async (boardId: string, userId: string) => {
+    const member = await db.query.boardMembers.findFirst({
+      where: and(
+        eq(boardMembers.boardId, boardId),
+        eq(boardMembers.userId, userId)
+      ),
+    });
+    return member;
+  },
+
+  remove: async (boardId: string, userId: string) => {
     await db
       .delete(boardMembers)
       .where(
@@ -19,14 +39,14 @@ export const boardMemberRepository = {
       );
   },
 
-  updateMemberRole: async (boardId: string, userId: string, role: Role) => {
-    const [updatedMember] = await db
+  updateRole: async (boardId: string, userId: string, role: Role) => {
+    const [updated] = await db
       .update(boardMembers)
       .set({ role })
       .where(
         and(eq(boardMembers.boardId, boardId), eq(boardMembers.userId, userId))
       )
       .returning();
-    return updatedMember;
+    return updated;
   },
 };

@@ -1,61 +1,60 @@
-import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
-import { boardRepository } from "../repositories/board.repository";
 import { listRepository } from "../repositories/list.repository";
-import { CreateCardInput, UpdateCardInput } from "../schemas/card.schema";
-import { elasticsearchService } from "./elasticsearch.service";
+import { boardRepository } from "../repositories/board.repository";
+import { activityRepository } from "../repositories/activity.repository";
+import { notificationRepository } from "../repositories/notification.repository";
 import { checkBoardPermission } from "@/lib/permissions";
+import {
+  ArchiveCardInput,
+  CreateCardInput,
+  DeleteCardInput,
+  MoveCardInput,
+  ReorderCardInput,
+  RestoreCardInput,
+  UpdateCardInput,
+} from "../schemas/card.schema";
+import { auditLogRepository } from "../repositories/audit-log.repository";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
-    const board = await boardRepository.findById(data.boardId);
-    if (!board) throw new Error("Board not found");
-
     const list = await listRepository.findById(data.listId);
     if (!list) throw new Error("List not found");
 
-    if (list.boardId !== data.boardId) {
-      throw new Error("List does not belong to board");
-    }
-
     const hasPermission = await checkBoardPermission(
       userId,
-      data.boardId,
+      list.boardId,
       "normal"
     );
     if (!hasPermission) throw new Error("Permission denied");
 
+    const maxPosition = await cardRepository.getMaxPosition(data.listId);
     const card = await cardRepository.create({
       ...data,
-      title: data.title.trim(),
-      isArchived: false,
+      boardId: list.boardId,
+      position: maxPosition + 1,
     });
 
     await activityRepository.create({
-      boardId: card.boardId,
+      boardId: list.boardId,
       cardId: card.id,
       userId,
       action: "card.created",
       entityType: "card",
       entityId: card.id,
-      metadata: { title: card.title },
+      metadata: { title: card.title, listId: data.listId },
     });
 
-    await elasticsearchService.indexCard(card.id);
-
-    return card;
-  },
-
-  getById: async (userId: string, id: string) => {
-    const card = await cardRepository.findById(id);
-    if (!card) throw new Error("Card not found");
-
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      "observer"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
+    const board = await boardRepository.findById(list.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "card.created",
+        entityType: "card",
+        entityId: card.id,
+        metadata: { title: card.title, boardId: list.boardId },
+      });
+    }
 
     return card;
   },
@@ -71,38 +70,99 @@ export const cardService = {
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const list = await listRepository.findById(data.listId);
-    if (!list) throw new Error("List not found");
-
-    if (list.boardId !== card.boardId) {
-      throw new Error("Cannot move card to another board");
+    if (data.title !== undefined && data.title.trim() === "") {
+      throw new Error("Card title cannot be empty");
     }
 
     const updated = await cardRepository.update(id, data);
 
     await activityRepository.create({
-      boardId: updated.boardId,
-      cardId: updated.id,
+      boardId: card.boardId,
+      cardId: id,
       userId,
       action: "card.updated",
       entityType: "card",
-      entityId: updated.id,
+      entityId: id,
       metadata: data,
     });
 
-    await elasticsearchService.indexCard(updated.id);
+    if (data.dueDate && card.members) {
+      for (const member of card.members) {
+        await notificationRepository.create({
+          userId: member.userId,
+          type: "due_date",
+          title: "Due date updated",
+          message: `Due date for "${card.title}" has been updated`,
+          entityType: "card",
+          entityId: id,
+        });
+      }
+    }
 
     return updated;
   },
 
-  move: async (
-    userId: string,
-    cardId: string,
-    sourceListId: string,
-    destinationListId: string,
-    position: number
-  ) => {
-    const card = await cardRepository.findById(cardId);
+  move: async (userId: string, data: MoveCardInput) => {
+    const card = await cardRepository.findById(data.id);
+    if (!card) throw new Error("Card not found");
+
+    const newList = await listRepository.findById(data.listId);
+    if (!newList) throw new Error("Target list not found");
+
+    const hasPermissionOld = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
+    const hasPermissionNew = await checkBoardPermission(
+      userId,
+      newList.boardId,
+      "normal"
+    );
+
+    if (!hasPermissionOld || !hasPermissionNew) {
+      throw new Error("Permission denied");
+    }
+
+    const updated = await cardRepository.update(data.id, {
+      listId: data.listId,
+      position: data.position,
+      boardId: newList.boardId,
+    });
+
+    await activityRepository.create({
+      boardId: newList.boardId,
+      cardId: data.id,
+      userId,
+      action: "card.moved",
+      entityType: "card",
+      entityId: data.id,
+      metadata: {
+        oldListId: card.listId,
+        newListId: data.listId,
+        oldBoardId: card.boardId,
+        newBoardId: newList.boardId,
+      },
+    });
+
+    if (card.members) {
+      for (const member of card.members) {
+        await notificationRepository.create({
+          userId: member.userId,
+          type: "card_moved",
+          title: "Card moved",
+          message: `"${card.title}" has been moved to another list`,
+          entityType: "card",
+          entityId: data.id,
+        });
+      }
+    }
+
+    return updated;
+  },
+
+  reorder: async (userId: string, data: ReorderCardInput) => {
+    const card = await cardRepository.findById(data.id);
     if (!card) throw new Error("Card not found");
 
     const hasPermission = await checkBoardPermission(
@@ -112,68 +172,81 @@ export const cardService = {
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    if (card.listId !== sourceListId) {
-      throw new Error("Source list does not match card list");
-    }
-
-    const destinationList = await listRepository.findById(destinationListId);
-    if (!destinationList) throw new Error("Destination list not found");
-
-    if (destinationList.boardId !== card.boardId) {
-      throw new Error("Cannot move card to another board");
-    }
-
-    const moved = await cardRepository.move(
-      cardId,
-      destinationListId,
-      position
-    );
-
-    await activityRepository.create({
-      boardId: moved.boardId,
-      cardId: moved.id,
-      userId,
-      action: "card.moved",
-      entityType: "card",
-      entityId: moved.id,
-      metadata: { sourceListId, destinationListId, position },
+    const updated = await cardRepository.update(data.id, {
+      position: data.position,
     });
 
-    await elasticsearchService.indexCard(moved.id);
+    await activityRepository.create({
+      boardId: card.boardId,
+      cardId: data.id,
+      userId,
+      action: "card.reordered",
+      entityType: "card",
+      entityId: data.id,
+      metadata: { position: data.position },
+    });
 
-    return moved;
+    return updated;
   },
 
-  archive: async (userId: string, cardId: string) => {
-    const card = await cardRepository.findById(cardId);
+  archive: async (userId: string, data: ArchiveCardInput) => {
+    const card = await cardRepository.findById(data.id);
     if (!card) throw new Error("Card not found");
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "admin"
+      "normal"
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const archived = await cardRepository.archive(cardId);
+    const updated = await cardRepository.update(data.id, {
+      isArchived: true,
+    });
 
     await activityRepository.create({
-      boardId: archived.boardId,
-      cardId: archived.id,
+      boardId: card.boardId,
+      cardId: data.id,
       userId,
       action: "card.archived",
       entityType: "card",
-      entityId: archived.id,
-      metadata: {},
+      entityId: data.id,
+      metadata: { title: card.title },
     });
 
-    await elasticsearchService.indexCard(archived.id);
-
-    return archived;
+    return updated;
   },
 
-  delete: async (userId: string, cardId: string) => {
-    const card = await cardRepository.findById(cardId);
+  restore: async (userId: string, data: RestoreCardInput) => {
+    const card = await cardRepository.findById(data.id);
+    if (!card) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const updated = await cardRepository.update(data.id, {
+      isArchived: false,
+    });
+
+    await activityRepository.create({
+      boardId: card.boardId,
+      cardId: data.id,
+      userId,
+      action: "card.restored",
+      entityType: "card",
+      entityId: data.id,
+      metadata: { title: card.title },
+    });
+
+    return updated;
+  },
+
+  delete: async (userId: string, data: DeleteCardInput) => {
+    const card = await cardRepository.findById(data.id);
     if (!card) throw new Error("Card not found");
 
     const hasPermission = await checkBoardPermission(
@@ -183,6 +256,27 @@ export const cardService = {
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    await cardRepository.delete(card.id);
+    await cardRepository.delete(data.id);
+
+    await activityRepository.create({
+      boardId: card.boardId,
+      userId,
+      action: "card.deleted",
+      entityType: "card",
+      entityId: data.id,
+      metadata: { title: card.title },
+    });
+
+    const board = await boardRepository.findById(card.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "card.deleted",
+        entityType: "card",
+        entityId: data.id,
+        metadata: { title: card.title, boardId: card.boardId },
+      });
+    }
   },
 };

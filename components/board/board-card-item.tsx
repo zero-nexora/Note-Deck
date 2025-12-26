@@ -1,4 +1,5 @@
 "use client";
+
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -8,15 +9,9 @@ import { BoardCardContent } from "./board-card-content";
 
 interface BoardCardItemProps {
   card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
-  isPreview?: boolean;
-  isOverlay?: boolean;
 }
 
-export const BoardCardItem = ({
-  card,
-  isPreview = false,
-  isOverlay = false,
-}: BoardCardItemProps) => {
+export const BoardCardItem = ({ card }: BoardCardItemProps) => {
   const {
     attributes,
     listeners,
@@ -30,7 +25,6 @@ export const BoardCardItem = ({
       type: "card",
       card,
     },
-    disabled: isPreview || isOverlay,
   });
 
   const style = {
@@ -39,19 +33,6 @@ export const BoardCardItem = ({
   };
 
   const hasCover = !!card.coverImage;
-
-  if (isOverlay) {
-    return (
-      <div
-        className={cn(
-          "bg-card/40 rounded-lg border-2 border-primary/50",
-          "backdrop-blur-sm pointer-events-none",
-          hasCover ? "h-[200px]" : "h-20",
-          "w-full min-w-[280px]"
-        )}
-      />
-    );
-  }
 
   return (
     <div
@@ -62,8 +43,7 @@ export const BoardCardItem = ({
       className={cn(
         "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200 cursor-grab active:cursor-grabbing",
         "hover:shadow-md hover:-translate-y-0.5",
-        isDragging && "opacity-40",
-        isPreview && "pointer-events-none opacity-70"
+        isDragging && "opacity-50"
       )}
     >
       {hasCover && (
@@ -71,10 +51,6 @@ export const BoardCardItem = ({
       )}
 
       <BoardCardContent card={card} hasCover={hasCover} />
-
-      {isDragging && (
-        <div className="absolute inset-0 rounded-lg border-2 border-primary/50 bg-primary/5 pointer-events-none" />
-      )}
     </div>
   );
 };

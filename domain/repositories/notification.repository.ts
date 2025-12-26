@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewNotification } from "../types/notification.type";
 import { notifications } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 export const notificationRepository = {
   create: async (data: NewNotification) => {
@@ -9,35 +9,35 @@ export const notificationRepository = {
       .insert(notifications)
       .values(data)
       .returning();
-
     return notification;
   },
 
-  findByUserId: async (userId: string, limit = 50) => {
-    return await db.query.notifications.findMany({
-      where: eq(notifications.userId, userId),
-      orderBy: (notifications, { desc }) => [desc(notifications.createdAt)],
-      limit,
+  findById: async (id: string) => {
+    const notification = await db.query.notifications.findFirst({
+      where: eq(notifications.id, id),
     });
+    return notification;
   },
 
-  findUnReadByUserId: async (userId: string) => {
-    return await db.query.notifications.findMany({
-      where: and(
-        eq(notifications.userId, userId),
-        eq(notifications.isRead, false)
-      ),
-      orderBy: (notifications, { desc }) => [desc(notifications.createdAt)],
+  findByUserId: async (userId: string, unreadOnly = false) => {
+    const query = unreadOnly
+      ? and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+      : eq(notifications.userId, userId);
+
+    const userNotifications = await db.query.notifications.findMany({
+      where: query,
+      orderBy: [desc(notifications.createdAt)],
+      limit: 50,
     });
+    return userNotifications;
   },
 
-  markAsRead: async (notificationId: string) => {
+  markAsRead: async (id: string) => {
     const [updated] = await db
       .update(notifications)
       .set({ isRead: true })
-      .where(eq(notifications.id, notificationId))
+      .where(eq(notifications.id, id))
       .returning();
-
     return updated;
   },
 

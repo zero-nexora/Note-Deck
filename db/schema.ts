@@ -105,6 +105,21 @@ export const workspaces = pgTable("workspaces", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const workspaceInvites = pgTable("workspace_invites", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: roleEnum("role").notNull().default("normal"),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const workspaceMembers = pgTable(
   "workspace_members",
   {
@@ -407,8 +422,8 @@ export const automations = pgTable("automations", {
     .notNull()
     .references(() => boards.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
-  trigger: jsonb("trigger").notNull(),
-  actions: jsonb("actions").notNull(),
+  trigger: jsonb("trigger").notNull().default({}),
+  actions: jsonb("actions").notNull().default([]),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -567,13 +582,26 @@ export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
-  card: one(cards, { fields: [comments.cardId], references: [cards.id] }),
-  user: one(users, { fields: [comments.userId], references: [users.id] }),
+  card: one(cards, {
+    fields: [comments.cardId],
+    references: [cards.id],
+  }),
+
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+
   parent: one(comments, {
     fields: [comments.parentId],
     references: [comments.id],
+    relationName: "comment_parent",
   }),
-  replies: many(comments),
+
+  replies: many(comments, {
+    relationName: "comment_parent",
+  }),
+
   reactions: many(commentReactions),
 }));
 

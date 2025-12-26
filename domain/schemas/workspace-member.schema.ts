@@ -1,33 +1,33 @@
-import { RoleEnum } from "@/db/enum";
 import { z } from "zod";
+import { RoleEnum } from "@/db/enum";
 
-export const CreateWorkspaceMemberSchema =
-  z.object({
-    workspaceId: z.string(),
-    userId: z.string(),
-    role: RoleEnum.optional(),
-    isGuest: z.boolean().optional(),
-  });
-
-export const UpdateWorkspaceMemberSchema =
-  z.object({
-    workspaceId: z.string(),
-    userId: z.string(),
-    role: RoleEnum.optional(),
-    isGuest: z.boolean().optional(),
-  });
-
-export const DeleteWorkspaceMemberSchema = z.object({
-  workspaceId: z.string(),
-  userId: z.string(),
+export const AddMemberSchema = z.object({
+  workspaceId: z.string().min(1),
+  userId: z.string().min(1),
+  role: RoleEnum.optional().default("normal"),
 });
 
-export type CreateWorkspaceMemberInput = z.infer<
-  typeof CreateWorkspaceMemberSchema
->;
-export type UpdateWorkspaceMemberInput = z.infer<
-  typeof UpdateWorkspaceMemberSchema
->;
-export type DeleteWorkspaceMemberInput = z.infer<
-  typeof DeleteWorkspaceMemberSchema
->;
+export const RemoveMemberSchema = z.object({
+  workspaceId: z.string().min(1),
+  userId: z.string().min(1),
+});
+
+export const ChangeMemberRoleSchema = z.object({
+  workspaceId: z.string().min(1),
+  userId: z.string().min(1),
+  role: RoleEnum,
+});
+
+export const ListMembersSchema = z.object({
+  workspaceId: z.string().min(1),
+});
+
+export const LeaveWorkspaceSchema = z.object({
+  workspaceId: z.string().min(1),
+});
+
+export type AddMemberInput = z.infer<typeof AddMemberSchema>;
+export type RemoveMemberInput = z.infer<typeof RemoveMemberSchema>;
+export type ChangeMemberRoleInput = z.infer<typeof ChangeMemberRoleSchema>;
+export type ListMembersInput = z.infer<typeof ListMembersSchema>;
+export type LeaveWorkspaceInput = z.infer<typeof LeaveWorkspaceSchema>;

@@ -1,3 +1,4 @@
+
 import { findBoardsByWorkspaceIdAction } from "@/app/actions/board.action";
 import { BoardList } from "@/components/board/board-list";
 import { BoardWithMember } from "@/domain/types/board.type";

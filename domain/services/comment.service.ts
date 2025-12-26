@@ -4,34 +4,47 @@ import { notificationRepository } from "../repositories/notification.repository"
 import { cardRepository } from "../repositories/card.repository";
 import {
   CreateCommentInput,
+  DeleteCommentInput,
   UpdateCommentInput,
 } from "../schemas/comment.schema";
 import { checkBoardPermission } from "@/lib/permissions";
 
 export const commentService = {
-  create: async (userId: string, boardId: string, data: CreateCommentInput) => {
+  create: async (userId: string, data: CreateCommentInput) => {
     const card = await cardRepository.findById(data.cardId);
     if (!card) throw new Error("Card not found");
 
-    if (card.boardId !== boardId)
-      throw new Error("Card does not belong to board");
-
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const comment = await commentRepository.create(data);
+    if (data.parentId) {
+      const parent = await commentRepository.findById(data.parentId);
+      if (!parent) throw new Error("Parent comment not found");
+      if (parent.cardId !== data.cardId) {
+        throw new Error("Parent comment does not belong to this card");
+      }
+    }
+
+    const comment = await commentRepository.create({
+      ...data,
+      userId,
+    });
 
     await activityRepository.create({
-      boardId,
+      boardId: card.boardId,
       cardId: comment.cardId,
       userId,
       action: "comment.created",
       entityType: "comment",
       entityId: comment.id,
-      metadata: { content: comment.content },
+      metadata: { content: comment.content, parentId: data.parentId },
     });
 
-    if (data.mentions?.length) {
+    if (data.mentions && data.mentions.length > 0) {
       for (const mentionedUserId of data.mentions) {
         if (mentionedUserId === userId) continue;
 
@@ -49,45 +62,28 @@ export const commentService = {
     return comment;
   },
 
-  findById: async (userId: string, id: string) => {
+  update: async (userId: string, id: string, data: UpdateCommentInput) => {
     const comment = await commentRepository.findById(id);
     if (!comment) throw new Error("Comment not found");
 
-    return comment;
-  },
+    if (comment.userId !== userId) {
+      throw new Error("You can only edit your own comments");
+    }
 
-  findByCardId: async (userId: string, cardId: string) => {
-    const card = await cardRepository.findById(cardId);
+    const card = await cardRepository.findById(comment.cardId);
     if (!card) throw new Error("Card not found");
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "observer"
+      "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    return await commentRepository.findByCardId(cardId);
-  },
-
-  update: async (
-    userId: string,
-    boardId: string,
-    id: string,
-    data: UpdateCommentInput
-  ) => {
-    const comment = await commentRepository.findById(id);
-    if (!comment) throw new Error("Comment not found");
-
-    if (comment.userId !== userId) throw new Error("Permission denied");
-
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
     if (!hasPermission) throw new Error("Permission denied");
 
     const updated = await commentRepository.update(id, data);
 
     await activityRepository.create({
-      boardId,
+      boardId: card.boardId,
       cardId: comment.cardId,
       userId,
       action: "comment.updated",
@@ -96,23 +92,48 @@ export const commentService = {
       metadata: data,
     });
 
+    if (data.mentions && data.mentions.length > 0) {
+      for (const mentionedUserId of data.mentions) {
+        await notificationRepository.create({
+          userId: mentionedUserId,
+          type: "mention",
+          title: "You were mentioned",
+          message: `You were mentioned in a comment on ${card.title}`,
+          entityType: "comment",
+          entityId: id,
+        });
+      }
+    }
+
     return updated;
   },
 
-  delete: async (userId: string, boardId: string, id: string) => {
-    const comment = await commentRepository.findById(id);
+  delete: async (userId: string, data: DeleteCommentInput) => {
+    const comment = await commentRepository.findById(data.id);
     if (!comment) throw new Error("Comment not found");
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "admin");
+    if (comment.userId !== userId) {
+      const card = await cardRepository.findById(comment.cardId);
+      if (!card) throw new Error("Card not found");
 
-    if (!hasPermission && comment.userId !== userId)
-      throw new Error("Permission denied");
+      const hasAdminPermission = await checkBoardPermission(
+        userId,
+        card.boardId,
+        "admin"
+      );
+      if (!hasAdminPermission) {
+        throw new Error("You can only delete your own comments");
+      }
+    }
 
-    await commentRepository.delete(id);
+    const card = await cardRepository.findById(comment.cardId);
+    if (!card) throw new Error("Card not found");
+
+    await commentRepository.delete(data.id);
 
     await activityRepository.create({
-      boardId,
-      cardId: comment.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
       action: "comment.deleted",
       entityType: "comment",

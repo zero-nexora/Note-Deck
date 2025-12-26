@@ -1,12 +1,11 @@
 import { db } from "@/db";
 import { NewCard, UpdateCard } from "../types/card.type";
 import { cards } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export const cardRepository = {
   create: async (data: NewCard) => {
     const [card] = await db.insert(cards).values(data).returning();
-
     return card;
   },
 
@@ -27,17 +26,21 @@ export const cardRepository = {
           },
         },
         checklists: {
-          orderBy: (checklists, { asc }) => [asc(checklists.position)],
           with: {
-            items: {
-              orderBy: (items, { asc }) => [asc(items.position)],
-            },
+            items: { orderBy: (items, { asc }) => [asc(items.position)] },
           },
+          orderBy: (checklists, { asc }) => [asc(checklists.position)],
         },
         comments: {
+          where: (comments) => isNull(comments.parentId),
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
           with: {
             user: true,
+            replies: {
+              with: {
+                user: true,
+              },
+            },
             reactions: {
               with: {
                 user: true,
@@ -64,23 +67,12 @@ export const cardRepository = {
     return card;
   },
 
-  findCardsByListId: async (listId: string) => {
-    return db.query.cards.findMany({
-      where: and(eq(cards.listId, listId), eq(cards.isArchived, false)),
-      orderBy: (cards, { asc }) => [asc(cards.position)],
-    });
-  },
-
   update: async (id: string, data: UpdateCard) => {
     const [updated] = await db
       .update(cards)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
-      .where(eq(cards.id, data.id!))
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(cards.id, id))
       .returning();
-
     return updated;
   },
 
@@ -88,22 +80,13 @@ export const cardRepository = {
     await db.delete(cards).where(eq(cards.id, id));
   },
 
-  archive: async (id: string) => {
-    return cardRepository.update(id, { isArchived: true });
-  },
-
-  move: async (cardId: string, destinationListId: string, position: number) => {
-    const [moved] = await db
-      .update(cards)
-      .set({
-        listId: destinationListId,
-        position,
-        updatedAt: new Date(),
-      })
-      .where(eq(cards.id, cardId))
-      .returning();
-
-    return moved;
+  getMaxPosition: async (listId: string) => {
+    const result = await db.query.cards.findMany({
+      where: eq(cards.listId, listId),
+      orderBy: (cards, { desc }) => [desc(cards.position)],
+      limit: 1,
+    });
+    return result[0]?.position ?? -1;
   },
 
   reoders: async (

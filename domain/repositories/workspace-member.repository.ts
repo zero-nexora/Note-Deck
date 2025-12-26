@@ -10,13 +10,25 @@ export const workspaceMemberRepository = {
     return member;
   },
 
-  findByWorkspaceAndUser: async (workspaceId: string, userId: string) => {
-    return db.query.workspaceMembers.findFirst({
+  findByWorkspaceIdAndUserId: async (workspaceId: string, userId: string) => {
+    const member = await db.query.workspaceMembers.findFirst({
       where: and(
         eq(workspaceMembers.workspaceId, workspaceId),
         eq(workspaceMembers.userId, userId)
       ),
     });
+    return member;
+  },
+
+  findByWorkspaceId: async (workspaceId: string) => {
+    const members = await db.query.workspaceMembers.findMany({
+      where: eq(workspaceMembers.workspaceId, workspaceId),
+      with: {
+        user: true,
+      },
+      orderBy: (workspaceMembers, { asc }) => [asc(workspaceMembers.createdAt)],
+    });
+    return members;
   },
 
   findMembersByWorkspaceId: async (workspaceId: string) => {
@@ -28,14 +40,10 @@ export const workspaceMemberRepository = {
     });
   },
 
-  update: async (
-    workspaceId: string,
-    userId: string,
-    data: { role?: Role; isGuest?: boolean }
-  ) => {
+  updateRole: async (workspaceId: string, userId: string, role: Role) => {
     const [updated] = await db
       .update(workspaceMembers)
-      .set(data)
+      .set({ role })
       .where(
         and(
           eq(workspaceMembers.workspaceId, workspaceId),
@@ -46,7 +54,7 @@ export const workspaceMemberRepository = {
     return updated;
   },
 
-  delete: async (workspaceId: string, userId: string) => {
+  remove: async (workspaceId: string, userId: string) => {
     await db
       .delete(workspaceMembers)
       .where(
@@ -55,5 +63,23 @@ export const workspaceMemberRepository = {
           eq(workspaceMembers.userId, userId)
         )
       );
+  },
+
+  toggleGuest: async (
+    workspaceId: string,
+    userId: string,
+    isGuest: boolean
+  ) => {
+    const [updated] = await db
+      .update(workspaceMembers)
+      .set({ isGuest })
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId)
+        )
+      )
+      .returning();
+    return updated;
   },
 };

@@ -15,7 +15,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "../ui/form";
 import { Loading } from "../common/loading";
@@ -28,14 +27,12 @@ export const CreateList = ({ board }: CreateListProps) => {
   const { createList } = useList();
 
   const [isAddingList, setIsAddingList] = useState(false);
-  const [newListTitle, setNewListTitle] = useState("");
 
   const form = useForm<CreateListInput>({
     resolver: zodResolver(CreateListSchema),
     defaultValues: {
       boardId: board.id,
       name: "",
-      position: board.lists.length,
     },
   });
 

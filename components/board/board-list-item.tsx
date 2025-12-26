@@ -3,7 +3,6 @@
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useList } from "@/hooks/use-list";
 import { useSortable } from "@dnd-kit/sortable";
-import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { BoardListCards } from "./board-list-cards";
@@ -14,32 +13,20 @@ import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardListItemProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
-  isOverlay?: boolean;
 }
 
-export const BoardListItem = ({
-  list,
-  isOverlay = false,
-}: BoardListItemProps) => {
+export const BoardListItem = ({ list }: BoardListItemProps) => {
   const { open } = useConfirm();
+  const { deleteList } = useList();
 
   const {
     attributes,
     listeners,
-    setNodeRef: setSortableRef,
+    setNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({
-    id: list.id,
-    data: {
-      type: "list",
-      list,
-    },
-    disabled: isOverlay,
-  });
-
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: list.id,
     data: {
       type: "list",
@@ -52,38 +39,23 @@ export const BoardListItem = ({
     transition,
   };
 
-  const { deleteList } = useList();
-
   const handleDeleteList = async () => {
     open({
       title: "Delete list",
       description: "Are you sure you want to delete this list?",
       onConfirm: async () => {
-        await deleteList(list.id);
+        await deleteList({ id: list.id });
       },
     });
   };
 
-  const setRefs = (element: HTMLDivElement | null) => {
-    setSortableRef(element);
-    setDroppableRef(element);
-  };
-
-  if (isOverlay) {
-    return (
-      <div className="w-72 h-[400px] shrink-0 bg-card/40 rounded-2xl border-2 border-primary/50 backdrop-blur-sm pointer-events-none" />
-    );
-  }
-
   return (
     <div
-      ref={setRefs}
+      ref={setNodeRef}
       style={style}
       className={cn(
         "w-72 shrink-0 flex flex-col glass-card transition-all duration-200",
-        // FIX: Khi dragging, chỉ giảm opacity, không ẩn hoàn toàn
-        isDragging && "opacity-30 scale-95",
-        isOver && "ring-2 ring-primary/50 shadow-glow"
+        isDragging && "opacity-50"
       )}
     >
       <BoardListHeader

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Loading } from "../common/loading";
 
 export const CustomConfirm = () => {
   const { isOpen, data, confirm, cancel } = useConfirm();
@@ -76,7 +77,7 @@ export const CustomConfirm = () => {
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            Confirm
+            {isLoading ? <Loading /> : "Confirm"}
           </Button>
         </DialogFooter>
       </DialogContent>

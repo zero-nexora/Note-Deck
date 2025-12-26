@@ -1,21 +1,18 @@
 "use server";
-
-import { cardLabelService } from "@/domain/services/card-label.service";
-import { requireAuth } from "@/lib/session";
-import { error, success } from "@/lib/response";
 import {
-  CreateCardLabelInput,
-  CreateCardLabelSchema,
+  AddCardLabelInput,
+  AddCardLabelSchema,
+  RemoveCardLabelInput,
+  RemoveCardLabelSchema,
 } from "@/domain/schemas/card-label.schema";
+import { cardLabelService } from "@/domain/services/card-label.service";
+import { error, success } from "@/lib/response";
+import { requireAuth } from "@/lib/session";
 
-export const addCardLabelAction = async (
-  boardId: string,
-  input: CreateCardLabelInput
-) => {
+export const addCardLabelAction = async (input: AddCardLabelInput) => {
   try {
     const user = await requireAuth();
-
-    const parsed = CreateCardLabelSchema.safeParse(input);
+    const parsed = AddCardLabelSchema.safeParse(input);
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -23,25 +20,26 @@ export const addCardLabelAction = async (
       return error(message);
     }
 
-    const label = await cardLabelService.add(user.id, boardId, parsed.data);
-
-    return success("Label added to card successfully", label);
+    const cardLabel = await cardLabelService.add(user.id, parsed.data);
+    return success("Label added successfully", cardLabel);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
-export const removeCardLabelAction = async (
-  boardId: string,
-  cardId: string,
-  labelId: string
-) => {
+export const removeCardLabelAction = async (input: RemoveCardLabelInput) => {
   try {
     const user = await requireAuth();
+    const parsed = RemoveCardLabelSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
 
-    await cardLabelService.remove(user.id, boardId, cardId, labelId);
-
-    return success("Label removed from card successfully");
+    await cardLabelService.remove(user.id, parsed.data);
+    return success("Label removed successfully");
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

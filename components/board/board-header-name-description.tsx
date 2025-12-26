@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   UpdateBoardInput,
   UpdateBoardSchema,
-} from "@/domain/schemas/borad.schema";
+} from "@/domain/schemas/board.schema";
 import {
   Form,
   FormControl,
@@ -36,10 +36,8 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
   const form = useForm<UpdateBoardInput>({
     resolver: zodResolver(UpdateBoardSchema),
     defaultValues: {
-      workspaceId: board.workspaceId,
       name: board.name,
-      description: board.description,
-      isArchived: board.isArchived,
+      description: board.description || "",
     },
   });
 

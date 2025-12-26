@@ -7,4 +7,9 @@ export const UpdateUserSchema: z.ZodType<UpdateUser> = z.object({
   image: z.string().nullable().optional(),
 });
 
+export const DeleteUserSchema = z.object({
+  id: z.string().min(1),
+});
+
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export type DeleteUserInput = z.infer<typeof DeleteUserSchema>;

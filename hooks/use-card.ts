@@ -1,13 +1,23 @@
 "use client";
 
 import {
-  createCardAction,
-  updateCardAction,
-  moveCardAction,
   archiveCardAction,
+  createCardAction,
   deleteCardAction,
+  moveCardAction,
+  reorderCardAction,
+  restoreCardAction,
+  updateCardAction,
 } from "@/app/actions/card.action";
-import { CreateCardInput, UpdateCardInput } from "@/domain/schemas/card.schema";
+import {
+  ArchiveCardInput,
+  CreateCardInput,
+  DeleteCardInput,
+  MoveCardInput,
+  ReorderCardInput,
+  RestoreCardInput,
+  UpdateCardInput,
+} from "@/domain/schemas/card.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -17,7 +27,6 @@ export function useCard() {
   const createCard = async (input: CreateCardInput) => {
     try {
       const result = await createCardAction(input);
-
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -32,7 +41,6 @@ export function useCard() {
   const updateCard = async (id: string, input: UpdateCardInput) => {
     try {
       const result = await updateCardAction(id, input);
-
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -44,15 +52,9 @@ export function useCard() {
     }
   };
 
-  const moveCard = async (input: {
-    id: string;
-    sourceListId: string;
-    destinationListId: string;
-    position: number;
-  }) => {
+  const moveCard = async (input: MoveCardInput) => {
     try {
       const result = await moveCardAction(input);
-
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -64,10 +66,9 @@ export function useCard() {
     }
   };
 
-  const archiveCard = async (id: string) => {
+  const reorderCard = async (input: ReorderCardInput) => {
     try {
-      const result = await archiveCardAction(id);
-
+      const result = await reorderCardAction(input);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -79,10 +80,37 @@ export function useCard() {
     }
   };
 
-  const deleteCard = async (cardId: string) => {
+  const archiveCard = async (input: ArchiveCardInput) => {
     try {
-      const result = await deleteCardAction(cardId);
+      const result = await archiveCardAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
+  const restoreCard = async (input: RestoreCardInput) => {
+    try {
+      const result = await restoreCardAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const deleteCard = async (input: DeleteCardInput) => {
+    try {
+      const result = await deleteCardAction(input);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -96,13 +124,11 @@ export function useCard() {
 
   return {
     createCard,
-
     updateCard,
-
     moveCard,
-
+    reorderCard,
     archiveCard,
-
+    restoreCard,
     deleteCard,
   };
 }

@@ -23,7 +23,6 @@ const Cursor = memo(
           transform: "translate(-2px, -2px)",
         }}
       >
-        {/* Cursor SVG */}
         <svg
           width="24"
           height="24"

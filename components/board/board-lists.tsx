@@ -13,13 +13,17 @@ interface BoardListsProps {
 }
 
 export const BoardLists = ({ board }: BoardListsProps) => {
+  const sortedLists = [...board.lists].sort((a, b) => a.position - b.position);
+
   return (
-    <div className="flex gap-4 overflow-x-auto h-full items-start">
+    <div className="flex gap-4 overflow-x-auto h-full items-start pb-4">
       <SortableContext
-        items={board.lists.map((l) => l.id)}
+        items={sortedLists.map((l) => l.id)}
         strategy={horizontalListSortingStrategy}
       >
-        {board.lists.map((list) => <BoardListItem key={list.id} list={list} />)}
+        {sortedLists.map((list) => (
+          <BoardListItem key={list.id} list={list} />
+        ))}
       </SortableContext>
 
       <CreateList board={board} />

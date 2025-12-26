@@ -1,81 +1,48 @@
 "use client";
-
 import {
   addCardLabelAction,
   removeCardLabelAction,
 } from "@/app/actions/card-label.action";
-import { CreateCardLabelInput } from "@/domain/schemas/card-label.schema";
-import { CardLabel } from "@/domain/types/card-label.type";
-import { ActionResult } from "@/lib/response";
+import {
+  AddCardLabelInput,
+  RemoveCardLabelInput,
+} from "@/domain/schemas/card-label.schema";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function useCardLabel() {
   const router = useRouter();
 
-  const [addLoading, setAddLoading] = useState(false);
-  const [removeLoading, setRemoveLoading] = useState(false);
-
-  const [addState, setAddState] = useState<ActionResult<CardLabel>>({
-    success: false,
-    message: "",
-  });
-
-  const [removeState, setRemoveState] = useState<ActionResult<unknown>>({
-    success: false,
-    message: "",
-  });
-
-  const addCardLabel = async (boardId: string, input: CreateCardLabelInput) => {
-    setAddLoading(true);
+  const addLabel = async (input: AddCardLabelInput) => {
     try {
-      const result = await addCardLabelAction(boardId, input);
-      setAddState(result);
-    } finally {
-      setAddLoading(false);
+      const result = await addCardLabelAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const removeCardLabel = async (
-    boardId: string,
-    cardId: string,
-    labelId: string
-  ) => {
-    setRemoveLoading(true);
+  const removeLabel = async (input: RemoveCardLabelInput) => {
     try {
-      const result = await removeCardLabelAction(boardId, cardId, labelId);
-      setRemoveState(result);
-    } finally {
-      setRemoveLoading(false);
+      const result = await removeCardLabelAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
-
-  useEffect(() => {
-    if (!addState.message) return;
-
-    addState.success
-      ? toast.success(addState.message)
-      : toast.error(addState.message);
-
-    if (addState.success) router.refresh();
-  }, [addState, router]);
-
-  useEffect(() => {
-    if (!removeState.message) return;
-
-    removeState.success
-      ? toast.success(removeState.message)
-      : toast.error(removeState.message);
-
-    if (removeState.success) router.refresh();
-  }, [removeState, router]);
 
   return {
-    addCardLabel,
-    addCardLabelPending: addLoading,
-
-    removeCardLabel,
-    removeCardLabelPending: removeLoading,
+    addLabel,
+    removeLabel,
   };
 }

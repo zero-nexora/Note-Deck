@@ -41,4 +41,13 @@ export const checklistItemRepository = {
   delete: async (id: string) => {
     await db.delete(checklistItems).where(eq(checklistItems.id, id));
   },
+
+  getMaxPosition: async (checklistId: string) => {
+    const result = await db.query.checklistItems.findMany({
+      where: eq(checklistItems.checklistId, checklistId),
+      orderBy: (items, { desc }) => [desc(items.position)],
+      limit: 1,
+    });
+    return result[0]?.position ?? -1;
+  },
 };

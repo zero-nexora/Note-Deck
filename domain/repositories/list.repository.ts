@@ -12,16 +12,14 @@ export const listRepository = {
   findById: async (id: string) => {
     const list = await db.query.lists.findFirst({
       where: eq(lists.id, id),
+      with: {
+        cards: {
+          where: (cards) => eq(cards.isArchived, false),
+          orderBy: (cards, { asc }) => [asc(cards.position)],
+        },
+      },
     });
     return list;
-  },
-
-  findByBoardId: async (boardId: string) => {
-    const listsByBoard = await db.query.lists.findMany({
-      where: and(eq(lists.boardId, boardId), eq(lists.isArchived, false)),
-      orderBy: (lists, { asc }) => [asc(lists.position)],
-    });
-    return listsByBoard;
   },
 
   update: async (id: string, data: UpdateList) => {
@@ -33,7 +31,6 @@ export const listRepository = {
       })
       .where(eq(lists.id, id))
       .returning();
-
     return updated;
   },
 
@@ -41,8 +38,13 @@ export const listRepository = {
     await db.delete(lists).where(eq(lists.id, id));
   },
 
-  archive: async (id: string) => {
-    return listRepository.update(id, { isArchived: true });
+  getMaxPosition: async (boardId: string) => {
+    const result = await db.query.lists.findMany({
+      where: eq(lists.boardId, boardId),
+      orderBy: (lists, { desc }) => [desc(lists.position)],
+      limit: 1,
+    });
+    return result[0]?.position ?? -1;
   },
 
   reorders: async (

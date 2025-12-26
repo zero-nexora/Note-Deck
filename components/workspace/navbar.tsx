@@ -8,7 +8,6 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,20 +27,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../common/theme-toggle";
-import { useWorkspaceMember } from "@/hooks/use-workspace-member";
-import { CreateWorkspaceMemberInput } from "@/domain/schemas/workspace-member.schema";
 import { WorkspaceWithMember } from "@/domain/types/workspace.type";
 import { UserSession } from "@/domain/types/user.type";
 import { useState } from "react";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { useForm } from "react-hook-form";
-import {
-  UpdateWorkspaceInput,
-  UpdateWorkspaceSchema,
-} from "@/domain/schemas/workspace.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
+import { UpdateWorkspaceNameInput, UpdateWorkspaceNameSchema } from "@/domain/schemas/workspace.schema";
+import { WorkspaceInviteMember } from "./workspace-invite-member";
 
 interface NavbarProps {
   notifications: any[];
@@ -51,30 +46,17 @@ interface NavbarProps {
 
 export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const { updateNameWorkspace } = useWorkspace();
 
-  const { inviteMember } = useWorkspaceMember();
-  const { updateWorkspace } = useWorkspace();
-
-  const form = useForm<UpdateWorkspaceInput>({
-    resolver: zodResolver(UpdateWorkspaceSchema),
+  const form = useForm<UpdateWorkspaceNameInput>({
+    resolver: zodResolver(UpdateWorkspaceNameSchema),
     defaultValues: {
       name: workspace.name,
-      plan: workspace.plan,
     },
   });
 
-  const handleInviteMember = async () => {
-    const input: CreateWorkspaceMemberInput = {
-      userId: "f0f0a2d2-d7ab-4141-b7ee-3025252dc31d",
-      workspaceId: workspace.id,
-      role: "observer",
-    };
-
-    await inviteMember(input);
-  };
-
-  const handleSubmit = async (values: UpdateWorkspaceInput) => {
-    await updateWorkspace(workspace.id, values);
+  const handleSubmit = async (values: UpdateWorkspaceNameInput) => {
+    await updateNameWorkspace(workspace.id, values);
     setIsEditing(false);
     form.reset();
   };
@@ -127,10 +109,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
       <div className="flex items-center gap-4">
         <ThemeToggle />
 
-        <Button variant="ghost" onClick={handleInviteMember}>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Invite
-        </Button>
+        <WorkspaceInviteMember workspaceId={workspace.id} />
 
         <Popover>
           <PopoverTrigger asChild>

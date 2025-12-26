@@ -3,6 +3,12 @@
 import {
   CreateChecklistItemInput,
   CreateChecklistItemSchema,
+  DeleteChecklistItemInput,
+  DeleteChecklistItemSchema,
+  ReorderChecklistItemInput,
+  ReorderChecklistItemSchema,
+  ToggleChecklistItemInput,
+  ToggleChecklistItemSchema,
   UpdateChecklistItemInput,
   UpdateChecklistItemSchema,
 } from "@/domain/schemas/check-list-item.schema";
@@ -11,12 +17,10 @@ import { requireAuth } from "@/lib/session";
 import { error, success } from "@/lib/response";
 
 export const createChecklistItemAction = async (
-  boardId: string,
   input: CreateChecklistItemInput
 ) => {
   try {
     const user = await requireAuth();
-
     const parsed = CreateChecklistItemSchema.safeParse(input);
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
@@ -25,11 +29,7 @@ export const createChecklistItemAction = async (
       return error(message);
     }
 
-    const item = await checklistItemService.create(
-      user.id,
-      boardId,
-      parsed.data
-    );
+    const item = await checklistItemService.create(user.id, parsed.data);
 
     return success("Checklist item created successfully", item);
   } catch (err: any) {
@@ -38,19 +38,19 @@ export const createChecklistItemAction = async (
 };
 
 export const toggleChecklistItemAction = async (
-  boardId: string,
-  itemId: string,
-  isCompleted: boolean
+  input: ToggleChecklistItemInput
 ) => {
   try {
     const user = await requireAuth();
+    const parsed = ToggleChecklistItemSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
 
-    const item = await checklistItemService.toggle(
-      user.id,
-      boardId,
-      itemId,
-      isCompleted
-    );
+    const item = await checklistItemService.toggle(user.id, parsed.data);
 
     return success("Checklist item updated successfully", item);
   } catch (err: any) {
@@ -58,14 +58,32 @@ export const toggleChecklistItemAction = async (
   }
 };
 
+export const reorderChecklistItemAction = async (
+  input: ReorderChecklistItemInput
+) => {
+  try {
+    const user = await requireAuth();
+    const parsed = ReorderChecklistItemSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
+
+    const item = await checklistItemService.reorder(user.id, parsed.data);
+    return success("Checklist item reordered successfully", item);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
 export const updateChecklistItemAction = async (
-  boardId: string,
-  itemId: string,
+  id: string,
   input: UpdateChecklistItemInput
 ) => {
   try {
     const user = await requireAuth();
-
     const parsed = UpdateChecklistItemSchema.safeParse(input);
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
@@ -74,28 +92,28 @@ export const updateChecklistItemAction = async (
       return error(message);
     }
 
-    const updated = await checklistItemService.update(
-      user.id,
-      boardId,
-      itemId,
-      parsed.data
-    );
+    const item = await checklistItemService.update(user.id, id, parsed.data);
 
-    return success("Checklist item updated successfully", updated);
+    return success("Checklist item updated successfully", item);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
 export const deleteChecklistItemAction = async (
-  boardId: string,
-  itemId: string
+  input: DeleteChecklistItemInput
 ) => {
   try {
     const user = await requireAuth();
+    const parsed = DeleteChecklistItemSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
 
-    await checklistItemService.delete(user.id, boardId, itemId);
-
+    await checklistItemService.delete(user.id, parsed.data);
     return success("Checklist item deleted successfully");
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");

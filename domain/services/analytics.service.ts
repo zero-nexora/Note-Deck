@@ -1,6 +1,11 @@
 import { db } from "@/db";
 import { activities } from "@/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { GetActivityFeedInput, GetWorkspaceAnalyticsInput } from "../schemas/analytics.schema";
+import { WorkspaceAnalytics } from "../types/analytics.type";
+import { checkWorkspacePermission } from "@/lib/permissions";
+import { workspaceRepository } from "../repositories/workspace.repository";
+import { activityRepository } from "../repositories/activity.repository";
 
 export const analyticsService = {
   findBoardActivityHeatmap: async (
@@ -73,5 +78,50 @@ export const analyticsService = {
       );
 
     return matrics[0];
+  },
+
+  getAnalytics: async (
+    userId: string,
+    data: GetWorkspaceAnalyticsInput
+  ): Promise<WorkspaceAnalytics> => {
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      data.workspaceId,
+      "observer"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const [totalBoards, totalLists, totalCards, completionRate, activeMembers] =
+      await Promise.all([
+        workspaceRepository.getTotalBoards(data.workspaceId),
+        workspaceRepository.getTotalLists(data.workspaceId),
+        workspaceRepository.getTotalCards(data.workspaceId),
+        workspaceRepository.getCompletionRate(data.workspaceId),
+        workspaceRepository.getActiveMembers(data.workspaceId),
+      ]);
+
+    return {
+      totalBoards,
+      totalLists,
+      totalCards,
+      completionRate,
+      activeMembers,
+    };
+  },
+
+  getActivityFeed: async (userId: string, data: GetActivityFeedInput) => {
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      data.workspaceId,
+      "observer"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const activities = await activityRepository.findByWorkspaceId(
+      data.workspaceId,
+      data.limit
+    );
+
+    return activities;
   },
 };

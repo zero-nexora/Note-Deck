@@ -1,74 +1,80 @@
-import { activityRepository } from "../repositories/activity.repository";
 import { cardLabelRepository } from "../repositories/card-label.repository";
+import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
 import { labelRepository } from "../repositories/label.repository";
 import { checkBoardPermission } from "@/lib/permissions";
-import { CreateCardLabelInput } from "../schemas/card-label.schema";
+import {
+  AddCardLabelInput,
+  RemoveCardLabelInput,
+} from "../schemas/card-label.schema";
 
 export const cardLabelService = {
-  add: async (
-    userId: string,
-    boardId: string,
-    data: CreateCardLabelInput
-  ) => {
+  add: async (userId: string, data: AddCardLabelInput) => {
     const card = await cardRepository.findById(data.cardId);
     if (!card) throw new Error("Card not found");
-    if (card.boardId !== boardId)
-      throw new Error("Card does not belong to board");
 
     const label = await labelRepository.findById(data.labelId);
     if (!label) throw new Error("Label not found");
-    if (label.boardId !== boardId)
-      throw new Error("Label does not belong to board");
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    if (label.boardId !== card.boardId) {
+      throw new Error("Label does not belong to this board");
+    }
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const existed = await cardLabelRepository.find(data.cardId, data.labelId);
-    if (existed) throw new Error("Label already attached to card");
+    const exists = await cardLabelRepository.findByCardIdAndLabelId(
+      data.cardId,
+      data.labelId
+    );
+    if (exists) throw new Error("Label already added");
 
-    const cardLabel = await cardLabelRepository.create(data);
+    const cardLabel = await cardLabelRepository.add(data);
 
     await activityRepository.create({
-      boardId,
-      cardId: data.cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
-      action: "card_label.added",
-      entityType: "card_label",
-      entityId: cardLabel.id,
-      metadata: { labelId: data.labelId },
+      action: "card.label_added",
+      entityType: "card",
+      entityId: card.id,
+      metadata: { labelId: data.labelId, labelName: label.name },
     });
 
     return cardLabel;
   },
 
-  remove: async (
-    userId: string,
-    boardId: string,
-    cardId: string,
-    labelId: string
-  ) => {
-    const card = await cardRepository.findById(cardId);
+  remove: async (userId: string, data: RemoveCardLabelInput) => {
+    const card = await cardRepository.findById(data.cardId);
     if (!card) throw new Error("Card not found");
-    if (card.boardId !== boardId)
-      throw new Error("Card does not belong to board");
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      "normal"
+    );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const existed = await cardLabelRepository.find(cardId, labelId);
-    if (!existed) throw new Error("Label not attached to card");
+    const exists = await cardLabelRepository.findByCardIdAndLabelId(
+      data.cardId,
+      data.labelId
+    );
+    if (!exists) throw new Error("Label not found");
 
-    await cardLabelRepository.remove(cardId, labelId);
+    await cardLabelRepository.remove(data.cardId, data.labelId);
 
     await activityRepository.create({
-      boardId,
-      cardId,
+      boardId: card.boardId,
+      cardId: card.id,
       userId,
-      action: "card_label.removed",
-      entityType: "card_label",
-      entityId: existed.id,
-      metadata: { labelId },
+      action: "card.label_removed",
+      entityType: "card",
+      entityId: card.id,
+      metadata: { labelId: data.labelId },
     });
   },
 };

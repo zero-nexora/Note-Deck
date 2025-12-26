@@ -1,4 +1,5 @@
 "use client";
+
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { useBoardDragDrop } from "@/hooks/use-board-drag-drop";
@@ -24,7 +25,7 @@ export const BoardContent = ({ board }: BoardContentProps) => {
 
   const {
     activeId,
-    activeType,
+    localBoard,
     handleDragStart,
     handleDragMove,
     handleDragOver,
@@ -44,19 +45,18 @@ export const BoardContent = ({ board }: BoardContentProps) => {
     })
   );
 
-  const activeCard =
-    activeType === "card"
-      ? board.lists.flatMap((l) => l.cards).find((c) => c.id === activeId) ??
-        null
-      : null;
+  const activeCard = activeId
+    ? board.lists
+        .flatMap((list) => list.cards)
+        .find((card) => card.id === activeId)
+    : null;
 
-  const activeList =
-    activeType === "list"
-      ? board.lists.find((l) => l.id === activeId) ?? null
-      : null;
+  const activeList = activeId
+    ? board.lists.find((list) => list.id === activeId)
+    : null;
 
   return (
-    <ScrollArea className="h-[calc(100vh-250px)]">
+    <ScrollArea className="h-[calc(100vh-210px)]">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -67,9 +67,9 @@ export const BoardContent = ({ board }: BoardContentProps) => {
       >
         <div className="relative h-full">
           <LiveCursors />
-          <LiveDragOverlay board={board} />
+          <LiveDragOverlay board={localBoard} />
 
-          <BoardLists board={board} />
+          <BoardLists board={localBoard} />
 
           <BoardOverlay activeCard={activeCard} activeList={activeList} />
         </div>

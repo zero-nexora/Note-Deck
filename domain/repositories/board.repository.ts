@@ -6,7 +6,6 @@ import { and, eq } from "drizzle-orm";
 export const boardRepository = {
   create: async (data: NewBoard) => {
     const [board] = await db.insert(boards).values(data).returning();
-
     return board;
   },
 
@@ -47,13 +46,13 @@ export const boardRepository = {
     });
   },
 
-  findByWorkspaceId: async (workspaceId: string) => {
-    return await db.query.boards.findMany({
-      where: and(
-        eq(boards.workspaceId, workspaceId),
-        eq(boards.isArchived, false)
-      ),
-      orderBy: (boards, { desc }) => [desc(boards.updatedAt)],
+  findByWorkspaceId: async (workspaceId: string, includeArchived = false) => {
+    const query = includeArchived
+      ? eq(boards.workspaceId, workspaceId)
+      : and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false));
+
+    const workspaceBoards = await db.query.boards.findMany({
+      where: query,
       with: {
         members: {
           with: {
@@ -61,7 +60,9 @@ export const boardRepository = {
           },
         },
       },
+      orderBy: (boards, { desc }) => [desc(boards.createdAt)],
     });
+    return workspaceBoards;
   },
 
   update: async (id: string, data: UpdateBoard) => {
@@ -79,9 +80,5 @@ export const boardRepository = {
 
   delete: async (id: string) => {
     await db.delete(boards).where(eq(boards.id, id));
-  },
-
-  archive: async (id: string) => {
-    return boardRepository.update(id, { isArchived: true });
   },
 };

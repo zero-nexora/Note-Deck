@@ -3,8 +3,22 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { useCard } from "@/hooks/use-card";
-import { CreateCardInput } from "@/domain/schemas/card.schema";
+import {
+  CreateCardInput,
+  CreateCardSchema,
+} from "@/domain/schemas/card.schema";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Loading } from "../common/loading";
 
 interface CreateCardProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
@@ -12,54 +26,71 @@ interface CreateCardProps {
 
 export const CreateCard = ({ list }: CreateCardProps) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [newCardTitle, setNewCardTitle] = useState("");
 
   const { createCard } = useCard();
 
-  const handleAddCard = async () => {
-    const input: CreateCardInput = {
-      boardId: list.boardId,
+  const form = useForm<CreateCardInput>({
+    resolver: zodResolver(CreateCardSchema),
+    defaultValues: {
       listId: list.id,
-      title: newCardTitle,
-      position: list.cards.length,
-    };
+      title: "",
+    },
+  });
 
-    await createCard(input);
-    setNewCardTitle("");
+  const handleSubmit = async (values: CreateCardInput) => {
+    await createCard(values);
     setIsAdding(false);
+    form.reset();
   };
+
+  const isLoading = form.formState.isSubmitting;
 
   return (
     <div className="p-2">
       {isAdding ? (
-        <div className="space-y-2">
-          <Input
-            value={newCardTitle}
-            onChange={(e) => setNewCardTitle(e.target.value)}
-            placeholder="Enter card title..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddCard();
-              if (e.key === "Escape") setIsAdding(false);
-            }}
-            autoFocus
-          />
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              onClick={handleAddCard}
-              className="gradient-primary text-primary-foreground"
-            >
-              Add card
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsAdding(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-2"
+          >
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter card title..."
+                      autoFocus
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="gradient-primary text-primary-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? <Loading /> : "Add card"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                type="button"
+                onClick={() => setIsAdding(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
       ) : (
         <Button
           variant="ghost"

@@ -1,36 +1,90 @@
 "use server";
 
-import { boardMemberRepository } from "@/domain/repositories/board-member.repository";
 import {
-  CreateBoardMemberInput,
-  CreateBoardMemberSchema,
-} from "@/domain/schemas/borad-member.schema";
+  AddBoardMemberInput,
+  AddBoardMemberSchema,
+  RemoveBoardMemberInput,
+  RemoveBoardMemberSchema,
+  ChangeBoardMemberRoleInput,
+  ChangeBoardMemberRoleSchema,
+  ListBoardMembersInput,
+  ListBoardMembersSchema,
+} from "@/domain/schemas/board-member.schema";
+import { boardMemberService } from "@/domain/services/board-member.service";
 import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
 
-export const inviteBoardMember = async (input: CreateBoardMemberInput) => {
+export const addBoardMemberAction = async (input: AddBoardMemberInput) => {
   try {
     const user = await requireAuth();
-
-    const parsed = CreateBoardMemberSchema.safeParse({
-      boardId: input.boardId,
-      userId: input.userId,
-      role: input.role,
-    });
-
+    const parsed = AddBoardMemberSchema.safeParse(input);
     if (!parsed.success) {
+      const flattened = parsed.error.flatten();
       const message =
-        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
-        "Invalid input";
-
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
       return error(message);
     }
 
-    const validatedData: CreateBoardMemberInput = parsed.data;
+    const member = await boardMemberService.add(user.id, parsed.data);
+    return success("Member added successfully", member);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
 
-    const member = await boardMemberRepository.addMember(validatedData);
+export const removeBoardMemberAction = async (
+  input: RemoveBoardMemberInput
+) => {
+  try {
+    const user = await requireAuth();
+    const parsed = RemoveBoardMemberSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
 
-    return success("Member invited successfully", member);
+    await boardMemberService.remove(user.id, parsed.data);
+    return success("Member removed successfully");
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const changeBoardMemberRoleAction = async (
+  input: ChangeBoardMemberRoleInput
+) => {
+  try {
+    const user = await requireAuth();
+    const parsed = ChangeBoardMemberRoleSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
+
+    const member = await boardMemberService.changeRole(user.id, parsed.data);
+    return success("Role changed successfully", member);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const listBoardMembersAction = async (input: ListBoardMembersInput) => {
+  try {
+    const user = await requireAuth();
+    const parsed = ListBoardMembersSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
+
+    const members = await boardMemberService.list(user.id, parsed.data);
+    return success("", members);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

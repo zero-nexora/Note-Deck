@@ -5,151 +5,104 @@ import {
   toggleChecklistItemAction,
   updateChecklistItemAction,
   deleteChecklistItemAction,
+  reorderChecklistItemAction,
 } from "@/app/actions/checklist-item.action";
 import {
   CreateChecklistItemInput,
+  DeleteChecklistItemInput,
+  ReorderChecklistItemInput,
+  ToggleChecklistItemInput,
   UpdateChecklistItemInput,
 } from "@/domain/schemas/check-list-item.schema";
-import { ChecklistItem } from "@/domain/types/check-list-item.type";
-import { ActionResult } from "@/lib/response";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function useChecklistItem() {
   const router = useRouter();
 
-  const [createLoading, setCreateLoading] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const [createState, setCreateState] = useState<ActionResult<ChecklistItem>>({
-    success: false,
-    message: "",
-  });
-
-  const [toggleState, setToggleState] = useState<ActionResult<ChecklistItem>>({
-    success: false,
-    message: "",
-  });
-
-  const [updateState, setUpdateState] = useState<ActionResult<ChecklistItem>>({
-    success: false,
-    message: "",
-  });
-
-  const [deleteState, setDeleteState] = useState<ActionResult<unknown>>({
-    success: false,
-    message: "",
-  });
-
-  const createChecklistItem = async (
-    boardId: string,
-    input: CreateChecklistItemInput
-  ) => {
-    setCreateLoading(true);
+  const createChecklistItem = async (input: CreateChecklistItemInput) => {
     try {
-      const result = await createChecklistItemAction(boardId, input);
-      setCreateState(result);
-    } finally {
-      setCreateLoading(false);
+      const result = await createChecklistItemAction(input);
+
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const toggleChecklistItem = async (
-    boardId: string,
-    itemId: string,
-    isCompleted: boolean
-  ) => {
-    setToggleLoading(true);
+  const toggleChecklistItem = async (input: ToggleChecklistItemInput) => {
     try {
-      const result = await toggleChecklistItemAction(
-        boardId,
-        itemId,
-        isCompleted
-      );
-      setToggleState(result);
-    } finally {
-      setToggleLoading(false);
+      const result = await toggleChecklistItemAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   const updateChecklistItem = async (
-    boardId: string,
-    itemId: string,
+    id: string,
     input: UpdateChecklistItemInput
   ) => {
-    setUpdateLoading(true);
     try {
-      const result = await updateChecklistItemAction(boardId, itemId, input);
-      setUpdateState(result);
-    } finally {
-      setUpdateLoading(false);
+      const result = await updateChecklistItemAction(id, input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const deleteChecklistItem = async (boardId: string, itemId: string) => {
-    setDeleteLoading(true);
+  const reorderChecklistItem = async (input: ReorderChecklistItemInput) => {
     try {
-      const result = await deleteChecklistItemAction(boardId, itemId);
-      setDeleteState(result);
-    } finally {
-      setDeleteLoading(false);
+      const result = await reorderChecklistItemAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  useEffect(() => {
-    if (!createState.message) return;
-
-    createState.success
-      ? toast.success(createState.message)
-      : toast.error(createState.message);
-
-    if (createState.success) router.refresh();
-  }, [createState, router]);
-
-  useEffect(() => {
-    if (!toggleState.message) return;
-
-    toggleState.success
-      ? toast.success(toggleState.message)
-      : toast.error(toggleState.message);
-
-    if (toggleState.success) router.refresh();
-  }, [toggleState, router]);
-
-  useEffect(() => {
-    if (!updateState.message) return;
-
-    updateState.success
-      ? toast.success(updateState.message)
-      : toast.error(updateState.message);
-
-    if (updateState.success) router.refresh();
-  }, [updateState, router]);
-
-  useEffect(() => {
-    if (!deleteState.message) return;
-
-    deleteState.success
-      ? toast.success(deleteState.message)
-      : toast.error(deleteState.message);
-
-    if (deleteState.success) router.refresh();
-  }, [deleteState, router]);
+  const deleteChecklistItem = async (input: DeleteChecklistItemInput) => {
+    try {
+      const result = await deleteChecklistItemAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   return {
     createChecklistItem,
-    createChecklistItemPending: createLoading,
 
     toggleChecklistItem,
-    toggleChecklistItemPending: toggleLoading,
 
     updateChecklistItem,
-    updateChecklistItemPending: updateLoading,
+
+    reorderChecklistItem,
 
     deleteChecklistItem,
-    deleteChecklistItemPending: deleteLoading,
   };
 }

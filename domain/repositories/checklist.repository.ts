@@ -21,10 +21,10 @@ export const checklistRepository = {
       where: eq(checklists.cardId, cardId),
       with: {
         items: {
-          orderBy: (items, { desc }) => [desc(items.createdAt)],
+          orderBy: (items, { asc }) => [asc(items.position)],
         },
       },
-      orderBy: (checklists, { desc }) => [desc(checklists.createdAt)],
+      orderBy: (checklists, { asc }) => [asc(checklists.position)],
     });
   },
 
@@ -40,5 +40,14 @@ export const checklistRepository = {
 
   delete: async (id: string) => {
     await db.delete(checklists).where(eq(checklists.id, id));
+  },
+
+  getMaxPosition: async (cardId: string) => {
+    const result = await db.query.checklists.findMany({
+      where: eq(checklists.cardId, cardId),
+      orderBy: (checklists, { desc }) => [desc(checklists.position)],
+      limit: 1,
+    });
+    return result[0]?.position ?? -1;
   },
 };

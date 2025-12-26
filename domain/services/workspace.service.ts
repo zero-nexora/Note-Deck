@@ -1,12 +1,16 @@
 import { STRIPE_PLANS } from "@/lib/stripe";
-import { auditLogRepository } from "../repositories/audit.repository";
+import { auditLogRepository } from "../repositories/audit-log.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
-import {
-  CreateWorkspaceInput,
-  UpdateWorkspaceInput,
-} from "../schemas/workspace.schema";
 import slugify from "slugify";
 import { checkWorkspacePermission } from "@/lib/permissions";
+import {
+  ChangePlanInput,
+  CreateWorkspaceInput,
+  DeleteWorkspaceInput,
+  UpdateWorkspaceNameInput,
+  UpdateWorkspaceSlugInput,
+} from "../schemas/workspace.schema";
+import { workspaceMemberRepository } from "../repositories/workspace-member.repository";
 
 export const workspaceService = {
   create: async (userId: string, data: CreateWorkspaceInput) => {
@@ -18,6 +22,12 @@ export const workspaceService = {
       ownerId: userId,
       plan: "free",
       limits: STRIPE_PLANS["free"],
+    });
+
+    await workspaceMemberRepository.add({
+      workspaceId: workspace.id,
+      userId,
+      role: "admin",
     });
 
     await auditLogRepository.create({
@@ -65,40 +75,106 @@ export const workspaceService = {
     return result;
   },
 
-  update: async (userId: string, id: string, data: UpdateWorkspaceInput) => {
+  updateName: async (
+    userId: string,
+    id: string,
+    data: UpdateWorkspaceNameInput
+  ) => {
     const workspace = await workspaceRepository.findById(id);
     if (!workspace) throw new Error("Workspace not found");
 
     const hasPermission = await checkWorkspacePermission(userId, id, "admin");
-
     if (!hasPermission) throw new Error("Permission denied");
 
-    if (data.name !== undefined && data.name.trim() === "") {
+    if (data.name.trim() === "") {
       throw new Error("Workspace name cannot be empty");
     }
 
-    const updated = await workspaceRepository.update(id, data);
+    const updated = await workspaceRepository.update(id, { name: data.name });
 
     await auditLogRepository.create({
-      workspaceId: updated.id,
+      workspaceId: id,
       userId,
-      action: "workspace.updated",
+      action: "workspace.name_updated",
       entityType: "workspace",
-      entityId: updated.id,
-      metadata: data,
+      entityId: id,
+      metadata: { oldName: workspace.name, newName: data.name },
     });
 
     return updated;
   },
 
-  async delete(userId: string, id: string) {
+  updateSlug: async (
+    userId: string,
+    id: string,
+    data: UpdateWorkspaceSlugInput
+  ) => {
     const workspace = await workspaceRepository.findById(id);
     if (!workspace) throw new Error("Workspace not found");
 
-    const allowed = await checkWorkspacePermission(userId, id, "admin");
-    if (!allowed) throw new Error("Permission denied");
+    const hasPermission = await checkWorkspacePermission(userId, id, "admin");
+    if (!hasPermission) throw new Error("Permission denied");
 
-    await workspaceRepository.delete(id);
+    const exists = await workspaceRepository.findBySlug(data.slug);
+    if (exists && exists.id !== id) {
+      throw new Error("Slug already taken");
+    }
+
+    const updated = await workspaceRepository.update(id, { slug: data.slug });
+
+    await auditLogRepository.create({
+      workspaceId: id,
+      userId,
+      action: "workspace.slug_updated",
+      entityType: "workspace",
+      entityId: id,
+      metadata: { oldSlug: workspace.slug, newSlug: data.slug },
+    });
+
+    return updated;
+  },
+
+  changePlan: async (userId: string, id: string, data: ChangePlanInput) => {
+    const workspace = await workspaceRepository.findById(id);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const hasPermission = await checkWorkspacePermission(userId, id, "admin");
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const planLimits = STRIPE_PLANS[data.plan];
+    const updated = await workspaceRepository.update(id, {
+      plan: data.plan,
+      limits: planLimits,
+    });
+
+    await auditLogRepository.create({
+      workspaceId: id,
+      userId,
+      action: "workspace.plan_changed",
+      entityType: "workspace",
+      entityId: id,
+      metadata: { oldPlan: workspace.plan, newPlan: data.plan },
+    });
+
+    return updated;
+  },
+
+  delete: async (userId: string, data: DeleteWorkspaceInput) => {
+    const workspace = await workspaceRepository.findById(data.id);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      data.id,
+      "admin"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    if (workspace.ownerId !== userId) {
+      throw new Error("Only the workspace owner can delete it");
+    }
+
+    await workspaceRepository.delete(data.id);
 
     await auditLogRepository.create({
       workspaceId: workspace.id,

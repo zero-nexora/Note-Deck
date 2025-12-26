@@ -42,7 +42,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
       title: "Delete Board",
       description: "Are you sure you want to delete this board?",
       onConfirm: async () => {
-        await deleteBoard(board.id);
+        await deleteBoard({ id: board.id });
       },
     });
   };

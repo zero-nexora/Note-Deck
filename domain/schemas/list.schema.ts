@@ -1,17 +1,41 @@
 import { z } from "zod";
 
 export const CreateListSchema = z.object({
-  boardId: z.string(),
-  name: z.string(),
-  position: z.number(),
+  boardId: z.string().min(1),
+  name: z.string().min(1),
 });
 
 export const UpdateListSchema = z.object({
-  boardId: z.string(),
-  name: z.string().optional(),
-  position: z.number().optional(),
-  isArchived: z.boolean().optional(),
+  name: z.string().min(1).optional(),
+});
+
+export const ReorderListSchema = z.object({
+  id: z.string().min(1),
+  position: z.number().int().min(0),
+});
+
+export const MoveListSchema = z.object({
+  id: z.string().min(1),
+  boardId: z.string().min(1),
+  position: z.number().int().min(0),
+});
+
+export const ArchiveListSchema = z.object({
+  id: z.string().min(1),
+});
+
+export const RestoreListSchema = z.object({
+  id: z.string().min(1),
+});
+
+export const DeleteListSchema = z.object({
+  id: z.string().min(1),
 });
 
 export type CreateListInput = z.infer<typeof CreateListSchema>;
 export type UpdateListInput = z.infer<typeof UpdateListSchema>;
+export type ReorderListInput = z.infer<typeof ReorderListSchema>;
+export type MoveListInput = z.infer<typeof MoveListSchema>;
+export type ArchiveListInput = z.infer<typeof ArchiveListSchema>;
+export type RestoreListInput = z.infer<typeof RestoreListSchema>;
+export type DeleteListInput = z.infer<typeof DeleteListSchema>;

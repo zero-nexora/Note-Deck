@@ -13,10 +13,10 @@ interface BoardHeaderProps {
 }
 
 export const BoardHeader = ({ board }: BoardHeaderProps) => {
-  const { inviteMember } = useBoardMember();
+  const { addMember } = useBoardMember();
 
   const handleInvite = async () => {
-    await inviteMember({
+    await addMember({
       boardId: board.id,
       userId: "f0f0a2d2-d7ab-4141-b7ee-3025252dc31d",
       role: "observer",

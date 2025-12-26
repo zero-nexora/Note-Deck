@@ -1,53 +1,38 @@
 import { db } from "@/db";
-import { NewUser, UpdateUser, User } from "../types/user.type";
+import { NewUser, UpdateUser } from "../types/user.type";
 import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
-import { hashPassword } from "@/lib/bcrypt";
 
 export const userRepository = {
-  findByEmail: async (email: string): Promise<User | null> => {
-    const result = await db.query.users.findFirst({
+  create: async (data: NewUser) => {
+    const [user] = await db.insert(users).values(data).returning();
+    return user;
+  },
+
+  findByEmail: async (email: string) => {
+    const user = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
-    return result ?? null;
+    return user;
   },
 
-  findById: async (id: string): Promise<User | null> => {
-    const result = await db.query.users.findFirst({
+  findById: async (id: string) => {
+    const user = await db.query.users.findFirst({
       where: eq(users.id, id),
     });
-    return result ?? null;
+    return user;
   },
 
-  create: async (data: NewUser): Promise<User> => {
-    const hashedPassword = data.password
-      ? await hashPassword(data.password)
-      : "";
-
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        ...data,
-        password: hashedPassword,
-      })
-      .returning();
-
-    return newUser;
-  },
-
-  update: async (data: UpdateUser): Promise<User> => {
-    const [updatedUser] = await db
+  update: async (id: string, data: UpdateUser) => {
+    const [updated] = await db
       .update(users)
-      .set({
-        ...data,
-      })
-      .where(eq(users.id, data.id!))
+      .set(data)
+      .where(eq(users.id, id))
       .returning();
-
-    return updatedUser;
+    return updated;
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: string) => {
     await db.delete(users).where(eq(users.id, id));
   },
 };
