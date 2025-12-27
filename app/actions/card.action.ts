@@ -6,14 +6,14 @@ import {
   UpdateCardSchema,
   MoveCardInput,
   MoveCardSchema,
-  ReorderCardInput,
-  ReorderCardSchema,
   ArchiveCardInput,
   ArchiveCardSchema,
   RestoreCardInput,
   RestoreCardSchema,
   DeleteCardInput,
   DeleteCardSchema,
+  ReorderCardsInput,
+  ReorderCardsSchema,
 } from "@/domain/schemas/card.schema";
 import { cardService } from "@/domain/services/card.service";
 import { error, success } from "@/lib/response";
@@ -59,6 +59,7 @@ export const moveCardAction = async (input: MoveCardInput) => {
   try {
     const user = await requireAuth();
     const parsed = MoveCardSchema.safeParse(input);
+    
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -67,16 +68,18 @@ export const moveCardAction = async (input: MoveCardInput) => {
     }
 
     const card = await cardService.move(user.id, parsed.data);
+    
     return success("Card moved successfully", card);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
-export const reorderCardAction = async (input: ReorderCardInput) => {
+export const reorderCardsAction = async (input: ReorderCardsInput) => {
   try {
     const user = await requireAuth();
-    const parsed = ReorderCardSchema.safeParse(input);
+    const parsed = ReorderCardsSchema.safeParse(input);
+    
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -84,8 +87,9 @@ export const reorderCardAction = async (input: ReorderCardInput) => {
       return error(message);
     }
 
-    const card = await cardService.reorder(user.id, parsed.data);
-    return success("Card reordered successfully", card);
+    const cards = await cardService.reorders(user.id, parsed.data);
+    
+    return success("Cards reordered successfully", cards);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

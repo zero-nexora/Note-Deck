@@ -25,10 +25,10 @@ export const BoardListCards = ({ list }: BoardListCardsProps) => {
   const sortedCards = [...list.cards].sort((a, b) => a.position - b.position);
 
   return (
-    <div ref={setNodeRef} className="flex-1 overflow-y-auto overflow-x-hidden">
+    <div ref={setNodeRef} className="flex-1 overflow-y-auto overflow-x-hidden p-1">
       <div
         className={cn(
-          "space-y-2 p-2 min-h-[100px] transition-colors",
+          "space-y-2 p-1 min-h-[100px] transition-colors",
           isOver && "bg-primary/5 rounded-lg"
         )}
       >

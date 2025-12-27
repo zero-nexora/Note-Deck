@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewCard, UpdateCard } from "../types/card.type";
 import { cards } from "@/db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 export const cardRepository = {
   create: async (data: NewCard) => {
@@ -89,17 +89,36 @@ export const cardRepository = {
     return result[0]?.position ?? -1;
   },
 
-  reoders: async (
+  reorders: async (
     listId: string,
-    cardOrders: { id: string; position: number }[]
+    orders: { id: string; position: number }[]
   ) => {
     await db.transaction(async (tx) => {
-      for (const { id, position } of cardOrders) {
+      for (const { id, position } of orders) {
         await tx
           .update(cards)
           .set({ position, updatedAt: new Date() })
           .where(and(eq(cards.id, id), eq(cards.listId, listId)));
       }
+    });
+  },
+
+  moveToList: async (cardId: string, destinationListId: string, boardId: string) => {
+    return await db
+      .update(cards)
+      .set({
+        listId: destinationListId,
+        boardId,
+        updatedAt: new Date(),
+      })
+      .where(eq(cards.id, cardId))
+      .returning();
+  },
+
+  findAllByListId: async (listId: string) => {
+    return await db.query.cards.findMany({
+      where: eq(cards.listId, listId),
+      orderBy: [asc(cards.position)],
     });
   },
 };

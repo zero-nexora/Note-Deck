@@ -13,7 +13,7 @@ export const ResendInviteSchema = z.object({
 });
 
 export const RevokeInviteSchema = z.object({
-  id: z.string().min(1),
+  token: z.string().min(1),
 });
 
 export const AcceptInviteSchema = z.object({

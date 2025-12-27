@@ -5,8 +5,6 @@ import {
   CreateListSchema,
   UpdateListInput,
   UpdateListSchema,
-  ReorderListInput,
-  ReorderListSchema,
   MoveListInput,
   MoveListSchema,
   ArchiveListInput,
@@ -15,6 +13,8 @@ import {
   RestoreListSchema,
   DeleteListInput,
   DeleteListSchema,
+  ReorderListsInput,
+  ReorderListsSchema,
 } from "@/domain/schemas/list.schema";
 import { listService } from "@/domain/services/list.service";
 import { error, success } from "@/lib/response";
@@ -56,10 +56,11 @@ export const updateListAction = async (id: string, input: UpdateListInput) => {
   }
 };
 
-export const reorderListAction = async (input: ReorderListInput) => {
+export const reorderListsAction = async (input: ReorderListsInput) => {
   try {
     const user = await requireAuth();
-    const parsed = ReorderListSchema.safeParse(input);
+    const parsed = ReorderListsSchema.safeParse(input);
+
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -67,8 +68,9 @@ export const reorderListAction = async (input: ReorderListInput) => {
       return error(message);
     }
 
-    const list = await listService.reorder(user.id, parsed.data);
-    return success("List reordered successfully", list);
+    await listService.reorders(user.id, parsed.data);
+
+    return success("Lists reordered successfully");
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

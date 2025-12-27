@@ -1,4 +1,3 @@
-import { sendEmail } from "@/lib/email";
 import { notificationRepository } from "../repositories/notification.repository";
 import {
   CreateNotificationInput,
@@ -46,10 +45,6 @@ export const notificationService = {
       unreadOnly
     );
     return notifications;
-  },
-
-  sendEmail: async (email: string, subject: string, content: string) => {
-    await sendEmail(email, subject, content);
   },
 
   sendWebPush: async (

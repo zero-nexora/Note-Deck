@@ -12,6 +12,7 @@ import {
 } from "../schemas/workspace-invite.schema";
 import crypto from "crypto";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { sendWorkspaceInviteEmail } from "@/lib/email";
 
 export const workspaceInviteService = {
   create: async (userId: string, data: CreateInviteInput) => {
@@ -58,6 +59,8 @@ export const workspaceInviteService = {
       token,
       expiresAt,
     });
+
+    sendWorkspaceInviteEmail(data.email, workspace.name, token);
 
     await auditLogRepository.create({
       workspaceId: data.workspaceId,
@@ -107,24 +110,21 @@ export const workspaceInviteService = {
   },
 
   revoke: async (userId: string, data: RevokeInviteInput) => {
-    const invite = await workspaceInviteRepository.findById(data.id);
-    if (!invite) throw new Error("Invite not found");
+    const invite = await workspaceInviteRepository.findByToken(data.token);
+    if (!invite) throw new Error("Invalid invite token");
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      invite.workspaceId,
-      "admin"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (invite.acceptedAt) {
+      throw new Error("Invite already accepted");
+    }
 
-    await workspaceInviteRepository.revoke(data.id);
+    await workspaceInviteRepository.revoke(invite.id);
 
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.revoked",
+      action: "workspace_invite.revoked_by_email",
       entityType: "workspace_invite",
-      entityId: data.id,
+      entityId: invite.id,
       metadata: { email: invite.email },
     });
   },

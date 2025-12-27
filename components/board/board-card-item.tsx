@@ -42,7 +42,7 @@ export const BoardCardItem = ({ card }: BoardCardItemProps) => {
       {...listeners}
       className={cn(
         "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200 cursor-grab active:cursor-grabbing",
-        "hover:shadow-md hover:-translate-y-0.5",
+        "hover:shadow-md hover:-translate-y-0.5 my-2",
         isDragging && "opacity-50"
       )}
     >

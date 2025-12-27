@@ -7,7 +7,7 @@ import {
   CreateListInput,
   DeleteListInput,
   MoveListInput,
-  ReorderListInput,
+  ReorderListsInput,
   RestoreListInput,
   UpdateListInput,
 } from "../schemas/list.schema";
@@ -93,31 +93,43 @@ export const listService = {
     return updated;
   },
 
-  reorder: async (userId: string, data: ReorderListInput) => {
-    const list = await listRepository.findById(data.id);
-    if (!list) throw new Error("List not found");
-
+  reorders: async (userId: string, data: ReorderListsInput) => {
+    const board = await boardRepository.findById(data.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+    
     const hasPermission = await checkBoardPermission(
       userId,
-      list.boardId,
+      data.boardId,
       "normal"
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const updated = await listRepository.update(data.id, {
-      position: data.position,
-    });
+    const allLists = await listRepository.findAllByBoardId(data.boardId);
+    const boardListIds = new Set(allLists.map((l) => l.id));
+
+    for (const order of data.orders) {
+      if (!boardListIds.has(order.id)) {
+        throw new Error(
+          `List ${order.id} does not belong to board ${data.boardId}`
+        );
+      }
+    }
+
+    await listRepository.reorders(data.boardId, data.orders);
 
     await activityRepository.create({
-      boardId: list.boardId,
+      boardId: data.boardId,
       userId,
-      action: "list.reordered",
-      entityType: "list",
-      entityId: data.id,
-      metadata: { position: data.position },
+      action: "lists.reordered",
+      entityType: "board",
+      entityId: data.boardId,
+      metadata: { 
+        listCount: data.orders.length,
+        orders: data.orders,
+      },
     });
-
-    return updated;
   },
 
   move: async (userId: string, data: MoveListInput) => {

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewList, UpdateList } from "../types/list.type";
 import { lists } from "@/db/schema";
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 export const listRepository = {
   create: async (data: NewList) => {
@@ -49,10 +49,10 @@ export const listRepository = {
 
   reorders: async (
     boardId: string,
-    listOrders: { id: string; position: number }[]
+    orders: { id: string; position: number }[]
   ) => {
     await db.transaction(async (tx) => {
-      for (const { id, position } of listOrders) {
+      for (const { id, position } of orders) {
         await tx
           .update(lists)
           .set({ position, updatedAt: new Date() })
@@ -61,19 +61,10 @@ export const listRepository = {
     });
   },
 
-  // TODO: review
-  updatePositions: async (
-    boardId: string,
-    startPosition: number,
-    increment: number
-  ) => {
-    await db
-      .update(lists)
-      .set({
-        position: sql`${lists.position} + ${increment}`,
-      })
-      .where(
-        and(eq(lists.boardId, boardId), gte(lists.position, startPosition))
-      );
+  findAllByBoardId: async (boardId: string) => {
+    return await db.query.lists.findMany({
+      where: eq(lists.boardId, boardId),
+      orderBy: [asc(lists.position)],
+    });
   },
 };

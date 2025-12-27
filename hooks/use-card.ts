@@ -5,7 +5,7 @@ import {
   createCardAction,
   deleteCardAction,
   moveCardAction,
-  reorderCardAction,
+  reorderCardsAction,
   restoreCardAction,
   updateCardAction,
 } from "@/app/actions/card.action";
@@ -14,7 +14,7 @@ import {
   CreateCardInput,
   DeleteCardInput,
   MoveCardInput,
-  ReorderCardInput,
+  ReorderCardsInput,
   RestoreCardInput,
   UpdateCardInput,
 } from "@/domain/schemas/card.schema";
@@ -66,9 +66,9 @@ export function useCard() {
     }
   };
 
-  const reorderCard = async (input: ReorderCardInput) => {
+  const reorderCards = async (input: ReorderCardsInput) => {
     try {
-      const result = await reorderCardAction(input);
+      const result = await reorderCardsAction(input);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -126,7 +126,7 @@ export function useCard() {
     createCard,
     updateCard,
     moveCard,
-    reorderCard,
+    reorderCards,
     archiveCard,
     restoreCard,
     deleteCard,

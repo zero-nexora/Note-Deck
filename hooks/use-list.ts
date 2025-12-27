@@ -5,7 +5,7 @@ import {
   createListAction,
   deleteListAction,
   moveListAction,
-  reorderListAction,
+  reorderListsAction,
   restoreListAction,
   updateListAction,
 } from "@/app/actions/list.action";
@@ -14,7 +14,7 @@ import {
   CreateListInput,
   DeleteListInput,
   MoveListInput,
-  ReorderListInput,
+  ReorderListsInput,
   RestoreListInput,
   UpdateListInput,
 } from "@/domain/schemas/list.schema";
@@ -52,9 +52,9 @@ export function useList() {
     }
   };
 
-  const reorderList = async (input: ReorderListInput) => {
+  const reorderLists = async (input: ReorderListsInput) => {
     try {
-      const result = await reorderListAction(input);
+      const result = await reorderListsAction(input);
       if (result.success) {
         toast.success(result.message);
         router.refresh();
@@ -125,7 +125,7 @@ export function useList() {
   return {
     createList,
     updateList,
-    reorderList,
+    reorderLists,
     moveList,
     archiveList,
     restoreList,

@@ -9,7 +9,7 @@ import {
   CreateCardInput,
   DeleteCardInput,
   MoveCardInput,
-  ReorderCardInput,
+  ReorderCardsInput,
   RestoreCardInput,
   UpdateCardInput,
 } from "../schemas/card.schema";
@@ -102,91 +102,134 @@ export const cardService = {
     return updated;
   },
 
+  // Service Layer
   move: async (userId: string, data: MoveCardInput) => {
+    // Validate card exists
     const card = await cardRepository.findById(data.id);
     if (!card) throw new Error("Card not found");
 
-    const newList = await listRepository.findById(data.listId);
-    if (!newList) throw new Error("Target list not found");
-
-    const hasPermissionOld = await checkBoardPermission(
-      userId,
-      card.boardId,
-      "normal"
-    );
-    const hasPermissionNew = await checkBoardPermission(
-      userId,
-      newList.boardId,
-      "normal"
+    // Validate lists exist
+    const sourceList = await listRepository.findById(data.sourceListId);
+    const destinationList = await listRepository.findById(
+      data.destinationListId
     );
 
-    if (!hasPermissionOld || !hasPermissionNew) {
+    if (!sourceList || !destinationList) {
+      throw new Error("List not found");
+    }
+
+    // Check permissions
+    const hasPermissionSource = await checkBoardPermission(
+      userId,
+      sourceList.boardId,
+      "normal"
+    );
+    const hasPermissionDestination = await checkBoardPermission(
+      userId,
+      destinationList.boardId,
+      "normal"
+    );
+
+    if (!hasPermissionSource || !hasPermissionDestination) {
       throw new Error("Permission denied");
     }
 
-    const updated = await cardRepository.update(data.id, {
-      listId: data.listId,
-      position: data.position,
-      boardId: newList.boardId,
-    });
+    const isSameList = data.sourceListId === data.destinationListId;
 
-    await activityRepository.create({
-      boardId: newList.boardId,
-      cardId: data.id,
-      userId,
-      action: "card.moved",
-      entityType: "card",
-      entityId: data.id,
-      metadata: {
-        oldListId: card.listId,
-        newListId: data.listId,
-        oldBoardId: card.boardId,
-        newBoardId: newList.boardId,
-      },
-    });
+    if (isSameList) {
+      // Same list: Only update positions
+      if (data.destinationOrders.length > 0) {
+        await cardRepository.reorders(
+          data.destinationListId,
+          data.destinationOrders
+        );
+      }
+    } else {
+      // Different lists: Update card's listId and reorder both lists
+      await cardRepository.update(data.id, {
+        listId: data.destinationListId,
+      });
 
-    if (card.members) {
-      for (const member of card.members) {
-        await notificationRepository.create({
-          userId: member.userId,
-          type: "card_moved",
-          title: "Card moved",
-          message: `"${card.title}" has been moved to another list`,
-          entityType: "card",
-          entityId: data.id,
-        });
+      // Reorder source list (remove card from source)
+      if (data.sourceOrders.length > 0) {
+        await cardRepository.reorders(data.sourceListId, data.sourceOrders);
+      }
+
+      // Reorder destination list (add card to destination)
+      if (data.destinationOrders.length > 0) {
+        await cardRepository.reorders(
+          data.destinationListId,
+          data.destinationOrders
+        );
+      }
+
+      // Create activity log for cross-list moves
+      await activityRepository.create({
+        boardId: destinationList.boardId,
+        cardId: data.id,
+        userId,
+        action: "card.moved",
+        entityType: "card",
+        entityId: data.id,
+        metadata: {
+          sourceListId: data.sourceListId,
+          targetListId: data.destinationListId,
+        },
+      });
+
+      // Notify card members about the move
+      if (card.members?.length) {
+        for (const member of card.members) {
+          await notificationRepository.create({
+            userId: member.userId,
+            type: "card_moved",
+            title: "Card moved",
+            message: `"${card.title}" has been moved to another list`,
+            entityType: "card",
+            entityId: data.id,
+          });
+        }
       }
     }
 
-    return updated;
+    return card;
   },
 
-  reorder: async (userId: string, data: ReorderCardInput) => {
-    const card = await cardRepository.findById(data.id);
-    if (!card) throw new Error("Card not found");
+  reorders: async (userId: string, data: ReorderCardsInput) => {
+    const list = await listRepository.findById(data.listId);
+    if (!list) throw new Error("List not found");
 
     const hasPermission = await checkBoardPermission(
       userId,
-      card.boardId,
+      list.boardId,
       "normal"
     );
     if (!hasPermission) throw new Error("Permission denied");
 
-    const updated = await cardRepository.update(data.id, {
-      position: data.position,
-    });
+    const allCards = await cardRepository.findAllByListId(data.listId);
+    const listCardIds = new Set(allCards.map((c) => c.id));
+
+    for (const order of data.orders) {
+      if (!listCardIds.has(order.id)) {
+        throw new Error(
+          `Card ${order.id} does not belong to list ${data.listId}`
+        );
+      }
+    }
+
+    await cardRepository.reorders(data.listId, data.orders);
 
     await activityRepository.create({
-      boardId: card.boardId,
-      cardId: data.id,
+      boardId: list.boardId,
       userId,
-      action: "card.reordered",
-      entityType: "card",
-      entityId: data.id,
-      metadata: { position: data.position },
+      action: "cards.reordered",
+      entityType: "list",
+      entityId: data.listId,
+      metadata: {
+        cardCount: data.orders.length,
+        orders: data.orders,
+      },
     });
-
-    return updated;
   },
 
   archive: async (userId: string, data: ArchiveCardInput) => {

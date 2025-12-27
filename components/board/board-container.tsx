@@ -13,37 +13,37 @@ interface BoardContainerProps {
 
 export const BoardContainer = ({ board, user }: BoardContainerProps) => {
   return (
-    <RoomProvider
-      id={board.id}
-      initialPresence={{
-        cursor: null,
-        selectedCardId: null,
-        editingCardId: null,
-        editingField: null,
-        dragState: {
-          isDragging: false,
-          dragType: null,
-          draggingId: null,
-          dragOffset: null,
-          pointer: null,
-          sourceListId: null,
-          sourcePosition: null,
-        },
-        user: {
-          id: user.id,
-          name: user.name || "",
-          image: user.image,
-          color: generateUserColor(user.id),
-        },
-      }}
-      initialStorage={{
-        board: boardToStorage(board),
-      }}
-    >
+    // <RoomProvider
+    //   id={board.id}
+    //   initialPresence={{
+    //     cursor: null,
+    //     selectedCardId: null,
+    //     editingCardId: null,
+    //     editingField: null,
+    //     dragState: {
+    //       isDragging: false,
+    //       dragType: null,
+    //       draggingId: null,
+    //       dragOffset: null,
+    //       pointer: null,
+    //       sourceListId: null,
+    //       sourcePosition: null,
+    //     },
+    //     user: {
+    //       id: user.id,
+    //       name: user.name || "",
+    //       image: user.image,
+    //       color: generateUserColor(user.id),
+    //     },
+    //   }}
+    //   initialStorage={{
+    //     board: boardToStorage(board),
+    //   }}
+    // >
       <div className="flex flex-col gap-5">
         <BoardHeader board={board} />
         <BoardContent board={board} />
       </div>
-    </RoomProvider>
+    // </RoomProvider>
   );
 };

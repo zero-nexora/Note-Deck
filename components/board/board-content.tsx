@@ -1,7 +1,5 @@
 "use client";
-
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { useBoardDragDrop } from "@/hooks/use-board-drag-drop";
 import {
   DndContext,
@@ -21,21 +19,14 @@ interface BoardContentProps {
 }
 
 export const BoardContent = ({ board }: BoardContentProps) => {
-  const { startDragging, updateDragging, stopDragging } = useBoardRealtime();
-
   const {
-    activeId,
-    localBoard,
+    lists,
+    activeCard,
+    activeList,
     handleDragStart,
-    handleDragMove,
     handleDragOver,
     handleDragEnd,
-  } = useBoardDragDrop({
-    board,
-    startDragging,
-    updateDragging,
-    stopDragging,
-  });
+  } = useBoardDragDrop({ board });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -45,15 +36,10 @@ export const BoardContent = ({ board }: BoardContentProps) => {
     })
   );
 
-  const activeCard = activeId
-    ? board.lists
-        .flatMap((list) => list.cards)
-        .find((card) => card.id === activeId)
-    : null;
-
-  const activeList = activeId
-    ? board.lists.find((list) => list.id === activeId)
-    : null;
+  const updatedBoard = {
+    ...board,
+    lists,
+  };
 
   return (
     <ScrollArea className="h-[calc(100vh-210px)]">
@@ -61,16 +47,13 @@ export const BoardContent = ({ board }: BoardContentProps) => {
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
-        onDragMove={handleDragMove}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <div className="relative h-full">
-          <LiveCursors />
-          <LiveDragOverlay board={localBoard} />
-
-          <BoardLists board={localBoard} />
-
+          {/* <LiveCursors /> */}
+          {/* <LiveDragOverlay board={updatedBoard} /> */}
+          <BoardLists board={updatedBoard} />
           <BoardOverlay activeCard={activeCard} activeList={activeList} />
         </div>
       </DndContext>

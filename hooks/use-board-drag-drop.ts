@@ -1,396 +1,285 @@
-"use client";
-
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import {
   DragEndEvent,
-  DragMoveEvent,
   DragOverEvent,
   DragStartEvent,
   UniqueIdentifier,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useList } from "./use-list";
 import { useCard } from "./use-card";
 
 interface UseBoardDragDropProps {
   board: BoardWithListColumnLabelAndMember;
-  startDragging: (
-    type: "card" | "list",
-    draggingId: string,
-    dragOffset: { x: number; y: number },
-    pointer: { x: number; y: number },
-    sourceListId?: string | null,
-    sourcePosition?: number | null
-  ) => void;
-  updateDragging: (pointer: { x: number; y: number }) => void;
-  stopDragging: () => void;
 }
 
-interface DragState {
-  activeId: UniqueIdentifier | null;
-  activeType: "card" | "list" | null;
-  sourceListId: string | null;
-  sourcePosition: number | null;
-  overId: UniqueIdentifier | null;
-}
+type DragType = "list" | "card" | null;
 
-export function useBoardDragDrop({
-  board,
-  startDragging,
-  updateDragging,
-  stopDragging,
-}: UseBoardDragDropProps) {
-  const { reorderList } = useList();
-  const { reorderCard, moveCard } = useCard();
+export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
+  const { reorderLists } = useList();
+  const { reorderCards, moveCard } = useCard();
 
-  const [dragState, setDragState] = useState<DragState>({
-    activeId: null,
-    activeType: null,
-    sourceListId: null,
-    sourcePosition: null,
-    overId: null,
-  });
+  const [lists, setLists] = useState(board.lists);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [activeType, setActiveType] = useState<DragType>(null);
+  const [originalSourceListId, setOriginalSourceListId] = useState<string | null>(null);
 
-  const [localBoard, setLocalBoard] =
-    useState<BoardWithListColumnLabelAndMember>(board);
-
-  useEffect(() => {
-    // Chỉ cập nhật localBoard khi không đang kéo thả
-    if (!dragState.activeId) {
-      setLocalBoard(board);
+  const activeCard = useMemo(() => {
+    if (!activeId || activeType !== "card") return null;
+    for (const list of lists) {
+      const card = list.cards.find((c) => c.id === activeId);
+      if (card) return card;
     }
-  }, [board, dragState.activeId]);
+    return null;
+  }, [activeId, activeType, lists]);
 
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      const { active } = event;
-      const activeId = active.id as string;
+  const activeList = useMemo(() => {
+    if (!activeId || activeType !== "list") return null;
+    return lists.find((list) => list.id === activeId) || null;
+  }, [activeId, activeType, lists]);
 
-      const isDraggingList = board.lists.some((list) => list.id === activeId);
-      const dragType = isDraggingList ? "list" : "card";
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id);
+    const type = active.data.current?.type as DragType;
+    setActiveType(type);
 
-      let sourceListId: string | null = null;
-      let sourcePosition: number | null = null;
+    if (type === "card") {
+      const sourceList = board.lists.find((list) =>
+        list.cards.some((c) => c.id === active.id)
+      );
+      setOriginalSourceListId(sourceList?.id ?? null);
+    } else {
+      setOriginalSourceListId(null);
+    }
+  }, [board.lists]);
 
-      if (dragType === "card") {
-        for (const list of board.lists) {
-          const cardIndex = list.cards.findIndex((c) => c.id === activeId);
-          if (cardIndex !== -1) {
-            sourceListId = list.id;
-            sourcePosition = list.cards[cardIndex].position;
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeType = active.data.current?.type as DragType;
+    if (activeType !== "card") return;
+
+    const overType = over.data.current?.type as DragType | undefined;
+    if (overType !== "list" && overType !== "card") return;
+
+    setLists((prevLists) => {
+      // Find card và source list
+      let draggedCard = null;
+      let sourceListId = "";
+      let sourceCardIndex = -1;
+
+      for (const list of prevLists) {
+        const idx = list.cards.findIndex((c) => c.id === active.id);
+        if (idx !== -1) {
+          draggedCard = list.cards[idx];
+          sourceListId = list.id;
+          sourceCardIndex = idx;
+          break;
+        }
+      }
+
+      if (!draggedCard || !sourceListId) return prevLists;
+
+      // Find destination list và insert position
+      let destListId = "";
+      let insertIndex = -1;
+
+      if (overType === "list") {
+        // Drop vào empty list hoặc cuối list
+        destListId = over.id as string;
+        const destList = prevLists.find((l) => l.id === destListId);
+        insertIndex = destList ? destList.cards.length : 0;
+      } else {
+        // Drop vào card cụ thể
+        for (const list of prevLists) {
+          const idx = list.cards.findIndex((c) => c.id === over.id);
+          if (idx !== -1) {
+            destListId = list.id;
+            insertIndex = idx;
             break;
           }
         }
+      }
+
+      if (!destListId || insertIndex === -1) return prevLists;
+
+      // Nếu cùng list và cùng vị trí thì không làm gì
+      if (sourceListId === destListId && sourceCardIndex === insertIndex) {
+        return prevLists;
+      }
+
+      // Clone lists để update
+      const newLists = prevLists.map((list) => ({
+        ...list,
+        cards: [...list.cards],
+      }));
+
+      const sourceList = newLists.find((l) => l.id === sourceListId);
+      const destList = newLists.find((l) => l.id === destListId);
+
+      if (!sourceList || !destList) return prevLists;
+
+      if (sourceListId === destListId) {
+        // Cùng list: reorder trong list
+        sourceList.cards = arrayMove(sourceList.cards, sourceCardIndex, insertIndex);
       } else {
-        const listIndex = board.lists.findIndex((l) => l.id === activeId);
-        if (listIndex !== -1) {
-          sourcePosition = board.lists[listIndex].position;
-        }
+        // Khác list: remove từ source và add vào dest
+        sourceList.cards.splice(sourceCardIndex, 1);
+        destList.cards.splice(insertIndex, 0, draggedCard);
       }
 
-      setDragState({
-        activeId,
-        activeType: dragType,
-        sourceListId,
-        sourcePosition,
-        overId: null,
-      });
-
-      startDragging(
-        dragType,
-        activeId,
-        { x: 0, y: 0 },
-        {
-          x:
-            event.activatorEvent instanceof MouseEvent
-              ? event.activatorEvent.clientX
-              : 0,
-          y:
-            event.activatorEvent instanceof MouseEvent
-              ? event.activatorEvent.clientY
-              : 0,
-        },
-        sourceListId,
-        sourcePosition
-      );
-    },
-    [board, startDragging]
-  );
-
-  const handleDragMove = useCallback(
-    (event: DragMoveEvent) => {
-      const { delta, activatorEvent } = event;
-
-      if (activatorEvent instanceof MouseEvent) {
-        updateDragging({
-          x: activatorEvent.clientX + delta.x,
-          y: activatorEvent.clientY + delta.y,
-        });
+      // Update position cho tất cả cards trong lists bị ảnh hưởng
+      if (sourceListId === destListId) {
+        sourceList.cards = sourceList.cards.map((card, idx) => ({
+          ...card,
+          position: (idx + 1) * 1024,
+        }));
+      } else {
+        sourceList.cards = sourceList.cards.map((card, idx) => ({
+          ...card,
+          position: (idx + 1) * 1024,
+        }));
+        destList.cards = destList.cards.map((card, idx) => ({
+          ...card,
+          position: (idx + 1) * 1024,
+        }));
       }
-    },
-    [updateDragging]
-  );
 
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      const { active, over } = event;
-
-      if (!over || !dragState.activeType) return;
-
-      const activeId = active.id as string;
-      const overId = over.id as string;
-
-      // Cập nhật overId
-      setDragState((prev) => ({ ...prev, overId }));
-
-      if (dragState.activeType === "card") {
-        const activeListId = localBoard.lists.find((list) =>
-          list.cards.some((c) => c.id === activeId)
-        )?.id;
-
-        // Tìm list đích: nếu overId là list thì dùng nó, nếu là card thì tìm list chứa card đó
-        let overListId: string | undefined;
-
-        // Kiểm tra xem overId có phải là list không
-        const isOverList = localBoard.lists.some((list) => list.id === overId);
-
-        if (isOverList) {
-          overListId = overId;
-        } else {
-          // Nếu không phải list, tìm list chứa card này
-          overListId = localBoard.lists.find((list) =>
-            list.cards.some((c) => c.id === overId)
-          )?.id;
-        }
-
-        if (!activeListId || !overListId) return;
-
-        // Nếu kéo trong cùng list
-        if (activeListId === overListId) {
-          setLocalBoard((prevBoard) => {
-            const newLists = [...prevBoard.lists];
-            const listIndex = newLists.findIndex((l) => l.id === activeListId);
-            if (listIndex === -1) return prevBoard;
-
-            const list = newLists[listIndex];
-            const oldIndex = list.cards.findIndex((c) => c.id === activeId);
-
-            // Nếu over là list thì thêm vào cuối, nếu là card thì tìm vị trí của card đó
-            let newIndex: number;
-            if (isOverList) {
-              newIndex = list.cards.length - 1;
-            } else {
-              newIndex = list.cards.findIndex((c) => c.id === overId);
-            }
-
-            if (oldIndex === -1 || newIndex === -1) return prevBoard;
-            if (oldIndex === newIndex) return prevBoard;
-
-            newLists[listIndex] = {
-              ...list,
-              cards: arrayMove(list.cards, oldIndex, newIndex).map(
-                (card, idx) => ({
-                  ...card,
-                  position: idx,
-                })
-              ),
-            };
-
-            return { ...prevBoard, lists: newLists };
-          });
-        } else {
-          // Kéo sang list khác
-          setLocalBoard((prevBoard) => {
-            const newLists = [...prevBoard.lists];
-            const activeListIndex = newLists.findIndex(
-              (l) => l.id === activeListId
-            );
-            const overListIndex = newLists.findIndex(
-              (l) => l.id === overListId
-            );
-
-            if (activeListIndex === -1 || overListIndex === -1)
-              return prevBoard;
-
-            const activeList = { ...newLists[activeListIndex] };
-            const overList = { ...newLists[overListIndex] };
-
-            const activeCardIndex = activeList.cards.findIndex(
-              (c) => c.id === activeId
-            );
-            if (activeCardIndex === -1) return prevBoard;
-
-            // Xóa card khỏi list cũ
-            const [movedCard] = activeList.cards.splice(activeCardIndex, 1);
-
-            // Tìm vị trí insert trong list mới
-            let insertIndex: number;
-            if (isOverList) {
-              // Nếu kéo vào list trống hoặc vào list (không phải card cụ thể)
-              insertIndex = overList.cards.length;
-            } else {
-              // Nếu kéo vào vị trí card cụ thể
-              const overCardIndex = overList.cards.findIndex(
-                (c) => c.id === overId
-              );
-              insertIndex =
-                overCardIndex !== -1 ? overCardIndex : overList.cards.length;
-            }
-
-            // Thêm card vào list mới với listId mới
-            overList.cards.splice(insertIndex, 0, {
-              ...movedCard,
-              listId: overListId, // CẬP NHẬT LISTID
-            });
-
-            // Cập nhật position cho cả 2 lists
-            newLists[activeListIndex] = {
-              ...activeList,
-              cards: activeList.cards.map((card, idx) => ({
-                ...card,
-                position: idx,
-              })),
-            };
-
-            newLists[overListIndex] = {
-              ...overList,
-              cards: overList.cards.map((card, idx) => ({
-                ...card,
-                position: idx,
-              })),
-            };
-
-            return { ...prevBoard, lists: newLists };
-          });
-        }
-      } else if (dragState.activeType === "list") {
-        // Xử lý kéo list
-        setLocalBoard((prevBoard) => {
-          const oldIndex = prevBoard.lists.findIndex((l) => l.id === activeId);
-          const newIndex = prevBoard.lists.findIndex((l) => l.id === overId);
-
-          if (oldIndex === -1 || newIndex === -1) return prevBoard;
-          if (oldIndex === newIndex) return prevBoard;
-
-          const newLists = arrayMove(prevBoard.lists, oldIndex, newIndex).map(
-            (list, idx) => ({
-              ...list,
-              position: idx,
-            })
-          );
-
-          return { ...prevBoard, lists: newLists };
-        });
-      }
-    },
-    [dragState.activeType, localBoard.lists]
-  );
+      return newLists;
+    });
+  }, []);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
       const { active, over } = event;
 
-      stopDragging();
+      setActiveId(null);
+      setActiveType(null);
 
-      if (!over || !dragState.activeType) {
-        setDragState({
-          activeId: null,
-          activeType: null,
-          sourceListId: null,
-          sourcePosition: null,
-          overId: null,
-        });
-        setLocalBoard(board);
+      if (!over) {
+        setOriginalSourceListId(null);
+        setLists(board.lists); // Reset về state ban đầu nếu drop không hợp lệ
         return;
       }
 
-      const activeId = active.id as string;
-      const overId = over.id as string;
+      const type = active.data.current?.type as DragType;
 
-      try {
-        if (dragState.activeType === "card") {
-          // Tìm list hiện tại của card (sau khi drag over)
-          const currentList = localBoard.lists.find((list) =>
-            list.cards.some((c) => c.id === activeId)
+      // Xử lý drag list
+      if (type === "list") {
+        if (active.id === over.id) {
+          setOriginalSourceListId(null);
+          return;
+        }
+
+        const oldIndex = lists.findIndex((l) => l.id === active.id);
+        const newIndex = lists.findIndex((l) => l.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          const newLists = arrayMove(lists, oldIndex, newIndex);
+          const orders = newLists.map((list, idx) => ({
+            id: list.id,
+            position: (idx + 1) * 1024,
+          }));
+
+          setLists(
+            newLists.map((list, idx) => ({
+              ...list,
+              position: (idx + 1) * 1024,
+            }))
           );
 
-          if (!currentList) {
-            throw new Error("Current list not found");
-          }
+          await reorderLists({
+            boardId: board.id,
+            orders,
+          });
+        }
+        setOriginalSourceListId(null);
+        return;
+      }
 
-          const card = currentList.cards.find((c) => c.id === activeId);
-          if (!card) {
-            throw new Error("Card not found");
-          }
+      // Xử lý drag card
+      if (type !== "card" || !originalSourceListId) {
+        setOriginalSourceListId(null);
+        return;
+      }
 
-          const newPosition = card.position;
-          const newListId = currentList.id;
+      // Find current destination list của card
+      let currentDestListId = "";
+      for (const list of lists) {
+        if (list.cards.some((c) => c.id === active.id)) {
+          currentDestListId = list.id;
+          break;
+        }
+      }
 
-          // Kiểm tra xem có thay đổi list không
-          const hasChangedList = dragState.sourceListId !== newListId;
+      if (!currentDestListId) {
+        setOriginalSourceListId(null);
+        setLists(board.lists); // Reset nếu không tìm thấy
+        return;
+      }
 
-          if (hasChangedList) {
-            // Nếu đổi list, gọi moveCard với listId và position mới
-            await moveCard({
-              id: activeId,
-              listId: newListId,
-              position: newPosition,
-            });
-          } else {
-            // Nếu chỉ đổi vị trí trong cùng list
-            const hasChangedPosition = dragState.sourcePosition !== newPosition;
+      const isSameList = originalSourceListId === currentDestListId;
 
-            if (hasChangedPosition) {
-              await reorderCard({ id: activeId, position: newPosition });
-            }
-          }
-        } else if (dragState.activeType === "list") {
-          const newIndex = localBoard.lists.findIndex((l) => l.id === activeId);
-          if (newIndex === -1) {
-            throw new Error("List not found");
-          }
+      try {
+        if (isSameList) {
+          // Cùng list: gọi reorderCards
+          const destList = lists.find((l) => l.id === currentDestListId);
+          if (!destList) return;
 
-          const newPosition = localBoard.lists[newIndex].position;
-          const hasChangedPosition = dragState.sourcePosition !== newPosition;
+          const orders = destList.cards.map((c) => ({
+            id: c.id,
+            position: c.position,
+          }));
 
-          if (hasChangedPosition) {
-            await reorderList({ id: activeId, position: newPosition });
-          }
+          await reorderCards({
+            listId: currentDestListId,
+            orders,
+          });
+        } else {
+          // Khác list: gọi moveCard
+          const sourceList = lists.find((l) => l.id === originalSourceListId);
+          const destList = lists.find((l) => l.id === currentDestListId);
+
+          if (!sourceList || !destList) return;
+
+          const sourceOrders = sourceList.cards.map((c) => ({
+            id: c.id,
+            position: c.position,
+          }));
+
+          const destinationOrders = destList.cards.map((c) => ({
+            id: c.id,
+            position: c.position,
+          }));
+
+          await moveCard({
+            id: active.id as string,
+            sourceListId: originalSourceListId,
+            destinationListId: currentDestListId,
+            sourceOrders,
+            destinationOrders,
+          });
         }
       } catch (error) {
-        console.error("Error during drag end:", error);
-        // Rollback về trạng thái ban đầu nếu có lỗi
-        setLocalBoard(board);
-      } finally {
-        setDragState({
-          activeId: null,
-          activeType: null,
-          sourceListId: null,
-          sourcePosition: null,
-          overId: null,
-        });
+        console.error("Error updating card position:", error);
+        // Reset về state ban đầu nếu có lỗi
+        setLists(board.lists);
       }
+
+      setOriginalSourceListId(null);
     },
-    [
-      dragState.activeType,
-      dragState.sourceListId,
-      dragState.sourcePosition,
-      localBoard.lists,
-      board,
-      reorderCard,
-      moveCard,
-      reorderList,
-      stopDragging,
-    ]
+    [board, lists, originalSourceListId, moveCard, reorderCards, reorderLists]
   );
 
   return {
+    lists,
+    activeCard,
+    activeList,
     handleDragStart,
-    handleDragMove,
     handleDragOver,
     handleDragEnd,
-    activeId: dragState.activeId,
-    localBoard,
   };
 }
