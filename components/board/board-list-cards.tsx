@@ -8,14 +8,21 @@ import {
 import { BoardCardItem } from "./board-card-item";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardListCardsProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
   boardMembers: BoardWithListColumnLabelAndMember["members"];
   boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const BoardListCards = ({ list, boardMembers, boardLabels }: BoardListCardsProps) => {
+export const BoardListCards = ({
+  list,
+  boardMembers,
+  boardLabels,
+  realtimeUtils,
+}: BoardListCardsProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: list.id,
     data: {
@@ -39,7 +46,13 @@ export const BoardListCards = ({ list, boardMembers, boardLabels }: BoardListCar
           strategy={verticalListSortingStrategy}
         >
           {sortedCards.map((card) => (
-            <BoardCardItem boardMembers={boardMembers} boardLabels={boardLabels} key={card.id} card={card} />
+            <BoardCardItem
+              boardMembers={boardMembers}
+              boardLabels={boardLabels}
+              key={card.id}
+              card={card}
+              realtimeUtils={realtimeUtils}
+            />
           ))}
         </SortableContext>
 

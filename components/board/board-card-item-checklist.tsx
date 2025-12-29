@@ -14,22 +14,20 @@ import {
   CreateChecklistInput,
   CreateChecklistSchema,
 } from "@/domain/schemas/check-list.schema";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemChecklistsProps {
   cardId: string;
   cardChecklists: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["checklists"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemChecklists = ({
   cardId,
   cardChecklists: initialChecklists = [],
+  realtimeUtils,
 }: BoardCardItemChecklistsProps) => {
   const [checklists, setChecklists] = useState(initialChecklists);
   const [addingChecklist, setAddingChecklist] = useState(false);
@@ -37,11 +35,8 @@ export const BoardCardItemChecklists = ({
   const [newItemText, setNewItemText] = useState("");
 
   const { createChecklist, deleteChecklist } = useChecklist();
-  const {
-    createChecklistItem,
-    toggleChecklistItem,
-    deleteChecklistItem,
-  } = useChecklistItem();
+  const { createChecklistItem, toggleChecklistItem, deleteChecklistItem } =
+    useChecklistItem();
 
   useEffect(() => {
     setChecklists(initialChecklists);
@@ -56,6 +51,13 @@ export const BoardCardItemChecklists = ({
     const newChecklist = await createChecklist(values);
     if (newChecklist) {
       setChecklists((prev) => [...prev, { ...newChecklist, items: [] }]);
+
+      // ✨ Broadcast card updated (checklist added)
+      realtimeUtils.broadcastCardUpdated({
+        cardId,
+        field: "coverImage", // Sử dụng field tạm thời
+        value: "checklist_added",
+      });
     }
     createChecklistForm.reset();
     setAddingChecklist(false);
@@ -64,6 +66,13 @@ export const BoardCardItemChecklists = ({
   const handleDeleteChecklist = async (id: string) => {
     await deleteChecklist({ id });
     setChecklists((prev) => prev.filter((cl) => cl.id !== id));
+
+    // ✨ Broadcast card updated (checklist deleted)
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage", // Sử dụng field tạm thời
+      value: "checklist_deleted",
+    });
   };
 
   const handleToggleItem = async (id: string, isCompleted: boolean) => {
@@ -76,6 +85,13 @@ export const BoardCardItemChecklists = ({
         ),
       }))
     );
+
+    // ✨ Broadcast card updated (checklist item toggled)
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage", // Sử dụng field tạm thời
+      value: "checklist_item_toggled",
+    });
   };
 
   const handleAddItem = async (checklistId: string) => {
@@ -87,11 +103,16 @@ export const BoardCardItemChecklists = ({
     if (newItem) {
       setChecklists((prev) =>
         prev.map((cl) =>
-          cl.id === checklistId
-            ? { ...cl, items: [...cl.items, newItem] }
-            : cl
+          cl.id === checklistId ? { ...cl, items: [...cl.items, newItem] } : cl
         )
       );
+
+      // ✨ Broadcast card updated (checklist item added)
+      realtimeUtils.broadcastCardUpdated({
+        cardId,
+        field: "coverImage", // Sử dụng field tạm thời
+        value: "checklist_item_added",
+      });
     }
     setNewItemText("");
     setAddingItemTo(null);
@@ -105,6 +126,13 @@ export const BoardCardItemChecklists = ({
         items: cl.items.filter((item) => item.id !== id),
       }))
     );
+
+    // ✨ Broadcast card updated (checklist item deleted)
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage", // Sử dụng field tạm thời
+      value: "checklist_item_deleted",
+    });
   };
 
   return (
@@ -118,7 +146,10 @@ export const BoardCardItemChecklists = ({
             </div>
             <h3 className="font-semibold text-foreground">Checklists</h3>
             {checklists.length > 0 && (
-              <Badge variant="secondary" className="rounded-full h-5 min-w-5 px-1.5">
+              <Badge
+                variant="secondary"
+                className="rounded-full h-5 min-w-5 px-1.5"
+              >
                 {checklists.length}
               </Badge>
             )}
@@ -236,10 +267,7 @@ export const BoardCardItemChecklists = ({
                         {completedCount}/{totalCount}
                       </span>
                     </div>
-                    <Progress 
-                      value={progress} 
-                      className="h-2"
-                    />
+                    <Progress value={progress} className="h-2" />
                   </div>
                 </div>
 

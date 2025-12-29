@@ -43,9 +43,8 @@ const Cursor = memo(
           />
         </svg>
 
-        {/* User name tag */}
         <div
-          className="absolute left-6 top-0 px-2 py-1 rounded-md text-xs font-medium text-white whitespace-nowrap shadow-lg"
+          className="absolute left-6 top-0 px-2 py-1 rounded-md text-xs font-medium text-foreground whitespace-nowrap shadow-lg"
           style={{
             backgroundColor: color,
           }}

@@ -1,6 +1,6 @@
 "use client";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
-import { useBoardDragDrop } from "@/hooks/use-board-drag-drop";
+import { useBoardDragDropRealtime } from "@/hooks/use-board-drag-drop-realtime";
 import {
   DndContext,
   PointerSensor,
@@ -9,16 +9,16 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 import { BoardLists } from "./board-lists";
-import { LiveCursors } from "./live-cursors";
-import { LiveDragOverlay } from "./live-drap-overlay";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { BoardOverlay } from "./board-overlay";
 
 interface BoardContentProps {
   board: BoardWithListColumnLabelAndMember;
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const BoardContent = ({ board }: BoardContentProps) => {
+export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
   const {
     lists,
     activeCard,
@@ -26,7 +26,7 @@ export const BoardContent = ({ board }: BoardContentProps) => {
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-  } = useBoardDragDrop({ board });
+  } = useBoardDragDropRealtime({ board, realtimeUtils });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -51,11 +51,14 @@ export const BoardContent = ({ board }: BoardContentProps) => {
         onDragEnd={handleDragEnd}
       >
         <div className="relative h-full">
-          {/* <LiveCursors /> */}
-          {/* <LiveDragOverlay board={updatedBoard} /> */}
-          <BoardLists board={updatedBoard} />
-          <BoardOverlay activeCard={activeCard} activeList={activeList} />
+          <BoardLists board={updatedBoard} realtimeUtils={realtimeUtils} />
         </div>
+
+        <BoardOverlay
+          realtimeUtils={realtimeUtils}
+          activeCard={activeCard}
+          activeList={activeList}
+        />
       </DndContext>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>

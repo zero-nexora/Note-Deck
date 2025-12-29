@@ -1,51 +1,83 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { useModal } from "@/stores/modal-store";
 import { BoardHeaderMembersForm } from "./board-header-members-form";
+import { useOthers, useSelf } from "@/lib/liveblocks";
+import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 
 interface BoardHeaderMembersProps {
+  boardId: string;
   boardMembers: BoardWithListColumnLabelAndMember["members"];
 }
 
 export const BoardHeaderMembers = ({
+  boardId,
   boardMembers,
 }: BoardHeaderMembersProps) => {
   const { open: openModal } = useModal();
 
+  const others = useOthers();
+  const self = useSelf();
+
+  const allUsers = [
+    ...(self
+      ? [
+          {
+            connectionId: self.connectionId,
+            user: self.presence.user,
+            isMe: true,
+          },
+        ]
+      : []),
+    ...others.map((other) => ({
+      connectionId: other.connectionId,
+      user: other.presence.user,
+      isMe: false,
+    })),
+  ];
+
+  if (allUsers.length === 0) return null;
+
   const handleViewDetailMember = () => {
     openModal({
-      title: `Board Members (${boardMembers.length})`,
-      description: " Manage who has access to this board",
-      children: <BoardHeaderMembersForm members={boardMembers} />,
+      title: `People on this board (${allUsers.length})`,
+      description: "Currently viewing this board in real time",
+      children: (
+        <BoardHeaderMembersForm
+          boardId={boardId}
+          boardMembers={boardMembers}
+          membersOnline={allUsers.map((u) => u.user)}
+        />
+      ),
     });
   };
 
   return (
-    <Button onClick={handleViewDetailMember} variant={"ghost"}>
+    <Button
+      onClick={handleViewDetailMember}
+      variant={"ghost"}
+      className="gap-2"
+    >
       <div className="flex -space-x-2">
-        {boardMembers.slice(0, 5).map((member) => (
+        {allUsers.slice(0, 5).map(({ connectionId, user }) => (
           <Avatar
-            key={member.id}
+            key={connectionId}
             className="w-8 h-8 border-2 border-background ring-1 ring-border hover:z-10 transition-all"
           >
-            {member.user.image ? (
-              <AvatarImage
-                src={member.user.image}
-                alt={member.user.name || ""}
-              />
+            {user.image ? (
+              <AvatarImage src={user.image} alt={user.name || ""} />
             ) : null}
             <AvatarFallback className="text-xs bg-primary/10 text-primary">
-              {(member.user.name || "U").charAt(0).toUpperCase()}
+              {(user.name || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         ))}
-        {boardMembers.length > 5 && (
+        {allUsers.length > 5 && (
           <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
-            +{boardMembers.length - 5}
+            +{allUsers.length - 5}
           </div>
         )}
       </div>

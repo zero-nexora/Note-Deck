@@ -4,16 +4,17 @@ import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { BoardCardItem } from "./board-card-item";
 import { BoardListItem } from "./board-list-item";
-import { cardMembers } from "@/db/schema";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardOverlayProps {
   activeCard:
     | BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]
     | null | undefined;
   activeList: BoardWithListColumnLabelAndMember["lists"][number] | null | undefined;
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const BoardOverlay = ({ activeCard, activeList }: BoardOverlayProps) => {
+export const BoardOverlay = ({ activeCard, activeList, realtimeUtils }: BoardOverlayProps) => {
   const dropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: {
@@ -29,9 +30,9 @@ export const BoardOverlay = ({ activeCard, activeList }: BoardOverlayProps) => {
   return (
     <DragOverlay dropAnimation={dropAnimation}>
       {activeCard ? (
-        <BoardCardItem boardMembers={[]} boardLabels={[]} card={activeCard} />
+        <BoardCardItem realtimeUtils={realtimeUtils} boardMembers={[]} boardLabels={[]} card={activeCard} />
       ) : activeList ? (
-        <BoardListItem boardMembers={[]} boardLabels={[]} list={activeList} />
+        <BoardListItem realtimeUtils={realtimeUtils} boardMembers={[]} boardLabels={[]} list={activeList} />
       ) : null}
     </DragOverlay>
   );

@@ -10,15 +10,18 @@ import {
   ImageAttachmentPicker,
 } from "../common/image-attachment-picker";
 import Image from "next/image";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemAttachmentsProps {
   cardId: string;
   attachments: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["attachments"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemAttachments = ({
   cardId,
   attachments: initialAttachments = [],
+  realtimeUtils,
 }: BoardCardItemAttachmentsProps) => {
   const [attachments, setAttachments] = useState(initialAttachments);
   const [isAdding, setIsAdding] = useState(false);
@@ -38,6 +41,12 @@ export const BoardCardItemAttachments = ({
 
     if (newAttachment) {
       setAttachments((prev) => [...prev, newAttachment]);
+
+      realtimeUtils.broadcastCardUpdated({
+        cardId,
+        field: "coverImage",
+        value: "attachment_added",
+      });
     }
 
     setIsAdding(false);
@@ -46,6 +55,12 @@ export const BoardCardItemAttachments = ({
   const handleDeleteAttachment = async (id: string) => {
     await deleteAttachment({ id });
     setAttachments((prev) => prev.filter((a) => a.id !== id));
+
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage",
+      value: "attachment_deleted",
+    });
   };
 
   const formatFileSize = (bytes: number) => {
@@ -64,7 +79,6 @@ export const BoardCardItemAttachments = ({
   return (
     <Card className="p-5 bg-card border-border/60">
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
@@ -72,7 +86,10 @@ export const BoardCardItemAttachments = ({
             </div>
             <h3 className="font-semibold text-foreground">Attachments</h3>
             {attachments.length > 0 && (
-              <Badge variant="secondary" className="rounded-full h-5 min-w-5 px-1.5">
+              <Badge
+                variant="secondary"
+                className="rounded-full h-5 min-w-5 px-1.5"
+              >
                 {attachments.length}
               </Badge>
             )}
@@ -97,7 +114,6 @@ export const BoardCardItemAttachments = ({
           </Button>
         </div>
 
-        {/* Upload Area */}
         {isAdding && (
           <div className="p-4 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-colors">
             <ImageAttachmentPicker
@@ -107,18 +123,16 @@ export const BoardCardItemAttachments = ({
           </div>
         )}
 
-        {/* Attachments Grid */}
         {attachments.length > 0 && (
           <div className="grid gap-3">
             {attachments.map((attachment) => {
               const isImage = attachment.fileType.startsWith("image/");
-              
+
               return (
                 <div
                   key={attachment.id}
                   className="group relative flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/30 hover:bg-secondary/50 hover:border-border transition-all"
                 >
-                  {/* Preview/Icon */}
                   <div className="shrink-0">
                     {isImage ? (
                       <div className="relative h-14 w-14 overflow-hidden rounded-md border border-border/60 bg-background">
@@ -136,7 +150,6 @@ export const BoardCardItemAttachments = ({
                     )}
                   </div>
 
-                  {/* File Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate leading-tight">
                       {attachment.fileName}
@@ -152,7 +165,6 @@ export const BoardCardItemAttachments = ({
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
@@ -179,7 +191,6 @@ export const BoardCardItemAttachments = ({
           </div>
         )}
 
-        {/* Empty State */}
         {attachments.length === 0 && !isAdding && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
@@ -187,7 +198,7 @@ export const BoardCardItemAttachments = ({
             </div>
             <p className="text-sm text-muted-foreground">No attachments yet</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Click &quot;Addto&quot; upload files
+              Click &quot;Add&quot; to upload files
             </p>
           </div>
         )}

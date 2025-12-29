@@ -24,12 +24,20 @@ type UnsplashImage = {
   };
 };
 
-type Props = {
-  onSelect: (attachment: AttachmentInput) => void;
-  disabled?: boolean;
-};
+type ImageAttachmentPickerProps =
+  | {
+      mode: "cover";
+      onSelect: (imageUrl: string) => void;
+      disabled?: boolean;
+    }
+  | {
+      mode?: "attachment";
+      onSelect: (attachment: AttachmentInput) => void;
+      disabled?: boolean;
+    };
 
-export function ImageAttachmentPicker({ onSelect, disabled }: Props) {
+export function ImageAttachmentPicker(props: ImageAttachmentPickerProps) {
+  const { onSelect, disabled, mode = "attachment" } = props;
   const [images, setImages] = useState<UnsplashImage[]>([]);
   const [loadingUnsplash, setLoadingUnsplash] = useState(false);
 
@@ -51,32 +59,41 @@ export function ImageAttachmentPicker({ onSelect, disabled }: Props) {
   };
 
   const handleUnsplashSelect = (img: UnsplashImage) => {
-    const attachment = {
-      fileName: img.alt_description ?? "unsplash-image",
-      fileUrl: img.urls.regular,
-      fileType: "image/jpeg",
-      fileSize: 0,
-      uploadThingKey: `unsplash_${img.id}`,
-      expiresAt: null,
-    };
-    setImages([]);
-    onSelect(attachment);
+    if (mode === "cover") {
+      setImages([]);
+      (onSelect as (url: string) => void)(img.urls.regular);
+    } else {
+      const attachment: AttachmentInput = {
+        fileName: img.alt_description ?? "unsplash-image",
+        fileUrl: img.urls.regular,
+        fileType: "image/jpeg",
+        fileSize: 0,
+        uploadThingKey: `unsplash_${img.id}`,
+        expiresAt: null,
+      };
+      setImages([]);
+      (onSelect as (attachment: AttachmentInput) => void)(attachment);
+    }
   };
 
   const handleUploadComplete = (res: any) => {
     const file = res[0];
 
-    const attachment = {
-      fileName: file.name,
-      fileUrl: file.url,
-      fileType: file.type,
-      fileSize: file.size,
-      uploadThingKey: file.key,
-      expiresAt: null,
-    };
-
-    setImages([]);
-    onSelect(attachment);
+    if (mode === "cover") {
+      setImages([]);
+      (onSelect as (url: string) => void)(file.url);
+    } else {
+      const attachment: AttachmentInput = {
+        fileName: file.name,
+        fileUrl: file.url,
+        fileType: file.type,
+        fileSize: file.size,
+        uploadThingKey: file.key,
+        expiresAt: null,
+      };
+      setImages([]);
+      (onSelect as (attachment: AttachmentInput) => void)(attachment);
+    }
   };
 
   return (

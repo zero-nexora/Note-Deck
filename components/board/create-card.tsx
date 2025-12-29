@@ -19,12 +19,14 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Loading } from "../common/loading";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface CreateCardProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const CreateCard = ({ list }: CreateCardProps) => {
+export const CreateCard = ({ list, realtimeUtils }: CreateCardProps) => {
   const [isAdding, setIsAdding] = useState(false);
 
   const { createCard } = useCard();
@@ -38,7 +40,12 @@ export const CreateCard = ({ list }: CreateCardProps) => {
   });
 
   const handleSubmit = async (values: CreateCardInput) => {
-    await createCard(values);
+    const result = await createCard(values);
+    if (result)
+      realtimeUtils?.broadcastCardCreated({
+        cardId: result.id,
+        listId: list.id,
+      });
     setIsAdding(false);
     form.reset();
   };

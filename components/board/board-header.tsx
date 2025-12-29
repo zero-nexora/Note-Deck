@@ -22,10 +22,10 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
           <div className="flex gap-5">
             <BoardInviteMember
               boardId={board.id}
-              boardMembers={board["members"]}
+              boardMembers={board.members}
               workspaceMembers={workspaceMembers}
             />
-            <BoardHeaderMembers boardMembers={board["members"]} />
+            <BoardHeaderMembers boardMembers={board.members} boardId={board.id} />
           </div>
           <BoardHeaderLabels boardId={board.id} boardLabels={board["labels"]} />
         </div>

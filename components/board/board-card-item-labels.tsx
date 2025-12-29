@@ -5,17 +5,20 @@ import { Card } from "@/components/ui/card";
 import { Tag, Plus, X } from "lucide-react";
 import { useCardLabel } from "@/hooks/use-card-label";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemLabelsProps {
   cardId: string;
   cardLabels: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["cardLabels"];
   boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemLabels = ({
   cardId,
   cardLabels: initialCardLabels = [],
   boardLabels = [],
+  realtimeUtils,
 }: BoardCardItemLabelsProps) => {
   const [cardLabels, setCardLabels] = useState(initialCardLabels);
   const [isAdding, setIsAdding] = useState(false);
@@ -33,6 +36,12 @@ export const BoardCardItemLabels = ({
     if (isAssigned) {
       await removeLabel({ cardId, labelId });
       setCardLabels((prev) => prev.filter((cl) => cl.label.id !== labelId));
+
+      // ✨ Broadcast label removed
+      realtimeUtils.broadcastLabelRemoved({
+        cardId,
+        labelId,
+      });
     } else {
       const newCardLabel = await addLabel({ cardId, labelId });
       if (newCardLabel) {
@@ -53,6 +62,12 @@ export const BoardCardItemLabels = ({
               },
             },
           ]);
+
+          // ✨ Broadcast label added
+          realtimeUtils.broadcastLabelAdded({
+            cardId,
+            labelId,
+          });
         }
       }
       setIsAdding(false);

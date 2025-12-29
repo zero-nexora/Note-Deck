@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-explicit-any": "off",
       "react-hooks/exhaustive-deps": "off",
       "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
 ]);

@@ -6,17 +6,20 @@ import { Users, Plus, X } from "lucide-react";
 import { useCardMember } from "@/hooks/use-card-member";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { Badge } from "@/components/ui/badge";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemMembersProps {
   cardId: string;
   cardMembers: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["members"];
   boardMembers: BoardWithListColumnLabelAndMember["members"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemMembers = ({
   cardId,
   cardMembers: initialCardMembers = [],
   boardMembers = [],
+  realtimeUtils,
 }: BoardCardItemMembersProps) => {
   const [cardMembers, setCardMembers] = useState(initialCardMembers);
   const [isAdding, setIsAdding] = useState(false);
@@ -34,6 +37,12 @@ export const BoardCardItemMembers = ({
     if (isAssigned) {
       await removeMember({ cardId, userId });
       setCardMembers((prev) => prev.filter((m) => m.user.id !== userId));
+
+      // ✨ Broadcast member unassigned
+      realtimeUtils.broadcastMemberUnassigned({
+        cardId,
+        memberId: userId,
+      });
     } else {
       const newMembership = await addMember({ cardId, userId });
       if (newMembership) {
@@ -49,6 +58,12 @@ export const BoardCardItemMembers = ({
               user: boardMember.user,
             },
           ]);
+
+          // ✨ Broadcast member assigned
+          realtimeUtils.broadcastMemberAssigned({
+            cardId,
+            memberId: userId,
+          });
         }
       }
       setIsAdding(false);

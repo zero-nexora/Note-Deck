@@ -10,13 +10,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useList } from "./use-list";
 import { useCard } from "./use-card";
 
-interface UseBoardDragDropProps {
+interface UseBoardDragDropRealtimeProps {
   board: BoardWithListColumnLabelAndMember;
+  realtimeUtils: ReturnType<
+    typeof import("./use-board-realtime")["useBoardRealtime"]
+  >;
 }
 
 type DragType = "list" | "card" | null;
 
-export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
+export function useBoardDragDropRealtime({
+  board,
+  realtimeUtils,
+}: UseBoardDragDropRealtimeProps) {
   const { reorderLists } = useList();
   const { reorderCards, moveCard } = useCard();
 
@@ -49,8 +55,19 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
       const { active } = event;
-      setActiveId(active.id);
       const type = active.data.current?.type as DragType;
+
+      if (type === "card" && !realtimeUtils.canDragCard(active.id as string)) {
+        console.log("Cannot drag card - being dragged by another user");
+        return;
+      }
+
+      if (type === "list" && !realtimeUtils.canDragList(active.id as string)) {
+        console.log("Cannot drag list - being dragged by another user");
+        return;
+      }
+
+      setActiveId(active.id);
       setActiveType(type);
 
       if (type === "card") {
@@ -58,11 +75,13 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           list.cards.some((c) => c.id === active.id)
         );
         setOriginalSourceListId(sourceList?.id ?? null);
-      } else {
+        realtimeUtils.setDraggingCard(active.id as string);
+      } else if (type === "list") {
         setOriginalSourceListId(null);
+        realtimeUtils.setDraggingList(active.id as string);
       }
     },
-    [board.lists]
+    [board.lists, realtimeUtils]
   );
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
@@ -89,7 +108,6 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           break;
         }
       }
-
       if (!draggedCard || !sourceListId) return prevLists;
 
       let destListId = "";
@@ -109,7 +127,6 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           }
         }
       }
-
       if (!destListId || insertIndex === -1) return prevLists;
 
       if (sourceListId === destListId && sourceCardIndex === insertIndex) {
@@ -133,7 +150,6 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           insertIndex
         );
       } else {
-        // Khác list: remove từ source và add vào dest
         sourceList.cards.splice(sourceCardIndex, 1);
         destList.cards.splice(insertIndex, 0, draggedCard);
       }
@@ -165,13 +181,19 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
       setActiveId(null);
       setActiveType(null);
 
+      const type = active.data.current?.type as DragType;
+
+      if (type === "card") {
+        realtimeUtils.setDraggingCard(null);
+      } else if (type === "list") {
+        realtimeUtils.setDraggingList(null);
+      }
+
       if (!over) {
         setOriginalSourceListId(null);
         setLists(board.lists);
         return;
       }
-
-      const type = active.data.current?.type as DragType;
 
       if (type === "list") {
         if (active.id === over.id) {
@@ -199,6 +221,11 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           reorderLists({
             boardId: board.id,
             orders,
+          }).then(() => {
+            realtimeUtils.broadcastListMoved({
+              listId: active.id as string,
+              position: (newIndex + 1) * 1024,
+            });
           });
         }
         setOriginalSourceListId(null);
@@ -239,6 +266,16 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           reorderCards({
             listId: currentDestListId,
             orders,
+          }).then(() => {
+            const movedCard = destList.cards.find((c) => c.id === active.id);
+            if (movedCard) {
+              realtimeUtils.broadcastCardMoved({
+                cardId: active.id as string,
+                sourceListId: currentDestListId,
+                destinationListId: currentDestListId,
+                position: movedCard.position,
+              });
+            }
           });
         } else {
           const sourceList = lists.find((l) => l.id === originalSourceListId);
@@ -262,16 +299,32 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
             destinationListId: currentDestListId,
             sourceOrders,
             destinationOrders,
+          }).then(() => {
+            const movedCard = destList.cards.find((c) => c.id === active.id);
+            realtimeUtils.broadcastCardMoved({
+              cardId: active.id as string,
+              sourceListId: originalSourceListId,
+              destinationListId: currentDestListId,
+              position: movedCard?.position || 0,
+            });
           });
         }
       } catch (error) {
-        console.error("Error updating card position:", error);
+        console.error("Error updating position:", error);
         setLists(board.lists);
       }
 
       setOriginalSourceListId(null);
     },
-    [board, lists, originalSourceListId, moveCard, reorderCards, reorderLists]
+    [
+      board,
+      lists,
+      originalSourceListId,
+      moveCard,
+      reorderCards,
+      reorderLists,
+      realtimeUtils,
+    ]
   );
 
   return {

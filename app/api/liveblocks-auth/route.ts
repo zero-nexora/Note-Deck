@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     userInfo: {
       name: user.name || "",
       image: user.image,
-      email: user.email,
     },
   });
 

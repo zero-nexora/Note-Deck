@@ -1,180 +1,339 @@
-"use client";
-
+import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { User } from "@/domain/types/user.type";
+import { useCallback, useEffect } from "react";
 import {
-  useRoom,
-  useMyPresence,
-  useOthers,
+  useUpdateMyPresence,
   useBroadcastEvent,
+  useOthers,
+  useEventListener,
 } from "@/lib/liveblocks";
-import { useEffect, useCallback } from "react";
-import type { DragState } from "@/lib/liveblocks";
 
-export const useBoardRealtime = () => {
-  const room = useRoom();
-  const [myPresence, updateMyPresence] = useMyPresence();
-  const others = useOthers();
+interface UseBoardRealtimeProps {
+  board: BoardWithListColumnLabelAndMember;
+  user: User;
+  onBoardUpdate: () => void;
+}
+
+export const useBoardRealtime = ({
+  user,
+  onBoardUpdate,
+}: UseBoardRealtimeProps) => {
+  const updateMyPresence = useUpdateMyPresence();
   const broadcast = useBroadcastEvent();
+  const others = useOthers();
 
-  const updateCursor = useCallback(
-    (cursor: { x: number; y: number } | null) => {
-      updateMyPresence({ cursor });
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      updateMyPresence({
+        cursor: {
+          x: e.clientX,
+          y: e.clientY,
+        },
+      });
     },
     [updateMyPresence]
   );
 
-  const setSelectedCard = useCallback(
+  const handlePointerLeave = useCallback(() => {
+    updateMyPresence({
+      cursor: null,
+    });
+  }, [updateMyPresence]);
+
+  useEffect(() => {
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerleave", handlePointerLeave);
+
+    return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerleave", handlePointerLeave);
+    };
+  }, [handlePointerMove, handlePointerLeave]);
+
+  const setDraggingCard = useCallback(
     (cardId: string | null) => {
-      updateMyPresence({ selectedCardId: cardId });
+      updateMyPresence({
+        draggingCardId: cardId,
+      });
+    },
+    [updateMyPresence]
+  );
+
+  const setDraggingList = useCallback(
+    (listId: string | null) => {
+      updateMyPresence({
+        draggingListId: listId,
+      });
     },
     [updateMyPresence]
   );
 
   const setEditingCard = useCallback(
-    (cardId: string | null, field: string | null) => {
+    (cardId: string | null) => {
       updateMyPresence({
         editingCardId: cardId,
-        editingField: field,
       });
     },
     [updateMyPresence]
   );
 
-  const startDragging = useCallback(
-    (
-      type: "card" | "list",
-      draggingId: string,
-      dragOffset: { x: number; y: number },
-      pointer: { x: number; y: number },
-      sourceListId?: string | null,
-      sourcePosition?: number | null
-    ) => {
-      const dragState: DragState = {
-        isDragging: true,
-        dragType: type,
-        draggingId,
-        dragOffset,
-        pointer,
-        sourceListId: sourceListId ?? null,
-        sourcePosition: sourcePosition ?? null,
-      };
-
-      updateMyPresence({ dragState });
-
+  const broadcastCardMoved = useCallback(
+    (data: {
+      cardId: string;
+      sourceListId: string;
+      destinationListId: string;
+      position: number;
+    }) => {
       broadcast({
-        type: type === "card" ? "CARD_MOVED" : "LIST_MOVED",
-        data: {
-          action: "drag_start",
-          id: draggingId,
-          sourceListId,
-          sourcePosition,
-        },
+        type: "CARD_MOVED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
       });
     },
-    [updateMyPresence, broadcast]
+    [broadcast, user.id]
   );
 
-  const updateDragging = useCallback(
-    (pointer: { x: number; y: number }) => {
-      if (!myPresence.dragState.isDragging) return;
-
-      updateMyPresence({
-        dragState: {
-          ...myPresence.dragState,
-          pointer,
-        },
+  const broadcastCardUpdated = useCallback(
+    (data: {
+      cardId: string;
+      field: "title" | "description" | "dueDate" | "coverImage";
+      value: any;
+    }) => {
+      broadcast({
+        type: "CARD_UPDATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
       });
     },
-    [myPresence.dragState, updateMyPresence]
+    [broadcast, user.id]
   );
 
-  const stopDragging = useCallback(() => {
-    const currentDragState = myPresence.dragState;
-
-    if (currentDragState.isDragging) {
+  const broadcastCardCreated = useCallback(
+    (data: { cardId: string; listId: string }) => {
       broadcast({
-        type:
-          currentDragState.dragType === "card" ? "CARD_MOVED" : "LIST_MOVED",
-        data: {
-          action: "drag_end",
-          id: currentDragState.draggingId,
-          sourceListId: currentDragState.sourceListId,
-          sourcePosition: currentDragState.sourcePosition,
-        },
+        type: "CARD_CREATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
       });
-    }
+    },
+    [broadcast, user.id]
+  );
 
-    updateMyPresence({
-      dragState: {
-        isDragging: false,
-        dragType: null,
-        draggingId: null,
-        dragOffset: null,
-        pointer: null,
-        sourceListId: null,
-        sourcePosition: null,
-      },
-    });
-  }, [myPresence.dragState, updateMyPresence, broadcast]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      updateCursor({ x: e.clientX, y: e.clientY });
-    };
-
-    const handleMouseLeave = () => {
-      updateCursor(null);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [updateCursor]);
-
-  const activeDraggers = useCallback(() => {
-    const draggers: Array<{
-      connectionId: number;
-      user: any;
-      dragState: DragState;
-    }> = [];
-
-    others.forEach((other) => {
-      if (other.presence.dragState.isDragging) {
-        draggers.push({
-          connectionId: other.connectionId,
-          user: other.presence.user,
-          dragState: other.presence.dragState,
-        });
-      }
-    });
-
-    if (myPresence.dragState.isDragging) {
-      draggers.push({
-        connectionId: -1,
-        user: myPresence.user,
-        dragState: myPresence.dragState,
+  const broadcastCardDeleted = useCallback(
+    (data: { cardId: string; listId: string }) => {
+      broadcast({
+        type: "CARD_DELETED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
       });
-    }
+    },
+    [broadcast, user.id]
+  );
 
-    return draggers;
-  }, [others, myPresence]);
+  const broadcastListCreated = useCallback(
+    (data: { listId: string }) => {
+      broadcast({
+        type: "LIST_CREATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastListUpdated = useCallback(
+    (data: { listId: string; field: string; value: any }) => {
+      broadcast({
+        type: "LIST_UPDATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastListDeleted = useCallback(
+    (data: { listId: string }) => {
+      broadcast({
+        type: "LIST_DELETED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastListMoved = useCallback(
+    (data: { listId: string; position: number }) => {
+      broadcast({
+        type: "LIST_MOVED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastLabelAdded = useCallback(
+    (data: { cardId: string; labelId: string }) => {
+      broadcast({
+        type: "LABEL_ADDED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastLabelRemoved = useCallback(
+    (data: { cardId: string; labelId: string }) => {
+      broadcast({
+        type: "LABEL_REMOVED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastMemberAssigned = useCallback(
+    (data: { cardId: string; memberId: string }) => {
+      broadcast({
+        type: "MEMBER_ASSIGNED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastMemberUnassigned = useCallback(
+    (data: { cardId: string; memberId: string }) => {
+      broadcast({
+        type: "MEMBER_UNASSIGNED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastCommentAdded = useCallback(
+    (data: { cardId: string; commentId: string }) => {
+      broadcast({
+        type: "COMMENT_ADDED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastBoardUpdated = useCallback(
+    (data: { field: string; value: any }) => {
+      broadcast({
+        type: "BOARD_UPDATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  useEventListener(({ event }) => {
+    if (event.userId === user.id) return;
+
+    console.log("Received realtime event:", event.type, event);
+
+    onBoardUpdate();
+  });
+
+  const otherUsers = others.map((other) => ({
+    connectionId: other.connectionId,
+    user: other.presence.user,
+    draggingCardId: other.presence.draggingCardId,
+    draggingListId: other.presence.draggingListId,
+    editingCardId: other.presence.editingCardId,
+    cursor: other.presence.cursor,
+  }));
+
+  const isDraggingCardByOthers = (cardId: string) => {
+    return otherUsers.some((other) => other.draggingCardId === cardId);
+  };
+
+  const isDraggingListByOthers = (listId: string) => {
+    return otherUsers.some((other) => other.draggingListId === listId);
+  };
+
+  const isEditingByOthers = (cardId: string) => {
+    return otherUsers.some((other) => other.editingCardId === cardId);
+  };
+
+  const getUserDraggingCard = (cardId: string) => {
+    return otherUsers.find((other) => other.draggingCardId === cardId);
+  };
+
+  const getUserDraggingList = (listId: string) => {
+    return otherUsers.find((other) => other.draggingListId === listId);
+  };
+
+  const getUserEditingCard = (cardId: string) => {
+    return otherUsers.find((other) => other.editingCardId === cardId);
+  };
+
+  const canDragCard = (cardId: string) => {
+    return !isDraggingCardByOthers(cardId);
+  };
+
+  const canDragList = (listId: string) => {
+    return !isDraggingListByOthers(listId);
+  };
 
   return {
-    room,
-    myPresence,
-    others: [...others],
-    updateMyPresence,
-    activeDraggers,
+    handlePointerMove,
+    handlePointerLeave,
 
-    updateCursor,
-    setSelectedCard,
+    setDraggingCard,
+    setDraggingList,
     setEditingCard,
 
-    startDragging,
-    updateDragging,
-    stopDragging,
+    broadcastCardMoved,
+    broadcastCardUpdated,
+    broadcastCardCreated,
+    broadcastCardDeleted,
+    broadcastListCreated,
+    broadcastListUpdated,
+    broadcastListDeleted,
+    broadcastListMoved,
+    broadcastLabelAdded,
+    broadcastLabelRemoved,
+    broadcastMemberAssigned,
+    broadcastMemberUnassigned,
+    broadcastCommentAdded,
+    broadcastBoardUpdated,
+
+    otherUsers,
+    isDraggingCardByOthers,
+    isDraggingListByOthers,
+    isEditingByOthers,
+    getUserDraggingCard,
+    getUserDraggingList,
+    getUserEditingCard,
+    canDragCard,
+    canDragList,
   };
 };

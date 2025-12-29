@@ -8,19 +8,30 @@ import { BoardCardCover } from "./board-card-cover";
 import { BoardCardContent } from "./board-card-content";
 import { useSheet } from "@/stores/sheet-store";
 import { BoardCardItemDetail } from "./board-card-item-detail";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import {
+  CardDraggingIndicator,
+  CardEditingIndicator,
+} from "./card-dragging-indicator";
+import { useEffect } from "react";
 
 interface BoardCardItemProps {
   card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
   boardMembers: BoardWithListColumnLabelAndMember["members"];
   boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItem = ({
   card,
   boardMembers = [],
   boardLabels = [],
+  realtimeUtils,
 }: BoardCardItemProps) => {
-  const { open } = useSheet();
+  const { open, isOpen } = useSheet();
+
+  const isDraggingByOthers = realtimeUtils?.isDraggingCardByOthers(card.id);
+  const canDrag = realtimeUtils?.canDragCard(card.id) ?? true;
 
   const {
     attributes,
@@ -35,6 +46,7 @@ export const BoardCardItem = ({
       type: "card",
       card,
     },
+    disabled: !canDrag,
   });
 
   const style = {
@@ -42,9 +54,17 @@ export const BoardCardItem = ({
     transition,
   };
 
+  useEffect(() => {
+    if (!isOpen) {
+      realtimeUtils?.setEditingCard(null);
+    }
+  }, [isOpen]);
+
   const hasCover = !!card.coverImage;
 
   const handleViewDetailCard = () => {
+    realtimeUtils?.setEditingCard(card.id);
+
     open({
       title: "Detail Card",
       description: "",
@@ -53,6 +73,7 @@ export const BoardCardItem = ({
           boardMembers={boardMembers}
           boardLabels={boardLabels}
           card={card}
+          realtimeUtils={realtimeUtils}
         />
       ),
     });
@@ -63,11 +84,14 @@ export const BoardCardItem = ({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
+      {...(canDrag ? listeners : {})}
       className={cn(
-        "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200 cursor-grab active:cursor-grabbing",
+        "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200",
+        canDrag && "cursor-grab active:cursor-grabbing",
+        !canDrag && "cursor-not-allowed",
         "hover:shadow-md hover:-translate-y-0.5 my-2",
-        isDragging && "opacity-50"
+        isDragging && "opacity-50",
+        isDraggingByOthers && "opacity-70"
       )}
       onClick={handleViewDetailCard}
     >
@@ -76,6 +100,9 @@ export const BoardCardItem = ({
       )}
 
       <BoardCardContent card={card} hasCover={hasCover} />
+
+      <CardDraggingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
+      <CardEditingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
     </div>
   );
 };

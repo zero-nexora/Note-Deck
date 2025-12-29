@@ -3,13 +3,11 @@ import {
   addBoardMemberAction,
   removeBoardMemberAction,
   changeBoardMemberRoleAction,
-  listBoardMembersAction,
 } from "@/app/actions/board-member.action";
 import {
   AddBoardMemberInput,
   RemoveBoardMemberInput,
   ChangeBoardMemberRoleInput,
-  ListBoardMembersInput,
 } from "@/domain/schemas/board-member.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -37,6 +35,7 @@ export function useBoardMember() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data
       } else {
         toast.error(result.message);
       }
@@ -51,26 +50,12 @@ export function useBoardMember() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data
       } else {
         toast.error(result.message);
       }
     } catch (error: any) {
       toast.error(error.message);
-    }
-  };
-
-  const listMembers = async (input: ListBoardMembersInput) => {
-    try {
-      const result = await listBoardMembersAction(input);
-      if (result.success) {
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-      return null;
     }
   };
 
@@ -78,6 +63,5 @@ export function useBoardMember() {
     addMember,
     removeMember,
     changeRole,
-    listMembers,
   };
 }

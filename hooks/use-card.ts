@@ -30,6 +30,7 @@ export function useCard() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data;
       } else {
         toast.error(result.message);
       }
@@ -44,7 +45,7 @@ export function useCard() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
-        return result.data
+        return result.data;
       } else {
         toast.error(result.message);
       }

@@ -28,12 +28,14 @@ import { Calendar as CalendarIcon, Edit2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Loading } from "../common/loading";
 import { Card } from "../ui/card";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemTitleDescDueDateProps {
   cardId: string;
   title: string;
   description: string | null;
   dueDate: Date | null;
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemTitleDescDueDate = ({
@@ -41,6 +43,7 @@ export const BoardCardItemTitleDescDueDate = ({
   title,
   description,
   dueDate,
+  realtimeUtils,
 }: BoardCardItemTitleDescDueDateProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { updateCard } = useCard();
@@ -60,7 +63,7 @@ export const BoardCardItemTitleDescDueDate = ({
       description: description ?? "",
       dueDate: dueDate ?? undefined,
     });
-  }, [form]);
+  }, [title, description, dueDate, form]);
 
   const handleSubmit = async (values: UpdateCardInput) => {
     const updateData: UpdateCardInput = {};
@@ -79,6 +82,21 @@ export const BoardCardItemTitleDescDueDate = ({
           title: card.title ?? title,
           description: card.description ?? undefined,
           dueDate: card.dueDate ?? undefined,
+        });
+
+        // ✨ Broadcast các thay đổi
+        Object.entries(updateData).forEach(([field, value]) => {
+          if (
+            field === "title" ||
+            field === "description" ||
+            field === "dueDate"
+          ) {
+            realtimeUtils.broadcastCardUpdated({
+              cardId,
+              field: field as "title" | "description" | "dueDate",
+              value,
+            });
+          }
         });
       }
     }

@@ -18,15 +18,18 @@ import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { format } from "date-fns";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemCommentsProps {
   cardId: string;
   comments: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["comments"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemComments = ({
   cardId,
   comments: initialComments = [],
+  realtimeUtils,
 }: BoardCardItemCommentsProps) => {
   const [comments, setComments] = useState(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -56,6 +59,11 @@ export const BoardCardItemComments = ({
         ...prev,
         { ...createdComment, reactions: [], replies: [] },
       ]);
+
+      realtimeUtils.broadcastCommentAdded({
+        cardId,
+        commentId: createdComment.id,
+      });
     }
 
     setNewComment("");
@@ -76,6 +84,11 @@ export const BoardCardItemComments = ({
         ...prev,
         { ...createdReply, reactions: [], replies: [] },
       ]);
+
+      realtimeUtils.broadcastCommentAdded({
+        cardId,
+        commentId: createdReply.id,
+      });
     }
 
     setReplyTexts((prev) => ({ ...prev, [parentId]: "" }));
@@ -96,6 +109,12 @@ export const BoardCardItemComments = ({
       setComments((prev) =>
         prev.map((c) => (c.id === id ? { ...c, content: editText.trim() } : c))
       );
+
+      realtimeUtils.broadcastCardUpdated({
+        cardId,
+        field: "coverImage",
+        value: "comment_updated",
+      });
     }
 
     setEditingId(null);
@@ -105,6 +124,12 @@ export const BoardCardItemComments = ({
   const handleDeleteComment = async (id: string) => {
     await deleteComment({ id });
     setComments((prev) => prev.filter((c) => c.id !== id));
+
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage",
+      value: "comment_deleted",
+    });
   };
 
   const handleToggleReaction = async (commentId: string, emoji: string) => {
@@ -143,6 +168,12 @@ export const BoardCardItemComments = ({
         );
       }
     }
+
+    realtimeUtils.broadcastCardUpdated({
+      cardId,
+      field: "coverImage",
+      value: "reaction_toggled",
+    });
 
     setPickerOpenFor(null);
   };
