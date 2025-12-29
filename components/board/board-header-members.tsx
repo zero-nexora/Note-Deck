@@ -8,24 +8,26 @@ import { useModal } from "@/stores/modal-store";
 import { BoardHeaderMembersForm } from "./board-header-members-form";
 
 interface BoardHeaderMembersProps {
-  board: BoardWithListColumnLabelAndMember;
+  boardMembers: BoardWithListColumnLabelAndMember["members"];
 }
 
-export const BoardHeaderMembers = ({ board }: BoardHeaderMembersProps) => {
+export const BoardHeaderMembers = ({
+  boardMembers,
+}: BoardHeaderMembersProps) => {
   const { open: openModal } = useModal();
 
   const handleViewDetailMember = () => {
     openModal({
-      title: `Board Members (${board.members.length})`,
+      title: `Board Members (${boardMembers.length})`,
       description: " Manage who has access to this board",
-      children: <BoardHeaderMembersForm members={board.members} />,
+      children: <BoardHeaderMembersForm members={boardMembers} />,
     });
   };
 
   return (
     <Button onClick={handleViewDetailMember} variant={"ghost"}>
       <div className="flex -space-x-2">
-        {board.members.slice(0, 5).map((member) => (
+        {boardMembers.slice(0, 5).map((member) => (
           <Avatar
             key={member.id}
             className="w-8 h-8 border-2 border-background ring-1 ring-border hover:z-10 transition-all"
@@ -41,9 +43,9 @@ export const BoardHeaderMembers = ({ board }: BoardHeaderMembersProps) => {
             </AvatarFallback>
           </Avatar>
         ))}
-        {board.members.length > 5 && (
+        {boardMembers.length > 5 && (
           <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
-            +{board.members.length - 5}
+            +{boardMembers.length - 5}
           </div>
         )}
       </div>

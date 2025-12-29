@@ -1,4 +1,5 @@
 import { findBoardByIdAction } from "@/app/actions/board.action";
+import { findWorkspaceByIdAction } from "@/app/actions/workspace.action";
 import { BoardContainer } from "@/components/board/board-container";
 import { requireAuth } from "@/lib/session";
 
@@ -16,7 +17,21 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
 
   const board = result.data;
 
-  return <BoardContainer board={board} user={user} />;
+  const resultWorkspaceMember = await findWorkspaceByIdAction(
+    board.workspaceId
+  );
+  if (!resultWorkspaceMember.success || !resultWorkspaceMember.data)
+    return null;
+
+  const workspaceMembers = resultWorkspaceMember.data.members;
+
+  return (
+    <BoardContainer
+      board={board}
+      user={user}
+      workspaceMembers={workspaceMembers}
+    />
+  );
 };
 
 export default BoardsPage;

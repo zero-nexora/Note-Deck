@@ -12,6 +12,7 @@ import {
   UpdateListInput,
 } from "../schemas/list.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { executeAutomations } from "./automation.service";
 
 export const listService = {
   create: async (userId: string, data: CreateListInput) => {
@@ -47,6 +48,13 @@ export const listService = {
       entityType: "list",
       entityId: list.id,
       metadata: { boardId: data.boardId, name: list.name },
+    });
+
+    await executeAutomations({
+      type: "LIST_CREATED",
+      boardId: data.boardId,
+      listId: list.id,
+      userId,
     });
 
     return list;
@@ -98,7 +106,7 @@ export const listService = {
     if (!board) {
       throw new Error("Board not found");
     }
-    
+
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
@@ -125,7 +133,7 @@ export const listService = {
       action: "lists.reordered",
       entityType: "board",
       entityId: data.boardId,
-      metadata: { 
+      metadata: {
         listCount: data.orders.length,
         orders: data.orders,
       },
@@ -189,6 +197,13 @@ export const listService = {
       entityType: "list",
       entityId: data.id,
       metadata: { name: list.name },
+    });
+
+    await executeAutomations({
+      type: "LIST_ARCHIVED",
+      boardId: list.boardId,
+      listId: list.id,
+      userId,
     });
 
     return updated;

@@ -10,6 +10,7 @@ import {
   UpdateChecklistItemInput,
 } from "../schemas/check-list-item.schema";
 import { checkBoardPermission } from "@/lib/permissions";
+import { executeAutomations } from "./automation.service";
 
 export const checklistItemService = {
   create: async (userId: string, data: CreateChecklistItemInput) => {
@@ -77,6 +78,31 @@ export const checklistItemService = {
       entityId: updated.id,
       metadata: { isCompleted: data.isCompleted },
     });
+
+    if (data.isCompleted) {
+      await executeAutomations({
+        type: "CHECKLIST_ITEM_COMPLETED",
+        boardId: card.boardId,
+        cardId: card.id,
+        checklistId: checklist.id,
+        userId,
+      });
+
+      const allItems = await checklistItemRepository.findByChecklistId(
+        checklist.id
+      );
+      const allCompleted = allItems.every((i) => i.isCompleted);
+
+      if (allCompleted) {
+        await executeAutomations({
+          type: "CHECKLIST_COMPLETED",
+          boardId: card.boardId,
+          cardId: card.id,
+          checklistId: checklist.id,
+          userId,
+        });
+      }
+    }
 
     return updated;
   },

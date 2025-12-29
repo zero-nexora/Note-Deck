@@ -61,24 +61,24 @@ export function boardToStorage(
                     createdAt: card.createdAt.toISOString(),
                     updatedAt: card.updatedAt.toISOString(),
 
-                    labels: new LiveList(
-                      card.labels.map(
-                        (cl) =>
-                          new LiveObject({
-                            id: cl.id,
-                            cardId: cl.cardId,
-                            labelId: cl.labelId,
-                            label: {
-                              id: cl.label.id,
-                              boardId: cl.label.boardId,
-                              name: cl.label.name,
-                              color: cl.label.color,
-                              createdAt:
-                                cl.label.createdAt.toISOString(),
-                            },
-                          })
-                      )
-                    ),
+                    // labels: new LiveList(
+                    //   card.labels.map(
+                    //     (cl) =>
+                    //       new LiveObject({
+                    //         id: cl.id,
+                    //         cardId: cl.cardId,
+                    //         labelId: cl.labelId,
+                    //         label: {
+                    //           id: cl.label.id,
+                    //           boardId: cl.label.boardId,
+                    //           name: cl.label.name,
+                    //           color: cl.label.color,
+                    //           createdAt:
+                    //             cl.label.createdAt.toISOString(),
+                    //         },
+                    //       })
+                    //   )
+                    // ),
 
                     members: new LiveList(
                       card.members.map(

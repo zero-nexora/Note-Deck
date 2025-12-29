@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewBoard, UpdateBoard } from "../types/board.type";
-import { boards, cards, lists } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { boards, cards, comments, lists } from "@/db/schema";
+import { and, eq, isNull } from "drizzle-orm";
 
 export const boardRepository = {
   create: async (data: NewBoard) => {
@@ -27,14 +27,34 @@ export const boardRepository = {
               where: eq(cards.isArchived, false),
               orderBy: (cards, { asc }) => [asc(cards.position)],
               with: {
-                labels: {
-                  with: {
-                    label: true,
-                  },
-                },
                 members: {
                   with: {
                     user: true,
+                  },
+                },
+                attachments: true,
+                comments: {
+                  where: isNull(comments.parentId),
+                  with: {
+                    replies: {
+                      with: {
+                        user: true,
+                        reactions: true,
+                      },
+                      orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+                    },
+                    user: true,
+                    reactions: true,
+                  },
+                },
+                checklists: {
+                  with: {
+                    items: true,
+                  },
+                },
+                cardLabels: {
+                  with: {
+                    label: true,
                   },
                 },
               },

@@ -5,13 +5,15 @@ import { BoardContent } from "./board-content";
 import { boardToStorage } from "@/lib/utils";
 import { User } from "@/domain/types/user.type";
 import { BoardHeader } from "./board-header";
+import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 
 interface BoardContainerProps {
   board: BoardWithListColumnLabelAndMember;
   user: User;
+  workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 
-export const BoardContainer = ({ board, user }: BoardContainerProps) => {
+export const BoardContainer = ({ board, user, workspaceMembers }: BoardContainerProps) => {
   return (
     // <RoomProvider
     //   id={board.id}
@@ -41,7 +43,7 @@ export const BoardContainer = ({ board, user }: BoardContainerProps) => {
     //   }}
     // >
       <div className="flex flex-col gap-5">
-        <BoardHeader board={board} />
+        <BoardHeader board={board} workspaceMembers={workspaceMembers} />
         <BoardContent board={board} />
       </div>
     // </RoomProvider>

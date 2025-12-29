@@ -13,9 +13,11 @@ import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardListItemProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
+  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardLabels: BoardWithListColumnLabelAndMember["labels"];
 }
 
-export const BoardListItem = ({ list }: BoardListItemProps) => {
+export const BoardListItem = ({ list, boardLabels = [], boardMembers = [] }: BoardListItemProps) => {
   const { open } = useConfirm();
   const { deleteList } = useList();
 
@@ -54,7 +56,7 @@ export const BoardListItem = ({ list }: BoardListItemProps) => {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "w-72 shrink-0 flex flex-col glass-card transition-all duration-200",
+        "w-72 shrink-0 flex flex-col glass-card",
         isDragging && "opacity-50"
       )}
     >
@@ -65,7 +67,7 @@ export const BoardListItem = ({ list }: BoardListItemProps) => {
       />
 
       <ScrollArea className="h-[calc(100vh-270px)]">
-        <BoardListCards list={list} />
+        <BoardListCards boardMembers={boardMembers} boardLabels={boardLabels} list={list} />
       </ScrollArea>
 
       <BoardListFooter list={list} />

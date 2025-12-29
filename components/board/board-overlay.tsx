@@ -4,6 +4,7 @@ import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { BoardCardItem } from "./board-card-item";
 import { BoardListItem } from "./board-list-item";
+import { cardMembers } from "@/db/schema";
 
 interface BoardOverlayProps {
   activeCard:
@@ -28,9 +29,9 @@ export const BoardOverlay = ({ activeCard, activeList }: BoardOverlayProps) => {
   return (
     <DragOverlay dropAnimation={dropAnimation}>
       {activeCard ? (
-        <BoardCardItem card={activeCard} />
+        <BoardCardItem boardMembers={[]} boardLabels={[]} card={activeCard} />
       ) : activeList ? (
-        <BoardListItem list={activeList} />
+        <BoardListItem boardMembers={[]} boardLabels={[]} list={activeList} />
       ) : null}
     </DragOverlay>
   );

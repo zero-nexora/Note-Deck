@@ -12,14 +12,14 @@ interface BoardCardContentProps {
 }
 
 export const BoardCardContent = ({ card, hasCover }: BoardCardContentProps) => {
-  const hasLabels = card.labels && card.labels.length > 0;
+  const hasLabels = card.cardLabels && card.cardLabels.length > 0;
   const hasMembers = card.members && card.members.length > 0;
   const hasDescription = !!card.description;
   const hasDueDate = !!card.dueDate;
 
   return (
     <div className={cn("p-3 space-y-2", hasCover && "pt-2")}>
-      {hasLabels && <BoardCardLabels labels={card.labels} />}
+      {hasLabels && <BoardCardLabels cardLabels={card.cardLabels} />}
 
       <BoardCardTitle title={card.title} />
 

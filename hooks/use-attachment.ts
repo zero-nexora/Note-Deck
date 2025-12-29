@@ -20,6 +20,7 @@ export function useAttachment() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data
       } else {
         toast.error(result.message);
       }

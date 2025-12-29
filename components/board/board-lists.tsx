@@ -16,14 +16,16 @@ export const BoardLists = ({ board }: BoardListsProps) => {
   const sortedLists = [...board.lists].sort((a, b) => a.position - b.position);
 
   return (
-    <div className="flex gap-4 overflow-x-auto h-full items-start pb-4">
+    <div className="flex gap-4 h-full pb-4">
       <SortableContext
         items={sortedLists.map((l) => l.id)}
         strategy={horizontalListSortingStrategy}
       >
-        {sortedLists.map((list) => (
-          <BoardListItem key={list.id} list={list} />
+        <div className="flex gap-4">
+          {sortedLists.map((list) => (
+          <BoardListItem key={list.id} boardMembers={board.members} boardLabels={board.labels} list={list} />
         ))}
+        </div>
       </SortableContext>
 
       <CreateList board={board} />

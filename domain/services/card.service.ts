@@ -14,6 +14,7 @@ import {
   UpdateCardInput,
 } from "../schemas/card.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { executeAutomations } from "./automation.service";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
@@ -55,6 +56,14 @@ export const cardService = {
         metadata: { title: card.title, boardId: list.boardId },
       });
     }
+
+    await executeAutomations({
+      type: "CARD_CREATED",
+      boardId: card.boardId,
+      cardId: card.id,
+      listId: card.listId,
+      userId,
+    });
 
     return card;
   },
@@ -102,13 +111,10 @@ export const cardService = {
     return updated;
   },
 
-  // Service Layer
   move: async (userId: string, data: MoveCardInput) => {
-    // Validate card exists
     const card = await cardRepository.findById(data.id);
     if (!card) throw new Error("Card not found");
 
-    // Validate lists exist
     const sourceList = await listRepository.findById(data.sourceListId);
     const destinationList = await listRepository.findById(
       data.destinationListId
@@ -118,7 +124,6 @@ export const cardService = {
       throw new Error("List not found");
     }
 
-    // Check permissions
     const hasPermissionSource = await checkBoardPermission(
       userId,
       sourceList.boardId,
@@ -137,7 +142,6 @@ export const cardService = {
     const isSameList = data.sourceListId === data.destinationListId;
 
     if (isSameList) {
-      // Same list: Only update positions
       if (data.destinationOrders.length > 0) {
         await cardRepository.reorders(
           data.destinationListId,
@@ -145,25 +149,19 @@ export const cardService = {
         );
       }
     } else {
-      // Different lists: Update card's listId and reorder both lists
       await cardRepository.update(data.id, {
         listId: data.destinationListId,
       });
 
-      // Reorder source list (remove card from source)
       if (data.sourceOrders.length > 0) {
         await cardRepository.reorders(data.sourceListId, data.sourceOrders);
       }
-
-      // Reorder destination list (add card to destination)
       if (data.destinationOrders.length > 0) {
         await cardRepository.reorders(
           data.destinationListId,
           data.destinationOrders
         );
       }
-
-      // Create activity log for cross-list moves
       await activityRepository.create({
         boardId: destinationList.boardId,
         cardId: data.id,
@@ -177,7 +175,6 @@ export const cardService = {
         },
       });
 
-      // Notify card members about the move
       if (card.members?.length) {
         for (const member of card.members) {
           await notificationRepository.create({
@@ -191,6 +188,15 @@ export const cardService = {
         }
       }
     }
+
+    await executeAutomations({
+      type: "CARD_MOVED",
+      boardId: card.boardId,
+      cardId: card.id,
+      fromListId: data.sourceListId,
+      toListId: data.destinationListId,
+      userId,
+    });
 
     return card;
   },
@@ -255,6 +261,13 @@ export const cardService = {
       entityType: "card",
       entityId: data.id,
       metadata: { title: card.title },
+    });
+
+    await executeAutomations({
+      type: "CARD_ARCHIVED",
+      boardId: card.boardId,
+      cardId: card.id,
+      userId,
     });
 
     return updated;

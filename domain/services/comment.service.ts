@@ -8,6 +8,7 @@ import {
   UpdateCommentInput,
 } from "../schemas/comment.schema";
 import { checkBoardPermission } from "@/lib/permissions";
+import { executeAutomations } from "./automation.service";
 
 export const commentService = {
   create: async (userId: string, data: CreateCommentInput) => {
@@ -34,6 +35,10 @@ export const commentService = {
       userId,
     });
 
+    if (!comment) {
+      throw new Error("Comment cannot create");
+    }
+
     await activityRepository.create({
       boardId: card.boardId,
       cardId: comment.cardId,
@@ -42,6 +47,14 @@ export const commentService = {
       entityType: "comment",
       entityId: comment.id,
       metadata: { content: comment.content, parentId: data.parentId },
+    });
+
+    await executeAutomations({
+      type: "COMMENT_ADDED",
+      boardId: card.boardId,
+      cardId: card.id,
+      commentId: comment.id,
+      userId,
     });
 
     if (data.mentions && data.mentions.length > 0) {
@@ -55,6 +68,13 @@ export const commentService = {
           message: "You were mentioned in a comment",
           entityType: "comment",
           entityId: comment.id,
+        });
+
+        await executeAutomations({
+          type: "USER_MENTIONED",
+          boardId: card.boardId,
+          cardId: card.id,
+          userId: mentionedUserId,
         });
       }
     }

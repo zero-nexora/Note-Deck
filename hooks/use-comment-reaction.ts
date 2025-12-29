@@ -19,6 +19,7 @@ export function useCommentReaction() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data
       } else {
         toast.error(result.message);
       }

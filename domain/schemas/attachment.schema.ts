@@ -5,7 +5,7 @@ export const CreateAttachmentSchema = z.object({
   fileName: z.string().min(1),
   fileUrl: z.string().url(),
   fileType: z.string().min(1),
-  fileSize: z.number().int().positive(),
+  fileSize: z.number().int(),
   uploadThingKey: z.string().min(1),
   expiresAt: z.date().optional(),
 });

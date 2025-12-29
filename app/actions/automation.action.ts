@@ -32,6 +32,16 @@ export const createAutomationAction = async (input: CreateAutomationInput) => {
   }
 };
 
+export const findAutomationsByBoardIdAction = async (boardId: string) => {
+  try {
+    const user = await requireAuth();
+    const automations = await automationService.findByBoardId(user.id, boardId);
+    return success("", automations);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
 export const updateAutomationAction = async (
   id: string,
   input: UpdateAutomationInput

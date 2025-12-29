@@ -7,6 +7,7 @@ import {
   AddCardLabelInput,
   RemoveCardLabelInput,
 } from "../schemas/card-label.schema";
+import { executeAutomations } from "./automation.service";
 
 export const cardLabelService = {
   add: async (userId: string, data: AddCardLabelInput) => {
@@ -45,12 +46,24 @@ export const cardLabelService = {
       metadata: { labelId: data.labelId, labelName: label.name },
     });
 
+    await executeAutomations({
+      type: "LABEL_ADDED_TO_CARD",
+      boardId: card.boardId,
+      cardId: card.id,
+      labelId: data.labelId,
+      userId,
+    });
+
     return cardLabel;
   },
 
   remove: async (userId: string, data: RemoveCardLabelInput) => {
     const card = await cardRepository.findById(data.cardId);
     if (!card) throw new Error("Card not found");
+
+    const label = await labelRepository.findById(data.labelId);
+
+    if (!label) throw new Error("Label not found");
 
     const hasPermission = await checkBoardPermission(
       userId,
@@ -75,6 +88,14 @@ export const cardLabelService = {
       entityType: "card",
       entityId: card.id,
       metadata: { labelId: data.labelId },
+    });
+
+    await executeAutomations({
+      type: "LABEL_REMOVED_FROM_CARD",
+      boardId: card.boardId,
+      cardId: card.id,
+      labelId: label.id,
+      userId,
     });
   },
 };

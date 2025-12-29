@@ -5,7 +5,13 @@ import { and, eq, isNull } from "drizzle-orm";
 
 export const commentRepository = {
   create: async (data: NewComment) => {
-    const [comment] = await db.insert(comments).values(data).returning();
+    const [inserted] = await db
+      .insert(comments)
+      .values(data)
+      .returning({ id: comments.id });
+
+    const comment = await commentRepository.findById(inserted.id);
+
     return comment;
   },
 
@@ -17,17 +23,11 @@ export const commentRepository = {
         replies: {
           with: {
             user: true,
-            reactions: {
-              with: { user: true },
-            },
+            reactions: true,
           },
           orderBy: (comments, { asc }) => [asc(comments.createdAt)],
         },
-        reactions: {
-          with: {
-            user: true,
-          },
-        },
+        reactions: true,
       },
     });
   },

@@ -6,6 +6,7 @@ import {
   AddCardMemberInput,
   RemoveCardMemberInput,
 } from "../schemas/card-member.schema";
+import { executeAutomations } from "./automation.service";
 
 export const cardMemberService = {
   add: async (userId: string, data: AddCardMemberInput) => {
@@ -35,6 +36,13 @@ export const cardMemberService = {
       entityType: "card",
       entityId: card.id,
       metadata: { memberId: data.userId },
+    });
+
+    await executeAutomations({
+      type: "CARD_ASSIGNED",
+      boardId: card.boardId,
+      cardId: card.id,
+      userId: data.userId,
     });
 
     return member;
@@ -67,6 +75,13 @@ export const cardMemberService = {
       entityType: "card",
       entityId: card.id,
       metadata: { memberId: data.userId },
+    });
+
+    await executeAutomations({
+      type: "CARD_UNASSIGNED",
+      boardId: card.boardId,
+      cardId: card.id,
+      userId: data.userId,
     });
   },
 };

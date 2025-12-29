@@ -6,7 +6,7 @@ import {
   UniqueIdentifier,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useList } from "./use-list";
 import { useCard } from "./use-card";
 
@@ -24,6 +24,11 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeType, setActiveType] = useState<DragType>(null);
   const [originalSourceListId, setOriginalSourceListId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleSetBoardLists = () => setLists(board.lists);
+    handleSetBoardLists();
+  }, [board.lists])
 
   const activeCard = useMemo(() => {
     if (!activeId || activeType !== "card") return null;

@@ -11,9 +11,11 @@ import { cn } from "@/lib/utils";
 
 interface BoardListCardsProps {
   list: BoardWithListColumnLabelAndMember["lists"][number];
+  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardLabels: BoardWithListColumnLabelAndMember["labels"];
 }
 
-export const BoardListCards = ({ list }: BoardListCardsProps) => {
+export const BoardListCards = ({ list, boardMembers, boardLabels }: BoardListCardsProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: list.id,
     data: {
@@ -25,7 +27,7 @@ export const BoardListCards = ({ list }: BoardListCardsProps) => {
   const sortedCards = [...list.cards].sort((a, b) => a.position - b.position);
 
   return (
-    <div ref={setNodeRef} className="flex-1 overflow-y-auto overflow-x-hidden p-1">
+    <div ref={setNodeRef} className="flex-1 p-1">
       <div
         className={cn(
           "space-y-2 p-1 min-h-[100px] transition-colors",
@@ -37,7 +39,7 @@ export const BoardListCards = ({ list }: BoardListCardsProps) => {
           strategy={verticalListSortingStrategy}
         >
           {sortedCards.map((card) => (
-            <BoardCardItem key={card.id} card={card} />
+            <BoardCardItem boardMembers={boardMembers} boardLabels={boardLabels} key={card.id} card={card} />
           ))}
         </SortableContext>
 

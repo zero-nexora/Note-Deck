@@ -18,13 +18,13 @@ export const ourFileRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       return {
-        uploadedBy: metadata.userId,
         file: {
           name: file.name,
           size: file.size,
           type: file.type,
           key: file.key,
           url: file.url,
+          userId: metadata.userId,
         },
       };
     }),
