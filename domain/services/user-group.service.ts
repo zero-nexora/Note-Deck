@@ -6,6 +6,7 @@ import {
 import { checkWorkspacePermission } from "@/lib/permissions";
 import { userGroupRepository } from "../repositories/user-group.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { userGroupMemberRepository } from "../repositories/user-group-member.repository";
 
 export const userGroupService = {
   create: async (userId: string, data: CreateUserGroupInput) => {
@@ -18,6 +19,8 @@ export const userGroupService = {
 
     const group = await userGroupRepository.create(data);
 
+    await userGroupMemberRepository.add({ groupId: group.id, userId });
+
     await auditLogRepository.create({
       workspaceId: data.workspaceId,
       userId,
@@ -28,6 +31,16 @@ export const userGroupService = {
     });
 
     return group;
+  },
+
+  findById: async (id: string) => {
+    const userGroup = await userGroupRepository.findById(id);
+    return userGroup;
+  },
+
+  findByWorkspaceId: async (workspaceId: string) => {
+    const userGroups = await userGroupRepository.findByWorkspaceId(workspaceId);
+    return userGroups;
   },
 
   update: async (userId: string, id: string, data: UpdateUserGroupInput) => {

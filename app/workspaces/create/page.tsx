@@ -7,7 +7,7 @@ const CreateWorkspacePage = async () => {
 
   if (!user) return redirect("/sign-in");
 
-  return <CreateWorkspaceForm />;
+  return <div className="h-full flex items-center justify-center"><CreateWorkspaceForm /></div>;
 };
 
 export default CreateWorkspacePage;

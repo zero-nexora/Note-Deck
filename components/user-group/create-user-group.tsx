@@ -1,111 +1,37 @@
 "use client";
 
+import { useModal } from "@/stores/modal-store";
 import { Plus } from "lucide-react";
+import { CreateUserGroupForm } from "./create-user-group-form";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 
-const allPermissions = [
-  {
-    id: "manage_workspace",
-    name: "Manage Workspace",
-    description: "Edit workspace settings and billing",
-  },
-  {
-    id: "manage_members",
-    name: "Manage Members",
-    description: "Invite and remove members",
-  },
-  {
-    id: "manage_boards",
-    name: "Manage Boards",
-    description: "Create and delete boards",
-  },
-  {
-    id: "manage_billing",
-    name: "Manage Billing",
-    description: "Access billing and subscription",
-  },
-  {
-    id: "view_boards",
-    name: "View Boards",
-    description: "View all boards in workspace",
-  },
-  {
-    id: "edit_cards",
-    name: "Edit Cards",
-    description: "Create, edit, and move cards",
-  },
-  { id: "comment", name: "Comment", description: "Add comments to cards" },
-  {
-    id: "upload_attachments",
-    name: "Upload Attachments",
-    description: "Upload files to cards",
-  },
-];
+interface CreatUserGroupProps {
+  workspaceId: string;
+}
 
-export const CreatUserGroup = () => {
+export const CreatUserGroup = ({ workspaceId }: CreatUserGroupProps) => {
+  const { open } = useModal();
+
+  const handleOpenCreateUserGroup = () => {
+    open({
+      title: "Create User Group",
+      description: "Create a new group with custom permissions",
+      children: <CreateUserGroupForm workspaceId={workspaceId} />,
+    });
+  };
+
   return (
-    <Dialog open>
-      <DialogTrigger asChild>
-        <Button className="gradient-primary text-primary-foreground shadow-glow flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Create Group
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          c<DialogTitle>Create User Group</DialogTitle>
-          <DialogDescription>
-            Define a new group with specific permissions
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6 mt-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Group Name</label>
-            <Input />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Description
-            </label>
-            <Input />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-3 block">
-              Permissions
-            </label>
-            <div className="space-y-3">
-              {allPermissions.map((p) => (
-                <div key={p.id} className="flex items-start gap-3">
-                  <Checkbox id={p.id} />
-                  <div className="grid gap-0.5">
-                    <label
-                      htmlFor={p.id}
-                      className="text-sm font-medium cursor-pointer"
-                    >
-                      {p.name}
-                    </label>
-                    <p className="text-xs text-muted-foreground">
-                      {p.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <Button className="w-full gradient-primary text-primary-foreground">
-            Create Group
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <Button
+      variant="ghost"
+      className="h-full min-h-[200px] rounded-xl border-2 border-dashed border-border hover:border-primary/50 bg-secondary/30 hover:bg-secondary/50 flex flex-col items-center justify-center gap-3 transition-all group"
+      onClick={handleOpenCreateUserGroup}
+    >
+      <div className="w-12 h-12 rounded-full bg-secondary group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+        <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+      </div>
+      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+        Create new group
+      </span>
+    </Button>
   );
 };

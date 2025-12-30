@@ -1,94 +1,131 @@
 "use client";
 
 import React from "react";
-import { Edit2, Trash2, UserPlus, Shield } from "lucide-react";
+import { Shield, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { UserGroupWithMembers } from "@/domain/types/user-group.type";
+import { useModal } from "@/stores/modal-store";
+import { UserGroupDetails } from "./user-group-details";
 
 interface UserGroupCardProps {
-  group: {
-    id: string;
-    name: string;
-    description: string;
-    permissions: string[];
-    members: string[];
-  };
+  userGroup: UserGroupWithMembers;
 }
 
-export const UserGroupCard: React.FC<UserGroupCardProps> = ({ group }) => {
+export const UserGroupCard = ({ userGroup }: UserGroupCardProps) => {
+  const { open } = useModal();
+
+  const handleViewDetailsUserGroup = () => {
+    open({
+      title: "User Group Details",
+      description: "View details of the user group",
+      children: <UserGroupDetails userGroup={userGroup} />,
+    });
+  };
+
+  const permissions = Object.entries(userGroup.permissions ?? {})
+    .filter(([, value]) => value === true)
+    .map(([key]) => key);
+
   return (
-    <Card className="group hover:shadow-lg transition-all">
+    <Card
+      className="group hover:shadow-lg hover:border-primary/50 transition-all"
+      onClick={handleViewDetailsUserGroup}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-              <Shield className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base">{group.name}</CardTitle>
-              <CardDescription className="text-xs">{group.members.length} members</CardDescription>
+              <h3 className="text-base font-semibold text-foreground">
+                {userGroup.name}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {userGroup.members.length} member
+                {userGroup.members.length !== 1 ? "s" : ""}
+              </p>
             </div>
-          </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" className="w-8 h-8">
-              <Edit2 className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8 text-destructive hover:text-destructive">
-              <Trash2 className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">{group.description}</p>
 
-        {/* Permissions */}
+      <CardContent className="space-y-4">
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             Permissions
           </h4>
-          <div className="flex flex-wrap gap-1">
-            {group.permissions.slice(0, 4).map((permission) => (
-              <Badge key={permission} variant="secondary" className="text-xs">
-                {permission.replace(/_/g, " ")}
+          <div className="flex flex-wrap gap-1.5">
+            {permissions?.slice(0, 4).map((permission) => (
+              <Badge
+                key={permission}
+                variant="secondary"
+                className="text-xs font-normal"
+              >
+                {permission.split(".").pop()?.replace(/_/g, " ")}
               </Badge>
             ))}
-            {group.permissions.length > 4 && (
-              <Badge variant="secondary" className="text-xs">
-                +{group.permissions.length - 4} more
+            {permissions.length > 4 && (
+              <Badge
+                variant="secondary"
+                className="text-xs font-normal cursor-pointer hover:bg-primary/10"
+              >
+                +{permissions.length - 4} more
               </Badge>
             )}
           </div>
+          {permissions.length === 0 && (
+            <p className="text-xs text-muted-foreground italic">
+              No permissions set
+            </p>
+          )}
         </div>
 
-        {/* Members */}
         <div>
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Members
-          </h4>
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {group.members.slice(0, 4).map((memberId) => {
-                const user = {
-                  name: "John Doe",
-                  avatar: "https://images.unsplash.com/photo-1499714608240-22fc6ad53fb2?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-                };
-                return (
-                  <Avatar key={memberId} className="w-8 h-8 border-2 border-card">
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback className="gradient-primary text-primary-foreground text-xs">
-                      {user?.name.split(" ").map((n) => n[0]).join("") || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                );
-              })}
-            </div>
-            <Button variant="outline" size="sm" className="ml-auto flex items-center gap-1">
-              <UserPlus className="w-3 h-3" /> Add
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Members
+            </h4>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs hover:bg-primary/10 hover:text-primary"
+            >
+              <Users className="w-3 h-3 mr-1" />
+              Manage
             </Button>
           </div>
+
+          {userGroup.members.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {userGroup.members.slice(0, 5).map((member) => (
+                  <Avatar
+                    key={member.id}
+                    className="w-8 h-8 border-2 border-card"
+                  >
+                    <AvatarImage src={member.user.image ?? undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                      {member.user.name?.[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+              {userGroup.members.length > 5 && (
+                <span className="text-xs text-muted-foreground ml-1">
+                  +{userGroup.members.length - 5}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-dashed border-border">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">No members yet</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

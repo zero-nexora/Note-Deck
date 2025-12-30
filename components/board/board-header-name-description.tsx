@@ -1,11 +1,12 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useBoard } from "@/hooks/use-board";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, X } from "lucide-react";
 import {
   UpdateBoardInput,
   UpdateBoardSchema,
@@ -13,7 +14,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,22 +22,27 @@ import {
 import { Textarea } from "../ui/textarea";
 
 interface BoardHeaderNameProps {
-  board: BoardWithListColumnLabelAndMember;
+  boardId: string;
+  boardName: string;
+  boardDescription: string | null;
 }
 
-export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
+export const BoardHeaderNameDescription = ({
+  boardId,
+  boardDescription,
+  boardName,
+}: BoardHeaderNameProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wrapperRef = useRef<HTMLFormElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const { updateBoard } = useBoard();
 
   const form = useForm<UpdateBoardInput>({
     resolver: zodResolver(UpdateBoardSchema),
     defaultValues: {
-      name: board.name,
-      description: board.description || "",
+      name: boardName,
+      description: boardDescription || "",
     },
   });
 
@@ -49,33 +54,29 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
   }, [isEditing]);
 
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.select();
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
     const handleClickOutside = async (e: MouseEvent) => {
       if (
         isEditing &&
         wrapperRef.current &&
         !wrapperRef.current.contains(e.target as Node)
       ) {
-        await updateBoard(board.id, form.getValues());
+        await updateBoard(boardId, form.getValues());
         setIsEditing(false);
-        form.reset();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isEditing]);
+  }, [isEditing, boardId, form, updateBoard]);
 
   const handleSubmit = async (values: UpdateBoardInput) => {
-    await updateBoard(board.id, values);
+    await updateBoard(boardId, values);
     setIsEditing(false);
-    form.reset();
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    form.reset({ name: boardName, description: boardDescription || "" });
   };
 
   const isLoading = form.formState.isSubmitting;
@@ -83,9 +84,8 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
   if (isEditing) {
     return (
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(handleSubmit)}
-          className="space-y-2"
+        <div
+          className="space-y-3 p-4 rounded-lg border border-primary/30 bg-secondary/20"
           ref={wrapperRef}
         >
           <FormField
@@ -93,16 +93,26 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Board Name</FormLabel>
+                <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Board Name
+                </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     ref={inputRef}
-                    className="text-2xl font-bold h-auto py-1 px-2 border-primary/50 focus-visible:ring-primary"
+                    className="text-xl font-bold h-10 border-border focus-visible:ring-primary"
                     disabled={isLoading}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        form.handleSubmit(handleSubmit)();
+                      }
+                      if (e.key === "Escape") {
+                        handleCancel();
+                      }
+                    }}
                   />
                 </FormControl>
-                <FormDescription>Change the name of the board</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -113,25 +123,47 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Board Description</FormLabel>
+                <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Description
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
-                    ref={textareaRef}
                     value={field.value ?? ""}
-                    className="text-sm min-h-[60px] border-primary/50 focus-visible:ring-primary resize-none"
+                    className="text-sm min-h-20 border-border focus-visible:ring-primary resize-none"
                     placeholder="Add a description..."
                     disabled={isLoading}
                   />
                 </FormControl>
-                <FormDescription>
-                  Change the description of the board
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </form>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              type="button"
+              size="sm"
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={isLoading}
+              className="h-9"
+            >
+              <Check className="h-4 w-4 mr-1.5" />
+              Save
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="h-9"
+            >
+              <X className="h-4 w-4 mr-1.5" />
+              Cancel
+            </Button>
+          </div>
+        </div>
       </Form>
     );
   }
@@ -139,16 +171,18 @@ export const BoardHeaderNameDescription = ({ board }: BoardHeaderNameProps) => {
   return (
     <div className="space-y-2">
       <h1
-        className="text-2xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded hover:bg-accent/50"
+        className="text-2xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors px-2 py-1 rounded-md hover:bg-secondary/50"
         onDoubleClick={() => setIsEditing(true)}
+        title="Double-click to edit"
       >
-        {board.name}
+        {boardName}
       </h1>
       <p
-        className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-accent/50 min-h-10"
+        className="text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-secondary/50 min-h-7"
         onDoubleClick={() => setIsEditing(true)}
+        title="Double-click to edit"
       >
-        {board.description || "Add a description..."}
+        {boardDescription || "Add a description..."}
       </p>
     </div>
   );

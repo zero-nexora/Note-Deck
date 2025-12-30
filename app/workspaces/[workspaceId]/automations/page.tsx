@@ -1,6 +1,12 @@
 import { AutomationList } from "@/components/automation/automation-list";
 import { AutomationStatsCard } from "@/components/automation/automation-stats-card";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Pause, Play, Zap } from "lucide-react";
 
 const AutomationsPage = () => {
@@ -34,9 +40,21 @@ const AutomationsPage = () => {
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <AutomationStatsCard title="Total Automations" count={mockAutomations.length} icon={<Zap className="w-6 h-6 text-primary" />} />
-        <AutomationStatsCard title="Active" count={mockAutomations.filter(a => a.enabled).length} icon={<Play className="w-6 h-6 text-label-green" />} />
-        <AutomationStatsCard title="Paused" count={mockAutomations.filter(a => !a.enabled).length} icon={<Pause className="w-6 h-6 text-muted-foreground" />} />
+        <AutomationStatsCard
+          title="Total Automations"
+          count={mockAutomations.length}
+          icon={<Zap className="w-6 h-6 text-primary" />}
+        />
+        <AutomationStatsCard
+          title="Active"
+          count={mockAutomations.filter((a) => a.enabled).length}
+          icon={<Play className="w-6 h-6 text-label-green" />}
+        />
+        <AutomationStatsCard
+          title="Paused"
+          count={mockAutomations.filter((a) => !a.enabled).length}
+          icon={<Pause className="w-6 h-6 text-muted-foreground" />}
+        />
       </div>
 
       <Card>
@@ -48,7 +66,6 @@ const AutomationsPage = () => {
           <AutomationList automations={mockAutomations} />
         </CardContent>
       </Card>
-      
     </div>
   );
 };

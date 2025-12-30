@@ -16,7 +16,7 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
   return (
     <div className="border-b border-border/30 py-3">
       <div className="flex items-start justify-between gap-4">
-        <BoardHeaderNameDescription board={board} />
+        <BoardHeaderNameDescription boardId={board.id} boardName={board.name} boardDescription={board.description} />
 
         <div className="flex flex-col gap-4 flex-wrap items-end">
           <div className="flex gap-5">
@@ -27,7 +27,7 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
             />
             <BoardHeaderMembers boardMembers={board.members} boardId={board.id} />
           </div>
-          <BoardHeaderLabels boardId={board.id} boardLabels={board["labels"]} />
+          <BoardHeaderLabels boardId={board.id} boardLabels={board.labels} />
         </div>
       </div>
     </div>

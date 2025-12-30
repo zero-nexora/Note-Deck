@@ -24,7 +24,7 @@ export const CustomModal = () => {
             <DialogDescription>{data.description}</DialogDescription>
           )}
         </DialogHeader>
-        <ScrollArea className="h-[calc(100vh-300px)]">
+        <ScrollArea className="h-[calc(100vh-300px)] p-3">
           {data?.children}
         </ScrollArea>
       </DialogContent>

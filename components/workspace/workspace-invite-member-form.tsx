@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { Mail, Shield } from "lucide-react";
 
 interface WorkspaceInviteMemberFormProps {
   workspaceId: string;
@@ -55,21 +56,26 @@ export const WorkspaceInviteMemberForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+      <div className="space-y-5">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-primary" />
+                Email Address
+              </FormLabel>
               <FormControl>
                 <Input
                   disabled={isLoading}
-                  placeholder="Enter email"
+                  placeholder="colleague@example.com"
+                  type="email"
                   {...field}
+                  className="h-10"
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="text-xs">
                 Enter the email address of the person you want to invite
               </FormDescription>
               <FormMessage />
@@ -82,35 +88,63 @@ export const WorkspaceInviteMemberForm = ({
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Role
+              </FormLabel>
               <FormControl>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value}
                   disabled={isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="observer">Observer</SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Admin</span>
+                        <span className="text-xs text-muted-foreground">
+                          Full access to workspace
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="normal">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Normal</span>
+                        <span className="text-xs text-muted-foreground">
+                          Standard member access
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="observer">
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">Observer</span>
+                        <span className="text-xs text-muted-foreground">
+                          Read-only access
+                        </span>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>
-              <FormDescription>
-                Select the role for the person you want to invite
+              <FormDescription className="text-xs">
+                Select the role for the invited member
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button disabled={isLoading}>
-          {isLoading ? <Loading /> : "Invite"}
+        <Button
+          onClick={form.handleSubmit(handleSubmit)}
+          disabled={isLoading}
+          className="w-full h-10"
+        >
+          {isLoading ? <Loading /> : "Send Invitation"}
         </Button>
-      </form>
+      </div>
     </Form>
   );
 };

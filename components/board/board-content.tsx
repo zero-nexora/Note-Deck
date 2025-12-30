@@ -42,7 +42,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-210px)]">
+    <ScrollArea className="h-[calc(100vh-220px)]">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
