@@ -9,19 +9,21 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { UserGroupWithMembers } from "@/domain/types/user-group.type";
 import { useModal } from "@/stores/modal-store";
 import { UserGroupDetails } from "./user-group-details";
+import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 
 interface UserGroupCardProps {
   userGroup: UserGroupWithMembers;
+  workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 
-export const UserGroupCard = ({ userGroup }: UserGroupCardProps) => {
+export const UserGroupCard = ({ userGroup, workspaceMembers }: UserGroupCardProps) => {
   const { open } = useModal();
 
   const handleViewDetailsUserGroup = () => {
     open({
       title: "User Group Details",
       description: "View details of the user group",
-      children: <UserGroupDetails userGroup={userGroup} />,
+      children: <UserGroupDetails workspaceMembers={workspaceMembers} userGroup={userGroup} />,
     });
   };
 

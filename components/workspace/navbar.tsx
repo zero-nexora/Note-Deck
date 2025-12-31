@@ -48,6 +48,7 @@ import {
   UpdateWorkspaceNameSchema,
 } from "@/domain/schemas/workspace.schema";
 import { WorkspaceInviteMember } from "./workspace-invite-member";
+import { signOut } from "next-auth/react";
 
 interface NavbarProps {
   notifications: any[];
@@ -80,7 +81,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const isLoading = form.formState.isSubmitting;
 
   return (
-    <div className="w-full h-16 flex items-center justify-between px-6 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
+    <div className="w-full h-20 flex items-center justify-between px-6 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
       <div className="flex items-center gap-3">
         {isEditing ? (
           <Form {...form}>
@@ -135,13 +136,14 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
           </Form>
         ) : (
           <div className="flex flex-col leading-tight">
-            <button
+            <Button
               className="font-semibold text-sm text-foreground hover:text-primary transition-colors text-left"
               onDoubleClick={() => setIsEditing(true)}
               title="Double-click to edit"
+              variant={"ghost"}
             >
               {workspace.name}
-            </button>
+            </Button>
             <span className="text-xs text-muted-foreground">
               {workspace.plan ?? "Free plan"}
             </span>
@@ -170,7 +172,6 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-96 p-0" align="end" sideOffset={8}>
-            {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between bg-secondary/30">
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
@@ -246,7 +247,6 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
           </PopoverContent>
         </Popover>
 
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -268,7 +268,6 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-64" sideOffset={8}>
-            {/* User Info Header */}
             <DropdownMenuLabel className="p-3">
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10 border-2 border-border">
@@ -294,7 +293,6 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
 
             <DropdownMenuSeparator />
 
-            {/* Menu Items */}
             <DropdownMenuItem asChild>
               <Link
                 href="/profile"
@@ -343,8 +341,10 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
 
             <DropdownMenuSeparator />
 
-            {/* Sign Out */}
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center gap-3 px-3 py-2 cursor-pointer">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center gap-3 px-3 py-2 cursor-pointer"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-destructive/10">
                 <LogOut className="w-4 h-4" />
               </div>

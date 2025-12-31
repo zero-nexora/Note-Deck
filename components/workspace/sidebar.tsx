@@ -174,7 +174,7 @@ export const Sidebar = ({ workspaces, workspaceId }: SidebarProps) => {
         </div>
       </nav>
 
-      <Separator className="mx-4" />
+      <Separator />
 
       <div className="p-4">
         <Button

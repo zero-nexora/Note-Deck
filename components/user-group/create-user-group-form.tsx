@@ -291,7 +291,7 @@ export const CreateUserGroupForm = ({
       }
       return newSet;
     });
-    setSelectedPreset(""); // Clear preset when manually toggling
+    setSelectedPreset("");
   };
 
   const applyPreset = (presetKey: string) => {
@@ -346,7 +346,6 @@ export const CreateUserGroupForm = ({
   return (
     <Form {...form}>
       <div className="space-y-6">
-        {/* Group Name */}
         <FormField
           control={form.control}
           name="name"

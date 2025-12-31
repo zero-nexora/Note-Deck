@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useBoard } from "@/hooks/use-board";
 import { useModal } from "@/stores/modal-store";
+import { Sparkles } from "lucide-react";
 
 interface CreateBoardProps {
   workspaceId: string;
@@ -54,54 +55,76 @@ export const CreateBoardForm = ({ workspaceId }: CreateBoardProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* Board Name */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Board name</FormLabel>
+              <FormLabel className="text-sm font-medium">Board Name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="My Awesome Board"
+                  placeholder="e.g., Product Roadmap, Marketing Campaign"
                   {...field}
                   disabled={isSubmitting}
+                  className="h-10"
                 />
               </FormControl>
-              <FormDescription>What is this board about?</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Describe the purpose of this board (optional)"
-                  {...field}
-                  value={field.value ?? ""}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormDescription>
-                Optional. Describe the purpose of this board
+              <FormDescription className="text-xs">
+                Give your board a clear, descriptive name
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button
-          type="submit"
-          className="btn-gradient h-12 w-full"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loading /> : "Create Board"}
-        </Button>
+
+        {/* Description */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium">Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe what this board is for and what you'll be tracking..."
+                  {...field}
+                  value={field.value ?? ""}
+                  disabled={isSubmitting}
+                  className="min-h-20 resize-none"
+                />
+              </FormControl>
+              <FormDescription className="text-xs">
+                Optional. Help your team understand the purpose of this board
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 h-10"
+            onClick={close}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" className="flex-1 h-10" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <Loading />
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Create Board
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
   );

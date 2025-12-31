@@ -66,7 +66,7 @@ export const BoardCardItem = ({
     realtimeUtils?.setEditingCard(card.id);
 
     open({
-      title: "Detail Card",
+      title: "Card Details",
       description: "",
       children: (
         <BoardCardItemDetail
@@ -86,12 +86,12 @@ export const BoardCardItem = ({
       {...attributes}
       {...(canDrag ? listeners : {})}
       className={cn(
-        "group relative bg-card rounded-lg border border-border/50 hover:border-border transition-all duration-200",
-        canDrag && "cursor-grab active:cursor-grabbing",
-        !canDrag && "cursor-not-allowed",
-        "hover:shadow-md hover:-translate-y-0.5 my-2",
-        isDragging && "opacity-50",
-        isDraggingByOthers && "opacity-70"
+        "group relative bg-card rounded-lg shadow-sm hover:shadow-md transition-all duration-200 my-2",
+        canDrag && "cursor-pointer",
+        !canDrag && "cursor-not-allowed opacity-60",
+        isDragging && "opacity-50 shadow-lg",
+        isDraggingByOthers && "opacity-60",
+        "border border-border hover:border-primary/30"
       )}
       onClick={handleViewDetailCard}
     >
@@ -102,7 +102,7 @@ export const BoardCardItem = ({
       <BoardCardContent card={card} hasCover={hasCover} />
 
       <CardDraggingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
-      <CardEditingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
+      {/* <CardEditingIndicator cardId={card.id} realtimeUtils={realtimeUtils} /> */}
     </div>
   );
 };

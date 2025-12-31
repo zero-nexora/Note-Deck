@@ -18,9 +18,11 @@ export const BoardOverlay = ({ activeCard, activeList, realtimeUtils }: BoardOve
   const dropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: {
-        // active: {
-        //   opacity: "0.5",
-        // },
+        active: {
+          // opacity: "0.5",
+          rotate: "2deg",
+          scale: "1.05",
+        },
       },
     }),
     duration: 200,
@@ -28,7 +30,7 @@ export const BoardOverlay = ({ activeCard, activeList, realtimeUtils }: BoardOve
   };
 
   return (
-    <DragOverlay dropAnimation={dropAnimation}>
+    <DragOverlay dropAnimation={dropAnimation} className="rotate-2">
       {activeCard ? (
         <BoardCardItem realtimeUtils={realtimeUtils} boardMembers={[]} boardLabels={[]} card={activeCard} />
       ) : activeList ? (
