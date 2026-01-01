@@ -82,7 +82,6 @@ export const BoardInviteMemberForm = ({
 
   return (
     <div className="space-y-5">
-      {/* Selected Count */}
       {selectedUserIds.length > 0 && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
           <Users className="h-4 w-4 text-primary" />
@@ -93,7 +92,6 @@ export const BoardInviteMemberForm = ({
         </div>
       )}
 
-      {/* Members List */}
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {availableMembers.map((member) => {
           const isSelected = selectedUserIds.includes(member.userId);

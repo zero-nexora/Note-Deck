@@ -3,7 +3,7 @@ import {
   DeleteUserGroupInput,
   UpdateUserGroupInput,
 } from "../schemas/user-group.schema";
-import { checkWorkspacePermission } from "@/lib/permissions";
+import { checkWorkspacePermission } from "@/lib/check-permissions";
 import { userGroupRepository } from "../repositories/user-group.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { userGroupMemberRepository } from "../repositories/user-group-member.repository";

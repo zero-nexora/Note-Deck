@@ -103,7 +103,11 @@ export const cardRepository = {
     });
   },
 
-  moveToList: async (cardId: string, destinationListId: string, boardId: string) => {
+  moveToList: async (
+    cardId: string,
+    destinationListId: string,
+    boardId: string
+  ) => {
     return await db
       .update(cards)
       .set({
@@ -113,6 +117,27 @@ export const cardRepository = {
       })
       .where(eq(cards.id, cardId))
       .returning();
+  },
+
+  findCardDetails: async (id: string) => {
+    const card = await db.query.cards.findFirst({
+      where: eq(cards.id, id),
+      with: {
+        cardLabels: {
+          with: {
+            label: true,
+          },
+        },
+        checklists: {
+          with: {
+            items: true,
+          },
+        },
+        attachments: true,
+        board: true,
+      },
+    });
+    return card;
   },
 
   findAllByListId: async (listId: string) => {

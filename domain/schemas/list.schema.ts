@@ -29,12 +29,18 @@ export const DeleteListSchema = z.object({
 
 export const ReorderListsSchema = z.object({
   boardId: z.string().min(1),
-  orders: z.array(
-    z.object({
-      id: z.string().min(1),
-      position: z.number().int().min(0),
-    })
-  ).min(1),
+  orders: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        position: z.number().int().min(0),
+      })
+    )
+    .min(1),
+});
+
+export const DuplicateListSchema = z.object({
+  id: z.string().min(1),
 });
 
 export type CreateListInput = z.infer<typeof CreateListSchema>;
@@ -43,4 +49,5 @@ export type MoveListInput = z.infer<typeof MoveListSchema>;
 export type ArchiveListInput = z.infer<typeof ArchiveListSchema>;
 export type RestoreListInput = z.infer<typeof RestoreListSchema>;
 export type DeleteListInput = z.infer<typeof DeleteListSchema>;
-export type ReorderListsInput  = z.infer<typeof ReorderListsSchema>;
+export type ReorderListsInput = z.infer<typeof ReorderListsSchema>;
+export type DuplicateListInput = z.infer<typeof DuplicateListSchema>;

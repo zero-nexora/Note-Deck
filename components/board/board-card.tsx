@@ -62,7 +62,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
   return (
     <Link href={`/workspaces/${board.workspaceId}/boards/${board.id}`}>
       <Card className="h-full bg-card border border-border rounded-lg hover:border-primary/30 cursor-pointer">
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="space-y-3">
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">

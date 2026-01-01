@@ -1,7 +1,7 @@
 import { workspaceMemberRepository } from "../repositories/workspace-member.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { userRepository } from "../repositories/user.repository";
-import { checkWorkspacePermission } from "@/lib/permissions";
+import { checkWorkspacePermission } from "@/lib/check-permissions";
 import {
   AddMemberInput,
   ChangeMemberRoleInput,

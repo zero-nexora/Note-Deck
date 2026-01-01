@@ -3,11 +3,12 @@ import { listRepository } from "../repositories/list.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { notificationRepository } from "../repositories/notification.repository";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import {
   ArchiveCardInput,
   CreateCardInput,
   DeleteCardInput,
+  DuplicateCardInput,
   MoveCardInput,
   ReorderCardsInput,
   RestoreCardInput,
@@ -15,6 +16,10 @@ import {
 } from "../schemas/card.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { executeAutomations } from "./automation.service";
+import { cardLabelRepository } from "../repositories/card-label.repository";
+import { checklistRepository } from "../repositories/checklist.repository";
+import { checklistItemRepository } from "../repositories/checklist-item.repository";
+import { attachmentRepository } from "../repositories/attachment.repository";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
@@ -334,5 +339,98 @@ export const cardService = {
         metadata: { title: card.title, boardId: card.boardId },
       });
     }
+  },
+
+  duplicate: async (userId: string, data: DuplicateCardInput) => {
+    const originalCard = await cardRepository.findCardDetails(data.id);
+    if (!originalCard) throw new Error("Card not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      originalCard.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const maxPosition = await cardRepository.getMaxPosition(
+      originalCard.listId
+    );
+
+    const newCard = await cardRepository.create({
+      listId: originalCard.listId,
+      boardId: originalCard.boardId,
+      title: `${originalCard.title} (Copy)`,
+      description: originalCard.description,
+      position: maxPosition + 1024,
+      dueDate: originalCard.dueDate,
+      coverImage: originalCard.coverImage,
+    });
+
+    for (const cardLabel of originalCard.cardLabels) {
+      await cardLabelRepository.add({
+        cardId: newCard.id,
+        labelId: cardLabel.labelId,
+      });
+    }
+
+    for (const checklist of originalCard.checklists) {
+      const newChecklist = await checklistRepository.create({
+        cardId: newCard.id,
+        title: checklist.title,
+        position: checklist.position,
+      });
+
+      for (const item of checklist.items) {
+        await checklistItemRepository.create({
+          checklistId: newChecklist.id,
+          text: item.text,
+          position: item.position,
+          isCompleted: false,
+        });
+      }
+    }
+
+    for (const attachment of originalCard.attachments) {
+      await attachmentRepository.create({
+        cardId: newCard.id,
+        userId: userId,
+        fileName: attachment.fileName,
+        fileUrl: attachment.fileUrl,
+        fileType: attachment.fileType,
+        fileSize: attachment.fileSize,
+        uploadThingKey: attachment.uploadThingKey,
+        expiresAt: attachment.expiresAt || undefined,
+      });
+    }
+
+    await activityRepository.create({
+      boardId: originalCard.boardId,
+      cardId: newCard.id,
+      userId,
+      action: "card.duplicated",
+      entityType: "card",
+      entityId: newCard.id,
+      metadata: {
+        originalCardId: originalCard.id,
+        originalCardTitle: originalCard.title,
+        newCardTitle: newCard.title,
+        checklistsCount: originalCard.checklists.length,
+        attachmentsCount: originalCard.attachments.length,
+      },
+    });
+
+    await auditLogRepository.create({
+      workspaceId: originalCard.board?.workspaceId || "",
+      userId,
+      action: "card.duplicated",
+      entityType: "card",
+      entityId: newCard.id,
+      metadata: {
+        originalCardId: originalCard.id,
+        listId: originalCard.listId,
+      },
+    });
+
+    return newCard;
   },
 };

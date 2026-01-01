@@ -4,6 +4,7 @@ import {
   archiveCardAction,
   createCardAction,
   deleteCardAction,
+  duplicateCardAction,
   moveCardAction,
   reorderCardsAction,
   restoreCardAction,
@@ -13,6 +14,7 @@ import {
   ArchiveCardInput,
   CreateCardInput,
   DeleteCardInput,
+  DuplicateCardInput,
   MoveCardInput,
   ReorderCardsInput,
   RestoreCardInput,
@@ -33,9 +35,11 @@ export function useCard() {
         return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -48,9 +52,11 @@ export function useCard() {
         return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -124,6 +130,23 @@ export function useCard() {
     }
   };
 
+  const duplicateCard = async (input: DuplicateCardInput) => {
+    try {
+      const result = await duplicateCardAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+        return result.data;
+      } else {
+        toast.error(result.message);
+        return null;
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      return null;
+    }
+  };
+
   return {
     createCard,
     updateCard,
@@ -132,5 +155,6 @@ export function useCard() {
     archiveCard,
     restoreCard,
     deleteCard,
+    duplicateCard,
   };
 }

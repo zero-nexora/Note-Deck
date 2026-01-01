@@ -5,7 +5,7 @@ import { activityRepository } from "../repositories/activity.repository";
 import {
   checkBoardPermission,
   checkWorkspacePermission,
-} from "@/lib/permissions";
+} from "@/lib/check-permissions";
 import {
   AddBoardMemberInput,
   ChangeBoardMemberRoleInput,

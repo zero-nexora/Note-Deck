@@ -1,7 +1,7 @@
 import { cardMemberRepository } from "../repositories/card-member.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import {
   AddCardMemberInput,
   RemoveCardMemberInput,

@@ -274,7 +274,6 @@ export const BoardHeaderLabelsDetail = ({
         )}
       </div>
 
-      {/* Create New Label */}
       {isCreating && (
         <Card className="p-4 bg-primary/5 border-primary/30">
           <Form {...createForm}>

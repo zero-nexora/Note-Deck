@@ -67,4 +67,29 @@ export const listRepository = {
       orderBy: [asc(lists.position)],
     });
   },
+
+  findListDetails: async (id: string) => {
+    const list = await db.query.lists.findFirst({
+      where: eq(lists.id, id),
+      with: {
+        cards: {
+          with: {
+            cardLabels: {
+              with: {
+                label: true,
+              },
+            },
+            checklists: {
+              with: {
+                items: true,
+              },
+            },
+            attachments: true,
+          },
+        },
+        board: true,
+      },
+    });
+    return list;
+  },
 };

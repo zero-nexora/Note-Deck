@@ -14,12 +14,14 @@ interface BoardListHeaderProps {
     listeners: SyntheticListenerMap | undefined;
   };
   onDelete: () => void;
+  onDuplicate: () => void;
 }
 
 export const BoardListHeader = ({
   list,
   dragHandleProps,
   onDelete,
+  onDuplicate,
 }: BoardListHeaderProps) => {
   return (
     <div className="p-3 flex items-center justify-between border-b border-border/30 bg-background/30">
@@ -41,7 +43,7 @@ export const BoardListHeader = ({
         </h3>
       </div>
 
-      <ActionsMenu onDelete={onDelete} />
+      <ActionsMenu onDuplicate={onDuplicate} onDelete={onDelete} />
     </div>
   );
 };

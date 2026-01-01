@@ -1,4 +1,5 @@
 import { automations } from "@/db/schema";
+import { automationService } from "../services/automation.service";
 
 export type Automation = typeof automations.$inferSelect;
 export type NewAutomation = typeof automations.$inferInsert;
@@ -281,3 +282,7 @@ export interface AutomationRule {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type AutomationDetails = Awaited<
+  ReturnType<typeof automationService.findByBoardId>
+>[number];

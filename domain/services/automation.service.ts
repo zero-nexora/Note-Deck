@@ -1,7 +1,7 @@
 import { automationRepository } from "../repositories/automation.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import {
   CreateAutomationInput,
   DeleteAutomationInput,

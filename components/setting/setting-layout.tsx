@@ -6,9 +6,13 @@ import { ProfileTab } from "./profile-tab";
 import { NotificationsTab } from "./notification-tab";
 import { SecurityTab } from "./security-tab";
 import { BillingTab } from "./billing-tab";
+import { UserSession } from "@/domain/types/user.type";
 
+interface SettingTapsProps {
+  user: UserSession;
+}
 
-export const SettingLayout = () => {
+export const SettingTaps = ({ user }: SettingTapsProps) => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -16,7 +20,9 @@ export const SettingLayout = () => {
           <Settings className="w-6 h-6" />
           Settings
         </h1>
-        <p className="text-muted-foreground">Manage your account and preferences</p>
+        <p className="text-muted-foreground">
+          Manage your account and preferences
+        </p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
@@ -40,13 +46,13 @@ export const SettingLayout = () => {
         </TabsList>
 
         <TabsContent value="profile">
-          <ProfileTab />
+          <ProfileTab user={user} />
         </TabsContent>
         <TabsContent value="notifications">
           <NotificationsTab />
         </TabsContent>
         <TabsContent value="security">
-          <SecurityTab />
+          <SecurityTab user={user} />
         </TabsContent>
         <TabsContent value="billing">
           <BillingTab />
@@ -55,4 +61,3 @@ export const SettingLayout = () => {
     </div>
   );
 };
-

@@ -21,12 +21,14 @@ export function useLabel() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
-        return result.data
+        return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 

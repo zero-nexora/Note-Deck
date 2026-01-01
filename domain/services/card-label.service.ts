@@ -2,7 +2,7 @@ import { cardLabelRepository } from "../repositories/card-label.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
 import { labelRepository } from "../repositories/label.repository";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import {
   AddCardLabelInput,
   RemoveCardLabelInput,

@@ -27,7 +27,7 @@ export const BoardListItem = ({
   realtimeUtils,
 }: BoardListItemProps) => {
   const { open } = useConfirm();
-  const { deleteList } = useList();
+  const { deleteList, duplicateList } = useList();
 
   const isDraggingByOthers = realtimeUtils?.isDraggingListByOthers(list.id);
   const draggingUser = realtimeUtils?.getUserDraggingList(list.id);
@@ -65,6 +65,17 @@ export const BoardListItem = ({
     });
   };
 
+  const handleDuplicateList = async () => {
+    open({
+      title: "Duplicate list",
+      description: "Are you sure you want to duplicate this list?",
+      onConfirm: async () => {
+        await duplicateList({ id: list.id });
+        // realtimeUtils?.broadcastListCreated({ listId: list.id });
+      },
+    });
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -72,7 +83,7 @@ export const BoardListItem = ({
       className={cn(
         "w-72 shrink-0 flex flex-col glass-card relative",
         isDragging && "opacity-50",
-        isDraggingByOthers && "opacity-70" 
+        isDraggingByOthers && "opacity-70"
       )}
     >
       {isDraggingByOthers && draggingUser && (
@@ -101,6 +112,7 @@ export const BoardListItem = ({
           listeners: canDrag ? listeners : {},
         }}
         onDelete={handleDeleteList}
+        onDuplicate={handleDuplicateList}
       />
 
       <ScrollArea className="h-[calc(100vh-270px)]">

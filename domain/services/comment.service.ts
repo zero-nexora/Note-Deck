@@ -7,7 +7,7 @@ import {
   DeleteCommentInput,
   UpdateCommentInput,
 } from "../schemas/comment.schema";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import { executeAutomations } from "./automation.service";
 
 export const commentService = {

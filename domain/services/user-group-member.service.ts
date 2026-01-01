@@ -1,4 +1,4 @@
-import { checkWorkspacePermission } from "@/lib/permissions";
+import { checkWorkspacePermission } from "@/lib/check-permissions";
 import { userGroupRepository } from "../repositories/user-group.repository";
 import {
   AddGroupMemberInput,

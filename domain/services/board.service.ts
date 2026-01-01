@@ -10,11 +10,11 @@ import {
   RestoreBoardInput,
   UpdateBoardInput,
 } from "../schemas/board.schema";
-import { elasticsearchService } from "./elasticsearch.service";
+// import { elasticsearchService } from "./elasticsearch.service";
 import {
   checkBoardPermission,
   checkWorkspacePermission,
-} from "@/lib/permissions";
+} from "@/lib/check-permissions";
 
 export const boardService = {
   create: async (userId: string, data: CreateBoardInput) => {
@@ -55,7 +55,7 @@ export const boardService = {
       metadata: { name: board.name },
     });
 
-    await elasticsearchService.indexBoard(board.id);
+    // await elasticsearchService.indexBoard(board.id);
 
     return board;
   },
@@ -120,7 +120,7 @@ export const boardService = {
       metadata: data,
     });
 
-    await elasticsearchService.indexBoard(updated.id);
+    // await elasticsearchService.indexBoard(updated.id);
 
     return updated;
   },

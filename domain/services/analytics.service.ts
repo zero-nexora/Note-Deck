@@ -3,7 +3,7 @@ import { activities } from "@/db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { GetActivityFeedInput, GetWorkspaceAnalyticsInput } from "../schemas/analytics.schema";
 import { WorkspaceAnalytics } from "../types/analytics.type";
-import { checkWorkspacePermission } from "@/lib/permissions";
+import { checkWorkspacePermission } from "@/lib/check-permissions";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { activityRepository } from "../repositories/activity.repository";
 

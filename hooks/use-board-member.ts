@@ -38,9 +38,11 @@ export function useBoardMember() {
         return result.data
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -53,9 +55,11 @@ export function useBoardMember() {
         return result.data
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 

@@ -1,11 +1,12 @@
 import { listRepository } from "../repositories/list.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import {
   ArchiveListInput,
   CreateListInput,
   DeleteListInput,
+  DuplicateListInput,
   MoveListInput,
   ReorderListsInput,
   RestoreListInput,
@@ -13,6 +14,11 @@ import {
 } from "../schemas/list.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { executeAutomations } from "./automation.service";
+import { cardRepository } from "../repositories/card.repository";
+import { cardLabelRepository } from "../repositories/card-label.repository";
+import { checklistRepository } from "../repositories/checklist.repository";
+import { checklistItemRepository } from "../repositories/checklist-item.repository";
+import { attachmentRepository } from "../repositories/attachment.repository";
 
 export const listService = {
   create: async (userId: string, data: CreateListInput) => {
@@ -269,5 +275,111 @@ export const listService = {
         metadata: { boardId: list.boardId, name: list.name },
       });
     }
+  },
+
+  duplicate: async (userId: string, data: DuplicateListInput) => {
+    const originalList = await listRepository.findListDetails(data.id);
+    if (!originalList) throw new Error("List not found");
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      originalList.boardId,
+      "normal"
+    );
+    if (!hasPermission) throw new Error("Permission denied");
+
+    const maxPosition = await listRepository.getMaxPosition(
+      originalList.boardId
+    );
+
+    const newList = await listRepository.create({
+      boardId: originalList.boardId,
+      name: `${originalList.name} (Copy)`,
+      position: maxPosition + 1024,
+    });
+
+    const cardMapping = new Map<string, string>();
+
+    for (const originalCard of originalList.cards) {
+      const maxCardPosition = await cardRepository.getMaxPosition(newList.id);
+
+      const newCard = await cardRepository.create({
+        listId: newList.id,
+        boardId: originalList.boardId,
+        title: originalCard.title,
+        description: originalCard.description,
+        position: maxCardPosition + 1024,
+        dueDate: originalCard.dueDate,
+        coverImage: originalCard.coverImage,
+      });
+
+      cardMapping.set(originalCard.id, newCard.id);
+
+      for (const cardLabel of originalCard.cardLabels) {
+        await cardLabelRepository.add({
+          cardId: newCard.id,
+          labelId: cardLabel.labelId,
+        });
+      }
+
+      for (const checklist of originalCard.checklists) {
+        const newChecklist = await checklistRepository.create({
+          cardId: newCard.id,
+          title: checklist.title,
+          position: checklist.position,
+        });
+
+        for (const item of checklist.items) {
+          await checklistItemRepository.create({
+            checklistId: newChecklist.id,
+            text: item.text,
+            position: item.position,
+            isCompleted: false,
+          });
+        }
+      }
+
+      for (const attachment of originalCard.attachments) {
+        await attachmentRepository.create({
+          cardId: newCard.id,
+          userId: userId,
+          fileName: attachment.fileName,
+          fileUrl: attachment.fileUrl,
+          fileType: attachment.fileType,
+          fileSize: attachment.fileSize,
+          uploadThingKey: attachment.uploadThingKey,
+          expiresAt: attachment.expiresAt || undefined,
+        });
+      }
+    }
+
+    await activityRepository.create({
+      boardId: originalList.boardId,
+      userId,
+      action: "list.duplicated",
+      entityType: "list",
+      entityId: newList.id,
+      metadata: {
+        originalListId: originalList.id,
+        originalListName: originalList.name,
+        newListName: newList.name,
+        cardsCount: originalList.cards.length,
+      },
+    });
+
+    await auditLogRepository.create({
+      workspaceId: originalList.board.workspaceId || "",
+      userId,
+      action: "list.duplicated",
+      entityType: "list",
+      entityId: newList.id,
+      metadata: {
+        originalListId: originalList.id,
+        cardsCount: originalList.cards.length,
+      },
+    });
+
+
+    return newList;
   },
 };

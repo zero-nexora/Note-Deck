@@ -2,7 +2,7 @@ import { STRIPE_PLANS } from "@/lib/stripe";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import slugify from "slugify";
-import { checkWorkspacePermission } from "@/lib/permissions";
+import { checkWorkspacePermission } from "@/lib/check-permissions";
 import {
   ChangePlanInput,
   CreateWorkspaceInput,

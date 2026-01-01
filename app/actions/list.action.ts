@@ -15,6 +15,8 @@ import {
   DeleteListSchema,
   ReorderListsInput,
   ReorderListsSchema,
+  DuplicateListInput,
+  DuplicateListSchema,
 } from "@/domain/schemas/list.schema";
 import { listService } from "@/domain/services/list.service";
 import { error, success } from "@/lib/response";
@@ -143,6 +145,24 @@ export const deleteListAction = async (input: DeleteListInput) => {
 
     await listService.delete(user.id, parsed.data);
     return success("List deleted successfully");
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const duplicateListAction = async (input: DuplicateListInput) => {
+  try {
+    const user = await requireAuth();
+    const parsed = DuplicateListSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
+
+    const newList = await listService.duplicate(user.id, parsed.data);
+    return success("List duplicated successfully", newList);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

@@ -1,4 +1,4 @@
-import { checkBoardPermission } from "@/lib/permissions";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import { cardRepository } from "../repositories/card.repository";
 import { commentReactionRepository } from "../repositories/comment-reaction.repository";
 import { commentRepository } from "../repositories/comment.repository";

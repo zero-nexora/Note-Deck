@@ -17,14 +17,15 @@ export const userService = {
     }
 
     let hashedPassword: string | undefined;
-    if (data.password) {
-      hashedPassword = await hashPassword(data.password);
-    }
+    // if (data.password) {
+    //   hashedPassword = await hashPassword(data.password);
+    // }
 
     const updated = await userRepository.update(id, {
+      email: data.email,
       name: data.name,
       image: data.image,
-      password: hashedPassword,
+      // password: hashedPassword,
     });
 
     return updated;

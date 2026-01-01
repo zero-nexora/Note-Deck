@@ -14,6 +14,8 @@ import {
   DeleteCardSchema,
   ReorderCardsInput,
   ReorderCardsSchema,
+  DuplicateCardInput,
+  DuplicateCardSchema,
 } from "@/domain/schemas/card.schema";
 import { cardService } from "@/domain/services/card.service";
 import { error, success } from "@/lib/response";
@@ -59,7 +61,7 @@ export const moveCardAction = async (input: MoveCardInput) => {
   try {
     const user = await requireAuth();
     const parsed = MoveCardSchema.safeParse(input);
-    
+
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -68,7 +70,7 @@ export const moveCardAction = async (input: MoveCardInput) => {
     }
 
     const card = await cardService.move(user.id, parsed.data);
-    
+
     return success("Card moved successfully", card);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -79,7 +81,7 @@ export const reorderCardsAction = async (input: ReorderCardsInput) => {
   try {
     const user = await requireAuth();
     const parsed = ReorderCardsSchema.safeParse(input);
-    
+
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -88,7 +90,7 @@ export const reorderCardsAction = async (input: ReorderCardsInput) => {
     }
 
     const cards = await cardService.reorders(user.id, parsed.data);
-    
+
     return success("Cards reordered successfully", cards);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -144,6 +146,24 @@ export const deleteCardAction = async (input: DeleteCardInput) => {
 
     await cardService.delete(user.id, parsed.data);
     return success("Card deleted successfully");
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const duplicateCardAction = async (input: DuplicateCardInput) => {
+  try {
+    const user = await requireAuth();
+    const parsed = DuplicateCardSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
+    }
+
+    const newCard = await cardService.duplicate(user.id, parsed.data);
+    return success("Card duplicated successfully", newCard);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

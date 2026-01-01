@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createAutomationAction,
   deleteAutomationAction,
@@ -24,11 +26,14 @@ export function useAutomation() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -38,11 +43,14 @@ export function useAutomation() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -52,11 +60,14 @@ export function useAutomation() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 
@@ -66,11 +77,14 @@ export function useAutomation() {
       if (result.success) {
         toast.success(result.message);
         router.refresh();
+        return result.data;
       } else {
         toast.error(result.message);
+        return null;
       }
     } catch (error: any) {
       toast.error(error.message);
+      return null;
     }
   };
 

@@ -34,7 +34,7 @@ export const BoardInviteMember = ({
   }, [open, boardMembers, workspaceMembers, boardId]);
 
   return (
-    <Button className="btn-gradient shrink-0" onClick={handleBoardInviteMember}>
+    <Button className="shrink-0" onClick={handleBoardInviteMember}>
       <UserPlus className="w-4 h-4 mr-2" />
       Invite
     </Button>

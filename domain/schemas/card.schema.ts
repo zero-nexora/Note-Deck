@@ -25,22 +25,26 @@ export const MoveCardSchema = z.object({
       position: z.number().int().min(0),
     })
   ),
-  destinationOrders: z.array(
-    z.object({
-      id: z.string().min(1),
-      position: z.number().int().min(0),
-    })
-  ).min(1),
+  destinationOrders: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        position: z.number().int().min(0),
+      })
+    )
+    .min(1),
 });
 
 export const ReorderCardsSchema = z.object({
   listId: z.string().min(1),
-  orders: z.array(
-    z.object({
-      id: z.string().min(1),
-      position: z.number().int().min(0),
-    })
-  ).min(1),
+  orders: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        position: z.number().int().min(0),
+      })
+    )
+    .min(1),
 });
 
 export const ArchiveCardSchema = z.object({
@@ -55,6 +59,10 @@ export const DeleteCardSchema = z.object({
   id: z.string().min(1),
 });
 
+export const DuplicateCardSchema = z.object({
+  id: z.string().min(1),
+});
+
 export type CreateCardInput = z.infer<typeof CreateCardSchema>;
 export type UpdateCardInput = z.infer<typeof UpdateCardSchema>;
 export type MoveCardInput = z.infer<typeof MoveCardSchema>;
@@ -62,3 +70,4 @@ export type ReorderCardsInput = z.infer<typeof ReorderCardsSchema>;
 export type ArchiveCardInput = z.infer<typeof ArchiveCardSchema>;
 export type RestoreCardInput = z.infer<typeof RestoreCardSchema>;
 export type DeleteCardInput = z.infer<typeof DeleteCardSchema>;
+export type DuplicateCardInput = z.infer<typeof DuplicateCardSchema>;

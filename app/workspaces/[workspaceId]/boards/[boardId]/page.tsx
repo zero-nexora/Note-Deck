@@ -17,6 +17,7 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
 
   const board = result.data;
 
+
   const resultWorkspaceMember = await findWorkspaceByIdAction(
     board.workspaceId
   );

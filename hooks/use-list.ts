@@ -4,6 +4,7 @@ import {
   archiveListAction,
   createListAction,
   deleteListAction,
+  duplicateListAction,
   moveListAction,
   reorderListsAction,
   restoreListAction,
@@ -13,6 +14,7 @@ import {
   ArchiveListInput,
   CreateListInput,
   DeleteListInput,
+  DuplicateListInput,
   MoveListInput,
   ReorderListsInput,
   RestoreListInput,
@@ -122,6 +124,23 @@ export function useList() {
     }
   };
 
+  const duplicateList = async (input: DuplicateListInput) => {
+    try {
+      const result = await duplicateListAction(input);
+      if (result.success) {
+        toast.success(result.message);
+        router.refresh();
+        return result.data;
+      } else {
+        toast.error(result.message);
+        return null;
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      return null;
+    }
+  };
+
   return {
     createList,
     updateList,
@@ -130,5 +149,6 @@ export function useList() {
     archiveList,
     restoreList,
     deleteList,
+    duplicateList,
   };
 }

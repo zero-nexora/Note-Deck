@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Card,
   CardContent,
@@ -9,11 +8,30 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { UserSession } from "@/domain/types/user.type";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
 
-export const SecurityTab: React.FC = () => {
+interface SettingTapsProps {
+  user: UserSession;
+}
+
+export const SecurityTab = ({ user }: SettingTapsProps) => {
+  const form = useForm({
+    defaultValues: {
+      password: "••••••••••••",
+    },
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -24,23 +42,32 @@ export const SecurityTab: React.FC = () => {
         {/* Password */}
         <div className="space-y-4">
           <h3 className="font-semibold">Password</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" type="password" />
-            </div>
-          </div>
-          <Button variant="outline">Update Password</Button>
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Current Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="password"
+                      disabled
+                      className="cursor-not-allowed"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </Form>
+          <Button variant="outline">Change Password</Button>
         </div>
 
         {/* Two-Factor */}
         <div className="space-y-4">
           <h3 className="font-semibold">Two-Factor Authentication</h3>
-          <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+          <div className="flex items-center justify-between rounded-lg bg-secondary p-4">
             <div>
               <p className="font-medium">2FA is not enabled</p>
               <p className="text-sm text-muted-foreground">
@@ -54,7 +81,7 @@ export const SecurityTab: React.FC = () => {
         {/* Sessions */}
         <div className="space-y-4">
           <h3 className="font-semibold">Sessions</h3>
-          <div className="p-4 bg-secondary rounded-lg">
+          <div className="rounded-lg bg-secondary p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">Current session</p>
@@ -65,8 +92,9 @@ export const SecurityTab: React.FC = () => {
               <Button
                 variant="ghost"
                 className="text-destructive hover:text-destructive"
+                onClick={() => signOut({ callbackUrl: "/" })}
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </Button>
             </div>
