@@ -6,7 +6,6 @@ import {
   LayoutGrid,
   Users,
   Settings,
-  Zap,
   FileText,
   ChevronLeft,
   ChevronRight,
@@ -42,7 +41,6 @@ export const Sidebar = ({ workspaces, workspaceId }: SidebarProps) => {
   const sidebarLinks = [
     { icon: LayoutGrid, label: "Overview", path: "overview" },
     { icon: FileText, label: "Audit Logs", path: "audit-logs" },
-    { icon: Zap, label: "Automations", path: "automations" },
     { icon: Users, label: "User Groups", path: "user-groups" },
     { icon: Clipboard, label: "Boards", path: "boards" },
     { icon: Settings, label: "Settings", path: "settings" },

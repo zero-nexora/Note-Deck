@@ -49,9 +49,11 @@ import {
 } from "@/domain/schemas/workspace.schema";
 import { WorkspaceInviteMember } from "./workspace-invite-member";
 import { signOut } from "next-auth/react";
+import { NotificationWithUser } from "@/domain/types/notification.type";
+import { useNotification } from "@/hooks/use-notification";
 
 interface NavbarProps {
-  notifications: any[];
+  notifications: NotificationWithUser[];
   workspace: WorkspaceWithMember;
   user: UserSession;
 }
@@ -59,6 +61,7 @@ interface NavbarProps {
 export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { updateNameWorkspace } = useWorkspace();
+  const {markAsRead, markAllAsRead, deleteNotification} = useNotification();
 
   const form = useForm<UpdateWorkspaceNameInput>({
     resolver: zodResolver(UpdateWorkspaceNameSchema),
@@ -189,6 +192,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
                   variant="ghost"
                   size="sm"
                   className="text-xs h-7 text-primary hover:bg-primary/10"
+                  onClick={() => markAllAsRead()}
                 >
                   Mark all read
                 </Button>
@@ -215,14 +219,15 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
                       key={notification.id}
                       className={cn(
                         "p-4 hover:bg-secondary/50 cursor-pointer transition-colors group",
-                        !notification.read && "bg-primary/5"
+                        !notification.isRead && "bg-primary/5"
                       )}
+                      onClick={() => markAsRead({id: notification.id})}
                     >
                       <div className="flex items-start gap-3">
                         <div
                           className={cn(
                             "w-2 h-2 rounded-full mt-2 shrink-0 transition-colors",
-                            !notification.read
+                            !notification.isRead
                               ? "bg-primary"
                               : "bg-transparent group-hover:bg-border"
                           )}

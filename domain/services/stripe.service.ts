@@ -28,8 +28,8 @@ export const stripeService = {
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: STRIPE_PLANS[plan].priceId, quantity: 1 }],
-      success_url: `${process.env.APP_URL}/billing/success`,
-      cancel_url: `${process.env.APP_URL}/billing/cancel`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${workspaceId}/billing/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${workspaceId}/billing/cancel`,
       metadata: {
         workspaceId,
         plan,
@@ -63,7 +63,7 @@ export const stripeService = {
 
   handleSubscriptionUpdated: async (subscription: Stripe.Subscription) => {
     const workspaceId = subscription.metadata.workspaceId;
-    
+
     await workspaceRepository.update(workspaceId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status,

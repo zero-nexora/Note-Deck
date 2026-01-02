@@ -11,7 +11,7 @@ export const boardRepository = {
 
   findById: async (id: string) => {
     return await db.query.boards.findFirst({
-      where: eq(boards.id, id),
+      where: and(eq(boards.id, id), eq(boards.isArchived, false)),
       with: {
         workspace: true,
         members: {

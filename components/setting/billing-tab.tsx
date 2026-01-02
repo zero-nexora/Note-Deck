@@ -8,13 +8,99 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { STRIPE_PLANS } from "@/lib/constants";
+import { useConfirm } from "@/stores/confirm-store";
+import { useStripe } from "@/hooks/use-stripe";
+import { Check } from "lucide-react";
+import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
+import clsx from "clsx";
 
-export const BillingTab = () => {
-  const invoices = [
-    { date: "Dec 1, 2024", amount: "$12.00", status: "Paid" },
-    { date: "Nov 1, 2024", amount: "$12.00", status: "Paid" },
-    { date: "Oct 1, 2024", amount: "$12.00", status: "Paid" },
-  ];
+interface BillingTabProps {
+  workspace: WorkspaceWithOwnerMembers;
+}
+
+const formatPrice = (price: number) => {
+  if (price === 0) return "Free";
+  return `$${price}/month`;
+};
+
+export const BillingTab = ({ workspace }: BillingTabProps) => {
+  const { open } = useConfirm();
+  const { checkout } = useStripe();
+
+  const currentPlan = workspace.plan;
+
+  const handleUpgrade = (plan: "pro" | "enterprise") => {
+    const planData = STRIPE_PLANS[plan];
+
+    open({
+      title: `Upgrade to ${planData.name}`,
+      description: `You will be charged $${planData.price}/month. Do you want to continue?`,
+      onConfirm: async () => {
+        await checkout(workspace.id, plan);
+      },
+    });
+  };
+
+  const renderActionButton = (plan: "free" | "pro" | "enterprise") => {
+    if (plan === currentPlan) {
+      return (
+        <Button variant="outline" size="sm" disabled>
+          Current plan
+        </Button>
+      );
+    }
+
+    if (plan === "free") {
+      return null;
+    }
+
+    return (
+      <Button
+        size="sm"
+        variant={plan === "enterprise" ? "outline" : "default"}
+        onClick={() => handleUpgrade(plan)}
+      >
+        Upgrade
+      </Button>
+    );
+  };
+
+  const renderPlanCard = (
+    plan: "free" | "pro" | "enterprise",
+    features: React.ReactNode
+  ) => {
+    const planData = STRIPE_PLANS[plan];
+    const isCurrent = plan === currentPlan;
+
+    return (
+      <div
+        className={clsx(
+          "p-4 rounded-lg border",
+          isCurrent && "border-primary bg-primary/5",
+          !isCurrent && "border-border"
+        )}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h3 className="font-semibold text-lg">{planData.name}</h3>
+            <p
+              className={clsx(
+                "text-2xl font-bold",
+                isCurrent ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {formatPrice(planData.price)}
+            </p>
+          </div>
+
+          {renderActionButton(plan)}
+        </div>
+
+        <ul className="space-y-2">{features}</ul>
+      </div>
+    );
+  };
 
   return (
     <Card>
@@ -24,39 +110,53 @@ export const BillingTab = () => {
           Manage your subscription and payment methods
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="p-6 gradient-primary rounded-xl text-primary-foreground">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm opacity-90">Current Plan</p>
-              <h3 className="text-2xl font-bold">Pro Plan</h3>
-              <p className="text-sm opacity-90 mt-1">
-                $12/month • Billed monthly
-              </p>
-            </div>
-            <Button variant="secondary">Upgrade</Button>
-          </div>
-        </div>
 
-        <div className="space-y-4">
-          <h3 className="font-semibold">Billing History</h3>
-          <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-            {invoices.map((invoice, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium">{invoice.date}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {invoice.amount}
-                  </p>
-                </div>
-                <Button variant="ghost" size="sm">
-                  Download
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+      <CardContent className="space-y-4">
+        {/* Free */}
+        {renderPlanCard(
+          "free",
+          <>
+            <Feature>{STRIPE_PLANS.free.limits.boards} boards</Feature>
+            <Feature>
+              {STRIPE_PLANS.free.limits.cardsPerBoard} cards per board
+            </Feature>
+            <Feature>
+              {STRIPE_PLANS.free.limits.membersPerWorkspace} members
+            </Feature>
+          </>
+        )}
+
+        {/* Pro */}
+        {renderPlanCard(
+          "pro",
+          <>
+            <Feature>{STRIPE_PLANS.pro.limits.boards} boards</Feature>
+            <Feature>
+              {STRIPE_PLANS.pro.limits.cardsPerBoard} cards per board
+            </Feature>
+            <Feature>
+              {STRIPE_PLANS.pro.limits.membersPerWorkspace} members
+            </Feature>
+          </>
+        )}
+
+        {/* Enterprise */}
+        {renderPlanCard(
+          "enterprise",
+          <>
+            <Feature>Unlimited boards</Feature>
+            <Feature>Unlimited cards</Feature>
+            <Feature>Unlimited members</Feature>
+          </>
+        )}
       </CardContent>
     </Card>
   );
 };
+
+const Feature = ({ children }: { children: React.ReactNode }) => (
+  <li className="flex items-center gap-2 text-sm">
+    <Check className="h-4 w-4 text-primary" />
+    <span>{children}</span>
+  </li>
+);

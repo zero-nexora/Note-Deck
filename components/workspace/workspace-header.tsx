@@ -1,14 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 export function WorkspaceHeader() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+    <div
       className="text-center mb-8"
     >
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
@@ -23,6 +19,6 @@ export function WorkspaceHeader() {
       <p className="text-muted-foreground">
         Select a workspace to continue, or create a new one.
       </p>
-    </motion.div>
+    </div>
   );
 }

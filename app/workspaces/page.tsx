@@ -3,7 +3,7 @@ import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import WorkspaceList from "@/components/workspace/workspace-list";
 import { Workspace } from "@/domain/types/workspace.type";
 import { findWorkspacesByUserAction } from "../actions/workspace.action";
-import { CreateWorkspace } from "@/components/workspace/create-workspace-item";
+import { CreateWorkspace } from "@/components/workspace/create-workspace";
 
 const WorkspacesPage = async () => {
   const result = await findWorkspacesByUserAction();

@@ -47,12 +47,12 @@ export const notificationService = {
     return notifications;
   },
 
-  sendWebPush: async (
-    userId: string,
-    title: string,
-    body: string,
-    data?: any
-  ) => {
-    await sendPushNotification();
-  },
+  // sendWebPush: async (
+  //   userId: string,
+  //   title: string,
+  //   body: string,
+  //   data?: any
+  // ) => {
+  //   await sendPushNotification();
+  // },
 };

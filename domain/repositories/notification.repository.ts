@@ -26,6 +26,9 @@ export const notificationRepository = {
 
     const userNotifications = await db.query.notifications.findMany({
       where: query,
+      with: {
+        user: true,
+      },
       orderBy: [desc(notifications.createdAt)],
       limit: 50,
     });

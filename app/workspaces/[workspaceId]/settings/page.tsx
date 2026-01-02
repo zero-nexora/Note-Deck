@@ -1,16 +1,26 @@
-import { SettingTaps } from '@/components/setting/setting-layout'
-import { requireAuth } from '@/lib/session'
+import { findWorkspaceByIdAction } from "@/app/actions/workspace.action";
+import { SettingTabs } from "@/components/setting/setting-tabs";
+import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
+import { requireAuth } from "@/lib/session";
 
-const SetttingPage = async () => {
+interface SettingsPageProps {
+  params: Promise<{ workspaceId: string }>;
+}
+
+const SettingPage = async ({ params }: SettingsPageProps) => {
+  const { workspaceId } = await params;
   const user = await requireAuth();
 
-  if (!user) return null;
+  const result = await findWorkspaceByIdAction(workspaceId);
+  if (!result.success || !result.data) return null;
+
+  const workspace = result.data as WorkspaceWithOwnerMembers;
 
   return (
     <div>
-      <SettingTaps user={user} />
+      <SettingTabs workspace={workspace} user={user} />
     </div>
-  )
-}
+  );
+};
 
-export default SetttingPage
+export default SettingPage;

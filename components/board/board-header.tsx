@@ -19,7 +19,6 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
   return (
     <div className="border-b border-border bg-background px-4 py-3">
       <div className="flex items-center justify-between gap-4">
-        {/* Left: Name & Description */}
         <div className="min-w-0">
           <BoardHeaderNameDescription
             boardId={board.id}
@@ -28,7 +27,6 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
           />
         </div>
 
-        {/* Right: Labels, Members, Actions */}
         <div className="flex items-center gap-2 shrink-0">
           <BoardHeaderLabels boardId={board.id} boardLabels={board.labels} />
           

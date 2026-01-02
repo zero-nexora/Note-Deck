@@ -56,25 +56,9 @@ export function useNotification() {
     }
   };
 
-  const listNotifications = async (unreadOnly = false) => {
-    try {
-      const result = await listNotificationsAction(unreadOnly);
-      if (result.success) {
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-      return null;
-    }
-  };
-
   return {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    listNotifications,
   };
 }
