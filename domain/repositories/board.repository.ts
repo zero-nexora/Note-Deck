@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewBoard, UpdateBoard } from "../types/board.type";
 import { boards, cards, comments, lists } from "@/db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull } from "drizzle-orm";
 
 export const boardRepository = {
   create: async (data: NewBoard) => {
@@ -100,5 +100,27 @@ export const boardRepository = {
 
   delete: async (id: string) => {
     await db.delete(boards).where(eq(boards.id, id));
+  },
+
+  getTotalBoardsByWorkspaceId: async (workspaceId: string) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(boards)
+      .where(
+        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false))
+      );
+    return result.count;
+  },
+
+  getBoardsByWorkspaceId: async (workspaceId: string) => {
+    return await db
+      .select({
+        id: boards.id,
+        name: boards.name,
+      })
+      .from(boards)
+      .where(
+        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false))
+      );
   },
 };

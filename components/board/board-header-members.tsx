@@ -1,11 +1,10 @@
 "use client";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
-import { useModal } from "@/stores/modal-store";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { BoardHeaderMembersForm } from "./board-header-members-form";
 import { useOthers, useSelf } from "@/lib/liveblocks";
+import { useModal } from "@/stores/modal-store";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 
 interface BoardHeaderMembersProps {
@@ -18,7 +17,6 @@ export const BoardHeaderMembers = ({
   boardMembers,
 }: BoardHeaderMembersProps) => {
   const { open: openModal } = useModal();
-
   const others = useOthers();
   const self = useSelf();
 
@@ -58,30 +56,33 @@ export const BoardHeaderMembers = ({
   return (
     <Button
       onClick={handleViewDetailMember}
-      variant={"ghost"}
-      className="gap-2"
+      variant="ghost"
+      size="sm"
+      className="hover:bg-accent hover:text-accent-foreground gap-2"
     >
       <div className="flex -space-x-2">
         {allUsers.slice(0, 5).map(({ connectionId, user }) => (
-          <Avatar
-            key={connectionId}
-            className="w-8 h-8 border-2 border-background ring-1 ring-border hover:z-10 transition-all"
-          >
+          <Avatar key={connectionId} className="h-7 w-7 ring-2 ring-card">
             {user.image ? (
               <AvatarImage src={user.image} alt={user.name || ""} />
             ) : null}
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+            <AvatarFallback
+              className="text-xs font-medium"
+              style={{ backgroundColor: user.color }}
+            >
               {(user.name || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         ))}
         {allUsers.length > 5 && (
-          <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium text-muted-foreground">
-            +{allUsers.length - 5}
+          <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center ring-2 ring-card">
+            <span className="text-xs font-medium text-muted-foreground">
+              +{allUsers.length - 5}
+            </span>
           </div>
         )}
       </div>
-      <Users className="w-4 h-4 text-muted-foreground" />
+      <Users className="h-4 w-4 text-muted-foreground" />
     </Button>
   );
 };

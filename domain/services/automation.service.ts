@@ -25,16 +25,30 @@ import {
 export const automationService = {
   create: async (userId: string, data: CreateAutomationInput) => {
     const board = await boardRepository.findById(data.boardId);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    const automation = await automationRepository.create(data);
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      throw new Error("Automation name cannot be empty");
+    }
+
+    const automationData = {
+      ...data,
+      name: trimmedName,
+    };
+
+    const automation = await automationRepository.create(automationData);
 
     await activityRepository.create({
       boardId: data.boardId,
@@ -58,12 +72,19 @@ export const automationService = {
   },
 
   findByBoardId: async (userId: string, boardId: string) => {
+    const board = await boardRepository.findById(boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
     const hasPermission = await checkBoardPermission(
       userId,
       boardId,
       "observer"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const automations = await automationRepository.findByBoardId(boardId);
     return automations;
@@ -71,20 +92,51 @@ export const automationService = {
 
   update: async (userId: string, id: string, data: UpdateAutomationInput) => {
     const automation = await automationRepository.findById(id);
-    if (!automation) throw new Error("Automation not found");
+    if (!automation) {
+      throw new Error("Automation not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       automation.boardId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    if (data.name !== undefined && data.name.trim() === "") {
-      throw new Error("Automation name cannot be empty");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
     }
 
-    const updated = await automationRepository.update(id, data);
+    const updateData = { ...data };
+
+    if (data.name !== undefined) {
+      const trimmedName = data.name.trim();
+      if (!trimmedName) {
+        throw new Error("Automation name cannot be empty");
+      }
+      updateData.name = trimmedName;
+    }
+
+    const metadata: Record<string, any> = {};
+    if (data.name !== undefined && automation.name !== updateData.name) {
+      metadata.oldName = automation.name;
+      metadata.newName = updateData.name;
+    }
+    if (data.trigger !== undefined) {
+      metadata.triggerUpdated = true;
+    }
+    if (data.actions !== undefined) {
+      metadata.actionsUpdated = true;
+    }
+
+    if (
+      data.name !== undefined &&
+      automation.name === updateData.name &&
+      !data.trigger &&
+      !data.actions
+    ) {
+      return automation;
+    }
+
+    const updated = await automationRepository.update(id, updateData);
 
     await activityRepository.create({
       boardId: automation.boardId,
@@ -92,22 +144,45 @@ export const automationService = {
       action: "automation.updated",
       entityType: "automation",
       entityId: id,
-      metadata: data,
+      metadata,
     });
+
+    const board = await boardRepository.findById(automation.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "automation.updated",
+        entityType: "automation",
+        entityId: id,
+        metadata: {
+          boardId: automation.boardId,
+          ...metadata,
+        },
+      });
+    }
 
     return updated;
   },
 
   enable: async (userId: string, data: EnableAutomationInput) => {
     const automation = await automationRepository.findById(data.id);
-    if (!automation) throw new Error("Automation not found");
+    if (!automation) {
+      throw new Error("Automation not found");
+    }
+
+    if (automation.isActive) {
+      return automation;
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       automation.boardId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await automationRepository.enable(data.id);
 
@@ -115,56 +190,6 @@ export const automationService = {
       boardId: automation.boardId,
       userId,
       action: "automation.enabled",
-      entityType: "automation",
-      entityId: data.id,
-      metadata: {},
-    });
-
-    return updated;
-  },
-
-  disable: async (userId: string, data: DisableAutomationInput) => {
-    const automation = await automationRepository.findById(data.id);
-    if (!automation) throw new Error("Automation not found");
-
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    const updated = await automationRepository.disable(data.id);
-
-    await activityRepository.create({
-      boardId: automation.boardId,
-      userId,
-      action: "automation.disabled",
-      entityType: "automation",
-      entityId: data.id,
-      metadata: {},
-    });
-
-    return updated;
-  },
-
-  delete: async (userId: string, data: DeleteAutomationInput) => {
-    const automation = await automationRepository.findById(data.id);
-    if (!automation) throw new Error("Automation not found");
-
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    await automationRepository.delete(data.id);
-
-    await activityRepository.create({
-      boardId: automation.boardId,
-      userId,
-      action: "automation.deleted",
       entityType: "automation",
       entityId: data.id,
       metadata: { name: automation.name },
@@ -175,30 +200,126 @@ export const automationService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
+        action: "automation.enabled",
+        entityType: "automation",
+        entityId: data.id,
+        metadata: { boardId: automation.boardId, name: automation.name },
+      });
+    }
+
+    return updated;
+  },
+
+  disable: async (userId: string, data: DisableAutomationInput) => {
+    const automation = await automationRepository.findById(data.id);
+    if (!automation) {
+      throw new Error("Automation not found");
+    }
+
+    if (!automation.isActive) {
+      return automation;
+    }
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      automation.boardId,
+      "admin"
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const updated = await automationRepository.disable(data.id);
+
+    await activityRepository.create({
+      boardId: automation.boardId,
+      userId,
+      action: "automation.disabled",
+      entityType: "automation",
+      entityId: data.id,
+      metadata: { name: automation.name },
+    });
+
+    const board = await boardRepository.findById(automation.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "automation.disabled",
+        entityType: "automation",
+        entityId: data.id,
+        metadata: { boardId: automation.boardId, name: automation.name },
+      });
+    }
+
+    return updated;
+  },
+
+  delete: async (userId: string, data: DeleteAutomationInput) => {
+    const automation = await automationRepository.findById(data.id);
+    if (!automation) {
+      throw new Error("Automation not found");
+    }
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      automation.boardId,
+      "admin"
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const board = await boardRepository.findById(automation.boardId);
+
+    await activityRepository.create({
+      boardId: automation.boardId,
+      userId,
+      action: "automation.deleted",
+      entityType: "automation",
+      entityId: data.id,
+      metadata: { name: automation.name },
+    });
+
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
         action: "automation.deleted",
         entityType: "automation",
         entityId: data.id,
         metadata: { boardId: automation.boardId, name: automation.name },
       });
     }
+
+    await automationRepository.delete(data.id);
   },
 };
 
 const SYSTEM_USER_ID = "system";
 
 export async function executeAutomations(event: AutomationEvent) {
-  const rules = await automationRepository.findByBoardId(event.boardId);
+  try {
+    const rules = await automationRepository.findByBoardId(event.boardId);
 
-  for (const rule of rules) {
-    if (!matchTrigger(rule.trigger as Trigger, event)) continue;
+    const activeRules = rules.filter((rule) => rule.isActive);
 
-    for (const action of rule.actions as Action[]) {
-      try {
-        await executeAction(action, event);
-      } catch (error) {
-        console.error(`Failed to execute action ${action.type}:`, error);
+    for (const rule of activeRules) {
+      if (!matchTrigger(rule.trigger as Trigger, event)) continue;
+
+      for (const action of rule.actions as Action[]) {
+        try {
+          await executeAction(action, event);
+        } catch (error) {
+          console.error(
+            `Failed to execute action ${action.type} for automation ${rule.id}:`,
+            error
+          );
+        }
       }
     }
+  } catch (error) {
+    console.error("Failed to execute automations:", error);
   }
 }
 
@@ -241,24 +362,42 @@ function matchTrigger(trigger: Trigger, event: AutomationEvent): boolean {
 
 async function executeAction(action: Action, event: AutomationEvent) {
   if (!event.cardId && needsCardId(action.type)) {
-    console.error(`Action ${action.type} requires cardId`);
+    console.error(`Action ${action.type} requires cardId but none provided`);
     return;
   }
 
   switch (action.type) {
     case "ASSIGN_MEMBER":
+      if (!action.userId) {
+        console.error("ASSIGN_MEMBER action requires userId");
+        return;
+      }
       await assignMember(event.cardId!, action.userId);
       break;
 
     case "ADD_LABEL":
+      if (!action.labelId) {
+        console.error("ADD_LABEL action requires labelId");
+        return;
+      }
       await addLabel(event.cardId!, action.labelId);
       break;
 
     case "ADD_COMMENT":
-      await addComment(event.cardId!, action.content, event.userId);
+      if (!action.content || action.content.trim() === "") {
+        console.error("ADD_COMMENT action requires content");
+        return;
+      }
+      await addComment(event.cardId!, action.content.trim(), event.userId);
       break;
 
     case "SEND_NOTIFICATION":
+      if (!action.title || !action.message || !action.notificationType) {
+        console.error(
+          "SEND_NOTIFICATION action requires title, message, and notificationType"
+        );
+        return;
+      }
       await sendNotification(
         action.userId || event.userId!,
         action.title,
@@ -269,6 +408,10 @@ async function executeAction(action: Action, event: AutomationEvent) {
       break;
 
     case "LOG_ACTIVITY":
+      if (!action.action || !action.entityType) {
+        console.error("LOG_ACTIVITY action requires action and entityType");
+        return;
+      }
       await logActivity(
         event.boardId,
         event.cardId,
@@ -281,6 +424,10 @@ async function executeAction(action: Action, event: AutomationEvent) {
       break;
 
     case "MOVE_CARD":
+      if (!action.toListId) {
+        console.error("MOVE_CARD action requires toListId");
+        return;
+      }
       await moveCard(event.cardId!, action.toListId);
       break;
 
@@ -289,7 +436,11 @@ async function executeAction(action: Action, event: AutomationEvent) {
       break;
 
     case "ADD_LIST":
-      await addList(event.boardId, action.name);
+      if (!action.name || action.name.trim() === "") {
+        console.error("ADD_LIST action requires name");
+        return;
+      }
+      await addList(event.boardId, action.name.trim());
       break;
 
     default:
@@ -369,7 +520,19 @@ async function moveCard(cardId: string, toListId: string) {
     where: eq(cards.id, cardId),
   });
 
-  if (!card) return;
+  if (!card) {
+    console.error(`Card ${cardId} not found for MOVE_CARD action`);
+    return;
+  }
+
+  const targetList = await db.query.lists.findFirst({
+    where: eq(lists.id, toListId),
+  });
+
+  if (!targetList) {
+    console.error(`Target list ${toListId} not found for MOVE_CARD action`);
+    return;
+  }
 
   const maxPosition = await getMaxCardPosition(toListId);
 
@@ -377,6 +540,7 @@ async function moveCard(cardId: string, toListId: string) {
     .update(cards)
     .set({
       listId: toListId,
+      boardId: targetList.boardId,
       position: maxPosition + 1,
       updatedAt: new Date(),
     })
@@ -384,6 +548,15 @@ async function moveCard(cardId: string, toListId: string) {
 }
 
 async function archiveCard(cardId: string) {
+  const card = await db.query.cards.findFirst({
+    where: eq(cards.id, cardId),
+  });
+
+  if (!card) {
+    console.error(`Card ${cardId} not found for ARCHIVE_CARD action`);
+    return;
+  }
+
   await db
     .update(cards)
     .set({ isArchived: true, updatedAt: new Date() })
@@ -391,6 +564,15 @@ async function archiveCard(cardId: string) {
 }
 
 async function addList(boardId: string, name: string) {
+  const board = await db.query.boards.findFirst({
+    where: eq((await import("@/db/schema")).boards.id, boardId),
+  });
+
+  if (!board) {
+    console.error(`Board ${boardId} not found for ADD_LIST action`);
+    return;
+  }
+
   const maxPosition = await getMaxListPosition(boardId);
 
   await db.insert(lists).values({

@@ -23,7 +23,12 @@ import { Zap, Trash2, AlertCircle } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { TriggerSelector } from "./automation-trigger-selector";
 import { ActionSelector } from "./automation-action-selector";
-import { ActionOption, AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, TriggerOption } from "@/lib/automation";
+import {
+  ActionOption,
+  AUTOMATION_ACTIONS,
+  AUTOMATION_TRIGGERS,
+  TriggerOption,
+} from "@/lib/automation";
 
 interface CreateAutomationFormProps {
   boardId: string;
@@ -131,7 +136,7 @@ export const CreateAutomationForm = ({
             <div className="p-4 rounded-lg border border-primary/30 bg-primary/5">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{selectedTrigger.icon}</span>
+                  <selectedTrigger.icon />
                   <div className="flex flex-col">
                     <span className="font-semibold text-sm text-foreground">
                       {selectedTrigger.name}
@@ -253,7 +258,7 @@ export const CreateAutomationForm = ({
                       >
                         {index + 1}
                       </Badge>
-                      <span className="text-xl">{item.action.icon}</span>
+                      <item.action.icon />
                       <div className="flex flex-col">
                         <span className="font-semibold text-sm text-foreground">
                           {item.action.name}

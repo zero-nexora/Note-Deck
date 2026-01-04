@@ -84,7 +84,6 @@ export const BoardCardItemTitleDescDueDate = ({
           dueDate: card.dueDate ?? undefined,
         });
 
-        // ✨ Broadcast các thay đổi
         Object.entries(updateData).forEach(([field, value]) => {
           if (
             field === "title" ||
@@ -113,17 +112,17 @@ export const BoardCardItemTitleDescDueDate = ({
 
   if (!isEditing) {
     return (
-      <div className="space-y-5">
-        <div className="group relative">
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground leading-tight flex-1">
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h2 className="text-2xl font-bold text-foreground flex-1">
               {form.getValues("title")}
             </h2>
             <Button
               size="icon"
               variant="ghost"
-              className="opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-primary/10 hover:text-primary shrink-0 h-9 w-9"
               onClick={() => setIsEditing(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-accent shrink-0"
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -131,16 +130,16 @@ export const BoardCardItemTitleDescDueDate = ({
         </div>
 
         {dueDate && (
-          <Card className="p-3.5 bg-secondary/50 border-border/60">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary">
-                <CalendarIcon className="h-4 w-4" />
+          <Card className="p-4 bg-card border-border">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <CalendarIcon className="h-5 w-5 text-primary" />
               </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <div className="flex-1">
+                <span className="text-sm font-medium text-muted-foreground block">
                   Due Date
                 </span>
-                <span className="font-semibold text-foreground">
+                <span className="text-base font-semibold text-foreground">
                   {format(new Date(form.getValues("dueDate") as Date), "PPP")}
                 </span>
               </div>
@@ -148,25 +147,23 @@ export const BoardCardItemTitleDescDueDate = ({
           </Card>
         )}
 
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold text-foreground">
             Description
           </h3>
           {description ? (
-            <Card className="p-4 bg-secondary/30 border-border/50">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+            <Card className="p-4 bg-card border-border">
+              <p className="text-sm text-foreground whitespace-pre-wrap">
                 {form.getValues("description")}
               </p>
             </Card>
           ) : (
             <Button
               variant="outline"
-              className="w-full justify-start text-left font-normal h-auto py-3 px-4 hover:bg-secondary/80 hover:border-primary/50 transition-colors"
               onClick={() => setIsEditing(true)}
+              className="w-full justify-start h-auto py-3 border-dashed border-border hover:border-primary/50 hover:bg-accent text-muted-foreground hover:text-foreground"
             >
-              <span className="text-muted-foreground">
-                Add a description to this card...
-              </span>
+              <span>Add a description to this card...</span>
             </Button>
           )}
         </div>
@@ -175,42 +172,40 @@ export const BoardCardItemTitleDescDueDate = ({
   }
 
   return (
-    <Card className="p-6 bg-card border-border shadow-sm">
-      <div className="flex items-center justify-between mb-5">
+    <Card className="p-6 bg-card border-border">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-foreground">
           Edit Card Details
         </h3>
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
           onClick={handleCancel}
           disabled={isLoading}
+          className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-50"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Title
-                </FormLabel>
+                <FormLabel className="text-foreground">Title</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    className="text-xl font-semibold border-border focus-visible:ring-primary"
                     autoFocus
                     disabled={isLoading}
                     placeholder="Enter card title..."
+                    className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50"
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -220,19 +215,17 @@ export const BoardCardItemTitleDescDueDate = ({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Description
-                </FormLabel>
+                <FormLabel className="text-foreground">Description</FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     value={field.value ?? ""}
                     placeholder="Add a more detailed description..."
-                    className="min-h-32 resize-none border-border focus-visible:ring-primary"
                     disabled={isLoading}
+                    className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50 min-h-[120px] resize-none"
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
@@ -242,51 +235,51 @@ export const BoardCardItemTitleDescDueDate = ({
             name="dueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Due Date
-                </FormLabel>
+                <FormLabel className="text-foreground">Due Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal h-11 border-border hover:bg-secondary/80 hover:border-primary/50",
+                          "w-full justify-start text-left font-normal border-border hover:bg-accent hover:text-accent-foreground",
                           !field.value && "text-muted-foreground"
                         )}
                         disabled={isLoading}
                       >
-                        <CalendarIcon className="mr-3 h-4 w-4 opacity-70" />
+                        <CalendarIcon className="h-4 w-4 mr-2" />
                         {field.value ? (
-                          <span className="font-medium">
-                            {format(field.value, "PPP")}
-                          </span>
+                          <span>{format(field.value, "PPP")}</span>
                         ) : (
                           <span>Pick a due date</span>
                         )}
                       </Button>
                     </FormControl>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent
+                    align="start"
+                    className="w-auto p-0 bg-popover border-border"
+                  >
                     <Calendar
                       mode="single"
                       selected={field.value ? new Date(field.value) : undefined}
                       onSelect={(date) => field.onChange(date ?? undefined)}
                       disabled={isLoading}
                       initialFocus
+                      className="bg-popover"
                     />
                   </PopoverContent>
                 </Popover>
-                <FormMessage />
+                <FormMessage className="text-destructive" />
               </FormItem>
             )}
           />
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex items-center gap-3 pt-4">
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex-1 h-11 font-semibold"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {isLoading ? <Loading /> : "Save Changes"}
             </Button>
@@ -295,7 +288,7 @@ export const BoardCardItemTitleDescDueDate = ({
               variant="outline"
               onClick={handleCancel}
               disabled={isLoading}
-              className="px-6 h-11 hover:bg-secondary/80"
+              className="border-border hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
             >
               Cancel
             </Button>

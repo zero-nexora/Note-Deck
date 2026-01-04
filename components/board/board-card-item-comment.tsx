@@ -193,14 +193,14 @@ export const BoardCardItemComments = ({
 
   const renderComment = (comment: any, isReply = false) => (
     <div className="flex gap-3">
-      <Avatar className="h-8 w-8 shrink-0">
+      <Avatar className="h-8 w-8 shrink-0 ring-2 ring-background">
         <AvatarImage src={comment.user.image ?? undefined} />
-        <AvatarFallback className="text-xs">
+        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
           {comment.user.name?.[0] ?? "U"}
         </AvatarFallback>
       </Avatar>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex items-center gap-2">
           <span className="font-semibold text-sm text-foreground">
             {comment.user.name ?? "Unknown"}
           </span>
@@ -214,11 +214,15 @@ export const BoardCardItemComments = ({
             <Textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
-              className="min-h-20 resize-none text-sm"
               autoFocus
+              className="min-h-20 resize-none text-sm bg-input border-border text-foreground focus-visible:ring-ring"
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>
+              <Button
+                size="sm"
+                onClick={() => handleUpdateComment(comment.id)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 <Check className="h-3.5 w-3.5 mr-1" />
                 Save
               </Button>
@@ -229,6 +233,7 @@ export const BoardCardItemComments = ({
                   setEditingId(null);
                   setEditText("");
                 }}
+                className="border-border hover:bg-accent hover:text-accent-foreground"
               >
                 Cancel
               </Button>
@@ -240,16 +245,19 @@ export const BoardCardItemComments = ({
               {comment.content}
             </div>
 
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {groupReactions(comment.reactions).map(({ emoji, count }) => (
                 <Button
                   key={emoji}
                   variant="outline"
                   size="sm"
-                  className="h-7 px-2 text-xs hover:bg-primary/10"
+                  className="h-7 px-2 text-xs border-border hover:bg-primary/10 hover:border-primary/50"
                   onClick={() => handleToggleReaction(comment.id, emoji)}
                 >
-                  {emoji} {count > 1 && <span className="ml-1">{count}</span>}
+                  {emoji}{" "}
+                  {count > 1 && (
+                    <span className="ml-1 text-muted-foreground">{count}</span>
+                  )}
                 </Button>
               ))}
 
@@ -257,7 +265,7 @@ export const BoardCardItemComments = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 hover:bg-secondary"
+                  className="h-7 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   onClick={() =>
                     setPickerOpenFor(
                       pickerOpenFor === comment.id ? null : comment.id
@@ -284,7 +292,7 @@ export const BoardCardItemComments = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs hover:bg-secondary"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary"
                   onClick={() => setReplyingTo(comment.id)}
                 >
                   <Reply className="h-3.5 w-3.5 mr-1" />
@@ -295,7 +303,7 @@ export const BoardCardItemComments = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 hover:bg-secondary"
+                className="h-7 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary"
                 onClick={() => handleStartEdit(comment.id, comment.content)}
               >
                 <Edit2 className="h-3.5 w-3.5" />
@@ -304,7 +312,7 @@ export const BoardCardItemComments = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 hover:bg-destructive/10 hover:text-destructive"
+                className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => handleDeleteComment(comment.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -317,7 +325,7 @@ export const BoardCardItemComments = ({
   );
 
   return (
-    <Card className="p-5 bg-card border-border/60">
+    <Card className="p-5 bg-card border-border">
       <div className="space-y-5">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
@@ -325,7 +333,10 @@ export const BoardCardItemComments = ({
           </div>
           <h3 className="font-semibold text-foreground">Comments</h3>
           {comments.length > 0 && (
-            <Badge variant="secondary" className="rounded-full">
+            <Badge
+              variant="secondary"
+              className="bg-secondary text-secondary-foreground rounded-full"
+            >
               {comments.length}
             </Badge>
           )}
@@ -352,7 +363,7 @@ export const BoardCardItemComments = ({
                     <div className="flex gap-2">
                       <Textarea
                         placeholder="Write a reply..."
-                        className="min-h-20 resize-none flex-1 text-sm"
+                        className="min-h-20 resize-none flex-1 text-sm bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
                         value={replyTexts[comment.id] || ""}
                         onChange={(e) =>
                           setReplyTexts((prev) => ({
@@ -379,6 +390,7 @@ export const BoardCardItemComments = ({
                         <Button
                           size="sm"
                           onClick={() => handleAddReply(comment.id)}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                           Send
                         </Button>
@@ -392,6 +404,7 @@ export const BoardCardItemComments = ({
                               [comment.id]: "",
                             }));
                           }}
+                          className="border-border hover:bg-accent hover:text-accent-foreground"
                         >
                           Cancel
                         </Button>
@@ -414,7 +427,7 @@ export const BoardCardItemComments = ({
           <div className="flex gap-3">
             <Textarea
               placeholder="Write a comment..."
-              className="min-h-24 resize-none flex-1 text-sm"
+              className="min-h-24 resize-none flex-1 text-sm bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => {
@@ -424,7 +437,11 @@ export const BoardCardItemComments = ({
                 }
               }}
             />
-            <Button onClick={handleAddMainComment} className="self-end">
+            <Button
+              onClick={handleAddMainComment}
+              className="self-end bg-primary text-primary-foreground hover:bg-primary/90"
+              disabled={!newComment.trim()}
+            >
               Send
             </Button>
           </div>

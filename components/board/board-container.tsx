@@ -22,20 +22,18 @@ const BoardContainerInner = ({
   workspaceMembers,
 }: BoardContainerProps) => {
   const router = useRouter();
-
   const realtimeUtils = useBoardRealtime({
     board,
     user,
     onBoardUpdate: () => {
-      console.log("Board update triggered - refreshing...");
       router.refresh();
     },
   });
 
   return (
-    <div className="relative h-full">
+    <div className="relative h-screen bg-background">
       <LiveCursors />
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col h-full gap-4">
         <BoardHeader board={board} workspaceMembers={workspaceMembers} />
         <BoardContent board={board} realtimeUtils={realtimeUtils} />
       </div>
@@ -49,7 +47,6 @@ export const BoardContainer = ({
   workspaceMembers,
 }: BoardContainerProps) => {
   const userColor = generateUserColor(user.id);
-
   return (
     <RoomProvider
       id={board.id}
@@ -81,8 +78,11 @@ export const BoardContainer = ({
 
 const BoardLoading = () => {
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-12 w-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+        <p className="text-sm text-muted-foreground">Loading board...</p>
+      </div>
     </div>
   );
 };

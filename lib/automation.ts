@@ -1,9 +1,35 @@
+import {
+  AlertTriangle,
+  Archive,
+  ArrowLeftRight,
+  AtSign,
+  Bell,
+  Calendar,
+  Clock,
+  ClipboardList,
+  FileText,
+  MessageSquare,
+  PartyPopper,
+  Pencil,
+  Plus,
+  SquareCheckBig,
+  Tag,
+  Ticket,
+  Timer,
+  Trello,
+  User,
+  UserMinus,
+  UserPlus,
+  Users,
+  LucideIcon,
+} from "lucide-react";
+
 export interface TriggerOption {
   id: string;
   name: string;
   description: string;
   category: string;
-  icon: string;
+  icon: LucideIcon;
   when: string;
   fields?: TriggerField[];
 }
@@ -22,7 +48,7 @@ export interface ActionOption {
   name: string;
   description: string;
   category: string;
-  icon: string;
+  icon: LucideIcon;
   then: string;
   fields?: ActionField[];
 }
@@ -37,13 +63,13 @@ export interface ActionField {
 }
 
 export const TRIGGER_CATEGORIES = [
-  { id: "card", label: "Card Events", icon: "🎫" },
-  { id: "list", label: "List Events", icon: "📝" },
-  { id: "label", label: "Label Events", icon: "🏷️" },
-  { id: "checklist", label: "Checklist Events", icon: "☑️" },
-  { id: "comment", label: "Comment Events", icon: "💬" },
-  { id: "time", label: "Time-based", icon: "⏰" },
-  { id: "member", label: "Member Events", icon: "👥" },
+  { id: "card", label: "Card Events", icon: Ticket },
+  { id: "list", label: "List Events", icon: ClipboardList },
+  { id: "label", label: "Label Events", icon: Tag },
+  { id: "checklist", label: "Checklist Events", icon: SquareCheckBig },
+  { id: "comment", label: "Comment Events", icon: MessageSquare },
+  { id: "time", label: "Time-based", icon: Clock },
+  { id: "member", label: "Member Events", icon: Users },
 ] as const;
 
 export const AUTOMATION_TRIGGERS: TriggerOption[] = [
@@ -52,7 +78,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Card Created",
     description: "Trigger when a new card is created",
     category: "card",
-    icon: "➕",
+    icon: Plus,
     when: "When a card is created",
     fields: [
       {
@@ -69,7 +95,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Card Updated",
     description: "Trigger when a card is updated",
     category: "card",
-    icon: "✏️",
+    icon: Pencil,
     when: "When a card is updated",
     fields: [
       {
@@ -91,7 +117,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Card Moved",
     description: "Trigger when a card is moved to another list",
     category: "card",
-    icon: "🔀",
+    icon: ArrowLeftRight,
     when: "When a card is moved",
     fields: [
       {
@@ -115,7 +141,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Card Archived",
     description: "Trigger when a card is archived",
     category: "card",
-    icon: "📦",
+    icon: Archive,
     when: "When a card is archived",
   },
   {
@@ -123,7 +149,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Member Assigned to Card",
     description: "Trigger when a member is assigned to a card",
     category: "card",
-    icon: "👤",
+    icon: User,
     when: "When a member is assigned to a card",
     fields: [
       {
@@ -140,7 +166,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Member Unassigned from Card",
     description: "Trigger when a member is removed from a card",
     category: "card",
-    icon: "👤",
+    icon: User,
     when: "When a member is unassigned from a card",
   },
   {
@@ -148,7 +174,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Due Date Set",
     description: "Trigger when a due date is set or changed",
     category: "card",
-    icon: "📅",
+    icon: Calendar,
     when: "When a due date is set or changed",
   },
   {
@@ -156,7 +182,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Due Date Reached",
     description: "Trigger when a card's due date is reached",
     category: "card",
-    icon: "⏰",
+    icon: Clock,
     when: "When a card's due date is reached",
   },
   {
@@ -164,16 +190,15 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Card Overdue",
     description: "Trigger when a card is past its due date",
     category: "card",
-    icon: "🚨",
+    icon: AlertTriangle,
     when: "When a card becomes overdue",
   },
-
   {
     id: "LIST_CREATED",
     name: "List Created",
     description: "Trigger when a new list is created",
     category: "list",
-    icon: "➕",
+    icon: Plus,
     when: "When a list is created",
   },
   {
@@ -181,7 +206,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "List Moved",
     description: "Trigger when a list is reordered",
     category: "list",
-    icon: "🔀",
+    icon: ArrowLeftRight,
     when: "When a list is moved",
   },
   {
@@ -189,7 +214,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "List Archived",
     description: "Trigger when a list is archived",
     category: "list",
-    icon: "📦",
+    icon: Archive,
     when: "When a list is archived",
     fields: [
       {
@@ -201,14 +226,12 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
       },
     ],
   },
-
-  // Label Triggers
   {
     id: "LABEL_ADDED_TO_CARD",
     name: "Label Added",
     description: "Trigger when a label is added to a card",
     category: "label",
-    icon: "🏷️",
+    icon: Tag,
     when: "When a label is added to a card",
     fields: [
       {
@@ -225,7 +248,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Label Removed",
     description: "Trigger when a label is removed from a card",
     category: "label",
-    icon: "🏷️",
+    icon: Tag,
     when: "When a label is removed from a card",
     fields: [
       {
@@ -237,13 +260,12 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
       },
     ],
   },
-
   {
     id: "CHECKLIST_CREATED",
     name: "Checklist Created",
     description: "Trigger when a new checklist is created",
     category: "checklist",
-    icon: "➕",
+    icon: Plus,
     when: "When a checklist is created",
   },
   {
@@ -251,7 +273,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Checklist Item Completed",
     description: "Trigger when a checklist item is checked",
     category: "checklist",
-    icon: "✅",
+    icon: SquareCheckBig,
     when: "When a checklist item is completed",
   },
   {
@@ -259,17 +281,15 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Checklist Completed",
     description: "Trigger when all items in a checklist are completed",
     category: "checklist",
-    icon: "🎉",
+    icon: PartyPopper,
     when: "When all checklist items are completed",
   },
-
-  // Comment Triggers
   {
     id: "COMMENT_ADDED",
     name: "Comment Added",
     description: "Trigger when a new comment is added",
     category: "comment",
-    icon: "💬",
+    icon: MessageSquare,
     when: "When a comment is added",
   },
   {
@@ -277,7 +297,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "User Mentioned",
     description: "Trigger when a user is @mentioned in a comment",
     category: "comment",
-    icon: "👤",
+    icon: AtSign,
     when: "When a user is mentioned",
     fields: [
       {
@@ -289,13 +309,12 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
       },
     ],
   },
-
   {
     id: "ON_SCHEDULE",
     name: "On Schedule",
     description: "Trigger at specific times (cron schedule)",
     category: "time",
-    icon: "⏰",
+    icon: Clock,
     when: "On a schedule",
     fields: [
       {
@@ -312,7 +331,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "After X Hours",
     description: "Trigger X hours after an event",
     category: "time",
-    icon: "⏱️",
+    icon: Timer,
     when: "After a certain number of hours",
     fields: [
       {
@@ -341,7 +360,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "After X Days",
     description: "Trigger X days after an event",
     category: "time",
-    icon: "📆",
+    icon: Calendar,
     when: "After a certain number of days",
     fields: [
       {
@@ -365,13 +384,12 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
       },
     ],
   },
-
   {
     id: "MEMBER_JOINED",
     name: "Member Joined",
     description: "Trigger when a member joins the workspace/board",
     category: "member",
-    icon: "👋",
+    icon: UserPlus,
     when: "When a member joins",
   },
   {
@@ -379,7 +397,7 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Member Left",
     description: "Trigger when a member leaves the workspace/board",
     category: "member",
-    icon: "👋",
+    icon: UserMinus,
     when: "When a member leaves",
   },
   {
@@ -387,17 +405,17 @@ export const AUTOMATION_TRIGGERS: TriggerOption[] = [
     name: "Board Created",
     description: "Trigger when a new board is created",
     category: "member",
-    icon: "📋",
+    icon: Trello,
     when: "When a board is created",
   },
 ];
 
 export const ACTION_CATEGORIES = [
-  { id: "card", label: "Card Actions", icon: "🎫" },
-  { id: "member", label: "Member Actions", icon: "👥" },
-  { id: "label", label: "Label Actions", icon: "🏷️" },
-  { id: "notification", label: "Notifications", icon: "🔔" },
-  { id: "list", label: "List Actions", icon: "📝" },
+  { id: "card", label: "Card Actions", icon: Ticket },
+  { id: "member", label: "Member Actions", icon: Users },
+  { id: "label", label: "Label Actions", icon: Tag },
+  { id: "notification", label: "Notifications", icon: Bell },
+  { id: "list", label: "List Actions", icon: ClipboardList },
 ] as const;
 
 export const AUTOMATION_ACTIONS: ActionOption[] = [
@@ -406,7 +424,7 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
     name: "Move Card",
     description: "Move the card to another list",
     category: "card",
-    icon: "🔀",
+    icon: ArrowLeftRight,
     then: "Move card to a list",
     fields: [
       {
@@ -424,7 +442,7 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
     name: "Archive Card",
     description: "Archive the card",
     category: "card",
-    icon: "📦",
+    icon: Archive,
     then: "Archive the card",
   },
   {
@@ -432,7 +450,7 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
     name: "Add Comment",
     description: "Add a comment to the card",
     category: "card",
-    icon: "💬",
+    icon: MessageSquare,
     then: "Add a comment",
     fields: [
       {
@@ -444,13 +462,12 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
       },
     ],
   },
-
   {
     id: "ASSIGN_MEMBER",
     name: "Assign Member",
     description: "Assign a member to the card",
     category: "member",
-    icon: "👤",
+    icon: User,
     then: "Assign a member",
     fields: [
       {
@@ -463,13 +480,12 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
       },
     ],
   },
-
   {
     id: "ADD_LABEL",
     name: "Add Label",
     description: "Add a label to the card",
     category: "label",
-    icon: "🏷️",
+    icon: Tag,
     then: "Add a label",
     fields: [
       {
@@ -482,13 +498,12 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
       },
     ],
   },
-
   {
     id: "SEND_NOTIFICATION",
     name: "Send Notification",
     description: "Send a notification to users",
     category: "notification",
-    icon: "🔔",
+    icon: Bell,
     then: "Send a notification",
     fields: [
       {
@@ -533,7 +548,7 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
     name: "Log Activity",
     description: "Create an activity log entry",
     category: "notification",
-    icon: "📝",
+    icon: FileText,
     then: "Log an activity",
     fields: [
       {
@@ -552,13 +567,12 @@ export const AUTOMATION_ACTIONS: ActionOption[] = [
       },
     ],
   },
-
   {
     id: "ADD_LIST",
     name: "Add List",
     description: "Create a new list",
     category: "list",
-    icon: "➕",
+    icon: Plus,
     then: "Create a new list",
     fields: [
       {

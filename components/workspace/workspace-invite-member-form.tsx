@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Mail, Shield } from "lucide-react";
+import { Mail, Shield, CheckCircle2 } from "lucide-react";
 
 interface WorkspaceInviteMemberFormProps {
   workspaceId: string;
@@ -56,13 +56,13 @@ export const WorkspaceInviteMemberForm = ({
 
   return (
     <Form {...form}>
-      <div className="space-y-5">
+      <div className="space-y-6">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
+              <FormLabel className="flex items-center gap-2 text-foreground font-medium">
                 <Mail className="h-4 w-4 text-primary" />
                 Email Address
               </FormLabel>
@@ -72,13 +72,13 @@ export const WorkspaceInviteMemberForm = ({
                   placeholder="colleague@example.com"
                   type="email"
                   {...field}
-                  className="h-10"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </FormControl>
-              <FormDescription className="text-xs">
+              <FormDescription className="text-muted-foreground text-sm">
                 Enter the email address of the person you want to invite
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-destructive text-sm font-medium" />
             </FormItem>
           )}
         />
@@ -88,7 +88,7 @@ export const WorkspaceInviteMemberForm = ({
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
+              <FormLabel className="flex items-center gap-2 text-foreground font-medium">
                 <Shield className="h-4 w-4 text-primary" />
                 Role
               </FormLabel>
@@ -98,52 +98,93 @@ export const WorkspaceInviteMemberForm = ({
                   value={field.value}
                   disabled={isLoading}
                 >
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent focus:ring-ring focus:ring-2 focus:ring-offset-2">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">Admin</span>
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectItem
+                      value="admin"
+                      className="hover:bg-accent hover:text-accent-foreground cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex flex-col gap-1 py-1">
+                        <span className="font-semibold text-foreground flex items-center gap-2">
+                          Admin
+                          <Shield className="h-3.5 w-3.5 text-primary" />
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          Full access to workspace
+                          Full access to workspace settings and members
                         </span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="normal">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">Normal</span>
+
+                    <SelectItem
+                      value="normal"
+                      className="hover:bg-accent hover:text-accent-foreground cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex flex-col gap-1 py-1">
+                        <span className="font-semibold text-foreground flex items-center gap-2">
+                          Normal
+                          <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          Standard member access
+                          Standard member with regular permissions
                         </span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="observer">
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">Observer</span>
+
+                    <SelectItem
+                      value="observer"
+                      className="hover:bg-accent hover:text-accent-foreground cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                    >
+                      <div className="flex flex-col gap-1 py-1">
+                        <span className="font-semibold text-foreground">
+                          Observer
+                        </span>
                         <span className="text-xs text-muted-foreground">
-                          Read-only access
+                          Read-only access to workspace content
                         </span>
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>
-              <FormDescription className="text-xs">
-                Select the role for the invited member
+              <FormDescription className="text-muted-foreground text-sm">
+                Select the role and permissions for the invited member
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-destructive text-sm font-medium" />
             </FormItem>
           )}
         />
 
-        <Button
-          onClick={form.handleSubmit(handleSubmit)}
-          disabled={isLoading}
-          className="w-full h-10"
-        >
-          {isLoading ? <Loading /> : "Send Invitation"}
-        </Button>
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={close}
+            disabled={isLoading}
+            className="text-muted-foreground hover:text-foreground hover:bg-accent"
+          >
+            Cancel
+          </Button>
+
+          <Button
+            onClick={form.handleSubmit(handleSubmit)}
+            disabled={isLoading}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm min-w-[140px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loading />
+                <span>Sending...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span>Send Invitation</span>
+              </div>
+            )}
+          </Button>
+        </div>
       </div>
     </Form>
   );

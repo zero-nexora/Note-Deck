@@ -16,11 +16,10 @@ const Cursor = memo(
   }) => {
     return (
       <div
-        className="absolute pointer-events-none z-50 transition-transform duration-100 ease-out"
+        className="pointer-events-none absolute z-50 transition-transform duration-100"
         style={{
           left: x,
           top: y,
-          transform: "translate(-2px, -2px)",
         }}
       >
         <svg
@@ -29,7 +28,6 @@ const Cursor = memo(
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="drop-shadow-lg"
         >
           <path
             d="M5.65376 12.3673L13.6654 4.35564L18.2845 8.97479L10.2729 16.9864L5.65376 12.3673Z"
@@ -42,9 +40,8 @@ const Cursor = memo(
             strokeLinejoin="round"
           />
         </svg>
-
         <div
-          className="absolute left-6 top-0 px-2 py-1 rounded-md text-xs font-medium text-foreground whitespace-nowrap shadow-lg"
+          className="ml-6 -mt-2 px-2 py-1 rounded text-xs font-medium text-white whitespace-nowrap"
           style={{
             backgroundColor: color,
           }}
@@ -65,10 +62,8 @@ export const LiveCursors = () => {
     <>
       {others.map((other) => {
         if (!other.presence.cursor) return null;
-
         const color = other.presence.user.color;
         const name = other.presence.user.name;
-
         return (
           <Cursor
             key={other.connectionId}

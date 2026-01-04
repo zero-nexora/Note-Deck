@@ -1,7 +1,6 @@
 "use client";
-
 import React from "react";
-import { Shield, Users } from "lucide-react";
+import { Shield, Users, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,14 +15,22 @@ interface UserGroupCardProps {
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 
-export const UserGroupCard = ({ userGroup, workspaceMembers }: UserGroupCardProps) => {
+export const UserGroupCard = ({
+  userGroup,
+  workspaceMembers,
+}: UserGroupCardProps) => {
   const { open } = useModal();
 
   const handleViewDetailsUserGroup = () => {
     open({
       title: "User Group Details",
-      description: "View details of the user group",
-      children: <UserGroupDetails workspaceMembers={workspaceMembers} userGroup={userGroup} />,
+      description: "View and manage user group details",
+      children: (
+        <UserGroupDetails
+          workspaceMembers={workspaceMembers}
+          userGroup={userGroup}
+        />
+      ),
     });
   };
 
@@ -33,39 +40,42 @@ export const UserGroupCard = ({ userGroup, workspaceMembers }: UserGroupCardProp
 
   return (
     <Card
-      className="group hover:shadow-lg hover:border-primary/50 transition-all"
       onClick={handleViewDetailsUserGroup}
+      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-border hover:border-primary/50 bg-card group"
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Shield className="h-6 w-6" />
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
                 {userGroup.name}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
                 {userGroup.members.length} member
                 {userGroup.members.length !== 1 ? "s" : ""}
               </p>
             </div>
           </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div>
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
             Permissions
           </h4>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {permissions?.slice(0, 4).map((permission) => (
               <Badge
                 key={permission}
                 variant="secondary"
-                className="text-xs font-normal"
+                className="bg-secondary text-secondary-foreground text-xs"
               >
                 {permission.split(".").pop()?.replace(/_/g, " ")}
               </Badge>
@@ -73,30 +83,34 @@ export const UserGroupCard = ({ userGroup, workspaceMembers }: UserGroupCardProp
             {permissions.length > 4 && (
               <Badge
                 variant="secondary"
-                className="text-xs font-normal cursor-pointer hover:bg-primary/10"
+                className="bg-primary/10 text-primary text-xs"
               >
                 +{permissions.length - 4} more
               </Badge>
             )}
           </div>
           {permissions.length === 0 && (
-            <p className="text-xs text-muted-foreground italic">
+            <p className="text-sm text-muted-foreground italic">
               No permissions set
             </p>
           )}
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-2 pt-2 border-t border-border">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
               Members
             </h4>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs hover:bg-primary/10 hover:text-primary"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-accent"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewDetailsUserGroup();
+              }}
             >
-              <Users className="w-3 h-3 mr-1" />
               Manage
             </Button>
           </div>
@@ -107,25 +121,25 @@ export const UserGroupCard = ({ userGroup, workspaceMembers }: UserGroupCardProp
                 {userGroup.members.slice(0, 5).map((member) => (
                   <Avatar
                     key={member.id}
-                    className="w-8 h-8 border-2 border-card"
+                    className="h-8 w-8 border-2 border-card"
                   >
                     <AvatarImage src={member.user.image ?? undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       {member.user.name?.[0]?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                 ))}
               </div>
               {userGroup.members.length > 5 && (
-                <span className="text-xs text-muted-foreground ml-1">
+                <span className="text-sm text-muted-foreground font-medium">
                   +{userGroup.members.length - 5}
                 </span>
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/30 border border-dashed border-border">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">No members yet</p>
+            <div className="flex items-center gap-2 text-muted-foreground py-2">
+              <Users className="h-4 w-4" />
+              <p className="text-sm">No members yet</p>
             </div>
           )}
         </div>

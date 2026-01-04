@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreVertical, Pencil, Copy, Trash2, MoreHorizontal } from "lucide-react";
+import { Pencil, Copy, Trash2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,21 +23,29 @@ export const ActionsMenu = ({
 }: ActionsMenuProps) => {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="h-8 w-8">
-        <Button variant="ghost" size="icon">
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent"
+        >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent
+        align="end"
+        className="bg-popover text-popover-foreground border-border"
+      >
         {onEdit && (
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
+            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
           >
-            <Pencil className="mr-2 h-4 w-4" />
+            <Pencil className="h-4 w-4 mr-2" />
             Edit
           </DropdownMenuItem>
         )}
@@ -48,23 +56,24 @@ export const ActionsMenu = ({
               e.stopPropagation();
               onDuplicate();
             }}
+            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
           >
-            <Copy className="mr-2 h-4 w-4" />
+            <Copy className="h-4 w-4 mr-2" />
             Duplicate
           </DropdownMenuItem>
         )}
 
         {onDelete && (
           <>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border" />
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete();
               }}
-              className="text-destructive focus:text-destructive"
+              className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </DropdownMenuItem>
           </>

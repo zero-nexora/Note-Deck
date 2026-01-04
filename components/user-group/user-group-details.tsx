@@ -2,7 +2,7 @@ import { UserGroupWithMembers } from "@/domain/types/user-group.type";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { useUserGroup } from "@/hooks/use-user-group";
 import { useUserGroupMember } from "@/hooks/use-user-group-member";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -315,7 +315,6 @@ export const UserGroupDetails = ({
           />
         )}
 
-        {/* Members Section */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -326,7 +325,6 @@ export const UserGroupDetails = ({
             </div>
           </div>
 
-          {/* Add Member */}
           <div className="flex items-center gap-2">
             <Select
               value={selectedUserId}
@@ -372,7 +370,6 @@ export const UserGroupDetails = ({
             </Button>
           </div>
 
-          {/* Members List */}
           <div className="space-y-2">
             {userGroup.members.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -416,7 +413,6 @@ export const UserGroupDetails = ({
           </div>
         </div>
 
-        {/* Permissions Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
@@ -459,7 +455,7 @@ export const UserGroupDetails = ({
                           className={isPartial ? "opacity-50" : ""}
                         />
                       )}
-                      <span className="text-lg">{category.icon}</span>
+                      <category.icon />
                       <div className="flex flex-col">
                         <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
                           {category.label}
@@ -524,7 +520,6 @@ export const UserGroupDetails = ({
           </div>
         </div>
 
-        {/* Footer Actions */}
         {!isEditing && (
           <div className="flex items-center gap-3 pt-4 border-t border-border">
             <Button

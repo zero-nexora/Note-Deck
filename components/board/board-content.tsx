@@ -42,7 +42,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
   };
 
   return (
-    <ScrollArea>
+    <ScrollArea className="flex-1 bg-background">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -50,7 +50,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="relative h-full">
+        <div className="h-full">
           <BoardLists board={updatedBoard} realtimeUtils={realtimeUtils} />
         </div>
 
@@ -60,7 +60,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
           activeList={activeList}
         />
       </DndContext>
-      <ScrollBar orientation="horizontal" />
+      <ScrollBar orientation="horizontal" className="bg-muted" />
     </ScrollArea>
   );
 };

@@ -14,10 +14,16 @@ import { workspaceMemberRepository } from "../repositories/workspace-member.repo
 
 export const workspaceService = {
   create: async (userId: string, data: CreateWorkspaceInput) => {
-    const slug = await generateUniqueSlug(data.name);
+    const trimmedName = data.name.trim();
+
+    if (!trimmedName) {
+      throw new Error("Workspace name cannot be empty");
+    }
+
+    const slug = await generateUniqueSlug(trimmedName);
 
     const workspace = await workspaceRepository.create({
-      name: data.name.trim(),
+      name: trimmedName,
       slug,
       ownerId: userId,
       plan: "free",
@@ -36,7 +42,7 @@ export const workspaceService = {
       action: "workspace.created",
       entityType: "workspace",
       entityId: workspace.id,
-      metadata: { name: workspace.name },
+      metadata: { name: workspace.name, slug: workspace.slug },
     });
 
     return workspace;
@@ -45,7 +51,9 @@ export const workspaceService = {
   findById: async (userId: string, id: string) => {
     const workspace = await workspaceRepository.findById(id);
 
-    if (!workspace) throw new Error("Workspace not found");
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
@@ -53,24 +61,28 @@ export const workspaceService = {
       "observer"
     );
 
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     return workspace;
   },
 
   findByUserId: async (userId: string) => {
     const workspaces = await workspaceRepository.findByUserId(userId);
-    if (!workspaces || workspaces.length === 0)
-      throw new Error("Workspace not found");
+
+    if (!workspaces || workspaces.length === 0) {
+      return [];
+    }
 
     const result = [];
 
     for (const ws of workspaces) {
       const allowed = await checkWorkspacePermission(userId, ws.id, "observer");
-      if (allowed) result.push(ws);
+      if (allowed) {
+        result.push(ws);
+      }
     }
-
-    if (result.length === 0) throw new Error("Permission denied");
 
     return result;
   },
@@ -81,16 +93,28 @@ export const workspaceService = {
     data: UpdateWorkspaceNameInput
   ) => {
     const workspace = await workspaceRepository.findById(id);
-    if (!workspace) throw new Error("Workspace not found");
+
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(userId, id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
 
-    if (data.name.trim() === "") {
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const trimmedName = data.name.trim();
+
+    if (!trimmedName) {
       throw new Error("Workspace name cannot be empty");
     }
 
-    const updated = await workspaceRepository.update(id, { name: data.name });
+    if (workspace.name === trimmedName) {
+      return workspace;
+    }
+
+    const updated = await workspaceRepository.update(id, { name: trimmedName });
 
     await auditLogRepository.create({
       workspaceId: id,
@@ -98,7 +122,7 @@ export const workspaceService = {
       action: "workspace.name_updated",
       entityType: "workspace",
       entityId: id,
-      metadata: { oldName: workspace.name, newName: data.name },
+      metadata: { oldName: workspace.name, newName: trimmedName },
     });
 
     return updated;
@@ -110,17 +134,36 @@ export const workspaceService = {
     data: UpdateWorkspaceSlugInput
   ) => {
     const workspace = await workspaceRepository.findById(id);
-    if (!workspace) throw new Error("Workspace not found");
+
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(userId, id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
 
-    const exists = await workspaceRepository.findBySlug(data.slug);
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const normalizedSlug = slugify(data.slug, { lower: true, strict: true });
+
+    if (!normalizedSlug) {
+      throw new Error("Invalid slug format");
+    }
+
+    if (workspace.slug === normalizedSlug) {
+      return workspace;
+    }
+
+    const exists = await workspaceRepository.findBySlug(normalizedSlug);
+
     if (exists && exists.id !== id) {
       throw new Error("Slug already taken");
     }
 
-    const updated = await workspaceRepository.update(id, { slug: data.slug });
+    const updated = await workspaceRepository.update(id, {
+      slug: normalizedSlug,
+    });
 
     await auditLogRepository.create({
       workspaceId: id,
@@ -128,7 +171,7 @@ export const workspaceService = {
       action: "workspace.slug_updated",
       entityType: "workspace",
       entityId: id,
-      metadata: { oldSlug: workspace.slug, newSlug: data.slug },
+      metadata: { oldSlug: workspace.slug, newSlug: normalizedSlug },
     });
 
     return updated;
@@ -136,12 +179,27 @@ export const workspaceService = {
 
   changePlan: async (userId: string, id: string, data: ChangePlanInput) => {
     const workspace = await workspaceRepository.findById(id);
-    if (!workspace) throw new Error("Workspace not found");
+
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(userId, id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
+
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const planLimits = STRIPE_PLANS[data.plan];
+
+    if (!planLimits) {
+      throw new Error("Invalid plan");
+    }
+
+    if (workspace.plan === data.plan) {
+      return workspace;
+    }
+
     const updated = await workspaceRepository.update(id, {
       plan: data.plan,
       limits: planLimits,
@@ -153,7 +211,12 @@ export const workspaceService = {
       action: "workspace.plan_changed",
       entityType: "workspace",
       entityId: id,
-      metadata: { oldPlan: workspace.plan, newPlan: data.plan },
+      metadata: {
+        oldPlan: workspace.plan,
+        newPlan: data.plan,
+        oldLimits: workspace.limits,
+        newLimits: planLimits,
+      },
     });
 
     return updated;
@@ -161,20 +224,24 @@ export const workspaceService = {
 
   delete: async (userId: string, data: DeleteWorkspaceInput) => {
     const workspace = await workspaceRepository.findById(data.id);
-    if (!workspace) throw new Error("Workspace not found");
+
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.id,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     if (workspace.ownerId !== userId) {
       throw new Error("Only the workspace owner can delete it");
     }
-
-    await workspaceRepository.delete(data.id);
 
     await auditLogRepository.create({
       workspaceId: workspace.id,
@@ -182,8 +249,14 @@ export const workspaceService = {
       action: "workspace.deleted",
       entityType: "workspace",
       entityId: workspace.id,
-      metadata: { name: workspace.name },
+      metadata: {
+        name: workspace.name,
+        slug: workspace.slug,
+        plan: workspace.plan,
+      },
     });
+
+    await workspaceRepository.delete(data.id);
   },
 };
 

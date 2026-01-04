@@ -21,7 +21,9 @@ export const CustomSheet = () => {
           <SheetDescription>{data?.description}</SheetDescription>
         </SheetHeader>
         <Separator />
-        <ScrollArea className="h-[calc(100vh-100px)] p-4">{data?.children}</ScrollArea>
+        <div className="p-4 overflow-auto">{data?.children}</div>
+        {/* <ScrollArea className="h-[calc(100vh-100px)] p-4 w-full">
+          </ScrollArea> */}
       </SheetContent>
     </Sheet>
   );

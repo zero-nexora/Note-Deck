@@ -14,6 +14,7 @@ export const LogWorkspaceActionSchema = z.object({
 export const ReadAuditLogsSchema = z.object({
   workspaceId: z.string().min(1),
   limit: z.number().int().positive().optional().default(100),
+  page: z.number().int().positive().optional().default(1),
   userId: z.string().optional(),
 });
 

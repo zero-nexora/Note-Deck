@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewCard, UpdateCard } from "../types/card.type";
-import { cards } from "@/db/schema";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { boards, cards } from "@/db/schema";
+import { and, asc, count, eq, gte, isNull, lte, sql } from "drizzle-orm";
 
 export const cardRepository = {
   create: async (data: NewCard) => {
@@ -145,5 +145,217 @@ export const cardRepository = {
       where: eq(cards.listId, listId),
       orderBy: [asc(cards.position)],
     });
+  },
+
+  getTotalCardsByWorksapceId: async (workspaceId: string) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, false))
+      );
+    return result.count;
+  },
+
+  getCompletedCardsByWorkspaceId: async (workspaceId: string) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, true))
+      );
+    return result.count;
+  },
+
+  getOverdueCardsByWorkspaceId: async (workspaceId: string, now: Date) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          lte(cards.dueDate, now)
+        )
+      );
+    return result.count;
+  },
+
+  getCardsCreatedSinceByWorkspaceId: async (
+    workspaceId: string,
+    fromDate: Date
+  ) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(eq(boards.workspaceId, workspaceId), gte(cards.createdAt, fromDate))
+      );
+    return result.count;
+  },
+
+  getCardsCreatedByWorkspaceIdAndDate: async (
+    workspaceId: string,
+    startDate: Date
+  ) => {
+    return await db
+      .select({
+        date: sql<string>`DATE(${cards.createdAt})`,
+        created: count(),
+      })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          gte(cards.createdAt, startDate)
+        )
+      )
+      .groupBy(sql`DATE(${cards.createdAt})`)
+      .orderBy(sql`DATE(${cards.createdAt})`);
+  },
+
+  getCardsCompletedByWorkspaceIdAndDate: async (
+    workspaceId: string,
+    startDate: Date
+  ) => {
+    return await db
+      .select({
+        date: sql<string>`DATE(${cards.updatedAt})`,
+        completed: count(),
+      })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, true),
+          gte(cards.updatedAt, startDate)
+        )
+      )
+      .groupBy(sql`DATE(${cards.updatedAt})`)
+      .orderBy(sql`DATE(${cards.updatedAt})`);
+  },
+
+  getTotalCardsByBoardId: async (boardId: string) => {
+    const [res] = await db
+      .select({ count: count() })
+      .from(cards)
+      .where(and(eq(cards.boardId, boardId), eq(cards.isArchived, false)));
+    return res.count;
+  },
+
+  getCompletedCardsByBoardId: async (boardId: string) => {
+    const [res] = await db
+      .select({ count: count() })
+      .from(cards)
+      .where(and(eq(cards.boardId, boardId), eq(cards.isArchived, true)));
+    return res.count;
+  },
+
+  getOverdueCardsByBoardId: async (boardId: string, now: Date) => {
+    const [res] = await db
+      .select({ count: count() })
+      .from(cards)
+      .where(
+        and(
+          eq(cards.boardId, boardId),
+          eq(cards.isArchived, false),
+          lte(cards.dueDate, now)
+        )
+      );
+    return res.count;
+  },
+
+  getCompletedCardsDatesByBoardId: async (boardId: string, limit = 100) => {
+    return await db
+      .select({ createdAt: cards.createdAt, updatedAt: cards.updatedAt })
+      .from(cards)
+      .where(and(eq(cards.boardId, boardId), eq(cards.isArchived, true)))
+      .limit(limit);
+  },
+
+  getOverdueCardsCount: async (workspaceId: string, today: Date) => {
+    return await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          lte(cards.dueDate, today)
+        )
+      );
+  },
+
+  getDueTodayCardsCount: async (workspaceId: string, today: Date) => {
+    return await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          sql`DATE(${cards.dueDate}) = DATE(${today})`
+        )
+      );
+  },
+
+  getDueThisWeekCardsCount: async (
+    workspaceId: string,
+    today: Date,
+    weekFromNow: Date
+  ) => {
+    return await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          gte(cards.dueDate, today),
+          lte(cards.dueDate, weekFromNow)
+        )
+      );
+  },
+
+  getDueThisMonthCardsCount: async (
+    workspaceId: string,
+    today: Date,
+    monthFromNow: Date
+  ) => {
+    return await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          gte(cards.dueDate, today),
+          lte(cards.dueDate, monthFromNow)
+        )
+      );
+  },
+
+  getNoDueDateCardsCount: async (workspaceId: string) => {
+    return await db
+      .select({ count: count() })
+      .from(cards)
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(
+          eq(boards.workspaceId, workspaceId),
+          eq(cards.isArchived, false),
+          sql`${cards.dueDate} IS NULL`
+        )
+      );
   },
 };

@@ -42,7 +42,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <NextSSRPlugin routerConfig={extractRouterConfig(ourFileRouter)} />
-            {children}
+            <div className="h-full overflow-hidden">
+              {children}
+            </div>
             <CustomDialogProvider />
             <Toaster />
           </ThemeProvider>

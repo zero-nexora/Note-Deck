@@ -8,9 +8,12 @@ interface BoardListFooterProps {
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const BoardListFooter = ({ list, realtimeUtils }: BoardListFooterProps) => {
+export const BoardListFooter = ({
+  list,
+  realtimeUtils,
+}: BoardListFooterProps) => {
   return (
-    <div className="p-2 border-t border-border/30">
+    <div className="p-2 border-t border-border">
       <CreateCard realtimeUtils={realtimeUtils} list={list} />
     </div>
   );

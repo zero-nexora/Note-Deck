@@ -13,40 +13,36 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Loading } from "../common/loading";
 import {
-  CreateBoardInput,
-  CreateBoardSchema,
+  UpdateBoardInput,
+  UpdateBoardSchema,
 } from "@/domain/schemas/board.schema";
-import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useBoard } from "@/hooks/use-board";
 import { useModal } from "@/stores/modal-store";
 import { BoardWithMember } from "@/domain/types/board.type";
 
-interface CreateBoardProps {
+interface UpdateBoardFormProps {
   board: BoardWithMember;
 }
 
-export const UpdateBoardForm = ({ board }: CreateBoardProps) => {
+export const UpdateBoardForm = ({ board }: UpdateBoardFormProps) => {
   const { updateBoard } = useBoard();
   const { close } = useModal();
 
-  const form = useForm<z.infer<typeof CreateBoardSchema>>({
-    resolver: zodResolver(CreateBoardSchema),
+  const form = useForm<UpdateBoardInput>({
+    resolver: zodResolver(UpdateBoardSchema),
     defaultValues: {
-      workspaceId: board.workspaceId,
       description: board.description || "",
       name: board.name,
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof CreateBoardSchema>) => {
-    const input: CreateBoardInput = {
-      workspaceId: values.workspaceId,
+  const handleSubmit = async (values: UpdateBoardInput) => {
+    const input: UpdateBoardInput = {
       name: values.name,
       description: values.description,
     };
-
     await updateBoard(board.id, input);
     close();
     form.reset();
@@ -56,22 +52,25 @@ export const UpdateBoardForm = ({ board }: CreateBoardProps) => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Board name</FormLabel>
+              <FormLabel className="text-foreground">Board name</FormLabel>
               <FormControl>
                 <Input
                   placeholder="My Awesome Board"
                   {...field}
                   disabled={isSubmitting}
+                  className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </FormControl>
-              <FormDescription>What is this board about?</FormDescription>
-              <FormMessage />
+              <FormDescription className="text-muted-foreground">
+                What is this board about?
+              </FormDescription>
+              <FormMessage className="text-destructive" />
             </FormItem>
           )}
         />
@@ -81,29 +80,33 @@ export const UpdateBoardForm = ({ board }: CreateBoardProps) => {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel className="text-foreground">Description</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Describe the purpose of this board (optional)"
                   {...field}
                   value={field.value ?? ""}
                   disabled={isSubmitting}
+                  className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed min-h-[100px] resize-none"
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="text-muted-foreground">
                 Optional. Describe the purpose of this board
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-destructive" />
             </FormItem>
           )}
         />
-        <Button
-          type="submit"
-          className="btn-gradient h-12 w-full"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? <Loading /> : "Create Board"}
-        </Button>
+
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? <Loading /> : "Update Board"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

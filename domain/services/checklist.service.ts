@@ -1,7 +1,7 @@
-import { checklistRepository } from "../repositories/checklist.repository";
+import { checkBoardPermission } from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { checklistRepository } from "../repositories/checklist.repository";
 import {
   CreateChecklistInput,
   DeleteChecklistInput,
@@ -12,18 +12,29 @@ import {
 export const checklistService = {
   create: async (userId: string, data: CreateChecklistInput) => {
     const card = await cardRepository.findById(data.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const trimmedTitle = data.title.trim();
+    if (!trimmedTitle) {
+      throw new Error("Checklist title cannot be empty");
+    }
 
     const maxPosition = await checklistRepository.getMaxPosition(data.cardId);
+
     const checklist = await checklistRepository.create({
       ...data,
+      title: trimmedTitle,
       position: maxPosition + 1,
     });
 
@@ -42,23 +53,45 @@ export const checklistService = {
 
   update: async (userId: string, id: string, data: UpdateChecklistInput) => {
     const checklist = await checklistRepository.findById(id);
-    if (!checklist) throw new Error("Checklist not found");
+    if (!checklist) {
+      throw new Error("Checklist not found");
+    }
 
     const card = await cardRepository.findById(checklist.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    if (data.title !== undefined && data.title.trim() === "") {
-      throw new Error("Checklist title cannot be empty");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
     }
 
-    const updated = await checklistRepository.update(id, data);
+    const updateData = { ...data };
+
+    if (data.title !== undefined) {
+      const trimmedTitle = data.title.trim();
+      if (!trimmedTitle) {
+        throw new Error("Checklist title cannot be empty");
+      }
+      updateData.title = trimmedTitle;
+
+      if (checklist.title === trimmedTitle) {
+        return checklist;
+      }
+    }
+
+    const updated = await checklistRepository.update(id, updateData);
+
+    const metadata: Record<string, any> = {};
+    if (data.title !== undefined) {
+      metadata.oldTitle = checklist.title;
+      metadata.newTitle = updateData.title;
+    }
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -67,7 +100,7 @@ export const checklistService = {
       action: "checklist.updated",
       entityType: "checklist",
       entityId: id,
-      metadata: data,
+      metadata,
     });
 
     return updated;
@@ -75,17 +108,27 @@ export const checklistService = {
 
   reorder: async (userId: string, data: ReorderChecklistInput) => {
     const checklist = await checklistRepository.findById(data.id);
-    if (!checklist) throw new Error("Checklist not found");
+    if (!checklist) {
+      throw new Error("Checklist not found");
+    }
 
     const card = await cardRepository.findById(checklist.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    if (checklist.position === data.position) {
+      return checklist;
+    }
 
     const updated = await checklistRepository.update(data.id, {
       position: data.position,
@@ -98,7 +141,10 @@ export const checklistService = {
       action: "checklist.reordered",
       entityType: "checklist",
       entityId: data.id,
-      metadata: { position: data.position },
+      metadata: {
+        oldPosition: checklist.position,
+        newPosition: data.position,
+      },
     });
 
     return updated;
@@ -106,19 +152,23 @@ export const checklistService = {
 
   delete: async (userId: string, data: DeleteChecklistInput) => {
     const checklist = await checklistRepository.findById(data.id);
-    if (!checklist) throw new Error("Checklist not found");
+    if (!checklist) {
+      throw new Error("Checklist not found");
+    }
 
     const card = await cardRepository.findById(checklist.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    await checklistRepository.delete(data.id);
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -129,5 +179,7 @@ export const checklistService = {
       entityId: data.id,
       metadata: { title: checklist.title },
     });
+
+    await checklistRepository.delete(data.id);
   },
 };

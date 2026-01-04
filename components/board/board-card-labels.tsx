@@ -14,7 +14,7 @@ export const BoardCardLabels = ({ cardLabels }: BoardCardLabelsProps) => {
       {cardLabels.slice(0, 5).map((cardLabel) => (
         <div
           key={cardLabel.id}
-          className="h-2 rounded-full min-w-10 transition-all hover:min-w-[60px]"
+          className="h-2 w-12 rounded-full"
           style={{
             backgroundColor: cardLabel.label.color,
           }}
@@ -22,8 +22,8 @@ export const BoardCardLabels = ({ cardLabels }: BoardCardLabelsProps) => {
         />
       ))}
       {cardLabels.length > 5 && (
-        <div className="h-2 rounded-full min-w-6 bg-muted flex items-center justify-center">
-          <span className="text-[8px] font-bold text-muted-foreground">
+        <div className="h-2 px-2 rounded-full bg-muted flex items-center justify-center">
+          <span className="text-[10px] font-medium text-muted-foreground">
             +{cardLabels.length - 5}
           </span>
         </div>

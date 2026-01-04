@@ -9,10 +9,7 @@ import { BoardCardContent } from "./board-card-content";
 import { useSheet } from "@/stores/sheet-store";
 import { BoardCardItemDetail } from "./board-card-item-detail";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
-import {
-  CardDraggingIndicator,
-  CardEditingIndicator,
-} from "./card-dragging-indicator";
+import { CardDraggingIndicator } from "./card-dragging-indicator";
 import { useEffect } from "react";
 
 interface BoardCardItemProps {
@@ -86,12 +83,11 @@ export const BoardCardItem = ({
       {...attributes}
       {...(canDrag ? listeners : {})}
       className={cn(
-        "group relative bg-card rounded-lg shadow-sm hover:shadow-md transition-all duration-200 my-2",
-        canDrag && "cursor-pointer",
+        "group relative rounded-lg bg-card border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all cursor-pointer",
+        canDrag && "cursor-grab active:cursor-grabbing",
         !canDrag && "cursor-not-allowed opacity-60",
-        isDragging && "opacity-50 shadow-lg",
-        isDraggingByOthers && "opacity-60",
-        "border border-border hover:border-primary/30"
+        isDragging && "opacity-50 rotate-3",
+        isDraggingByOthers && "opacity-50 pointer-events-none"
       )}
       onClick={handleViewDetailCard}
     >
@@ -102,7 +98,6 @@ export const BoardCardItem = ({
       <BoardCardContent card={card} hasCover={hasCover} />
 
       <CardDraggingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
-      {/* <CardEditingIndicator cardId={card.id} realtimeUtils={realtimeUtils} /> */}
     </div>
   );
 };

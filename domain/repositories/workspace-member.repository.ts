@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { workspaceMembers } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { NewWorkspaceMember } from "../types/workspace-member.type";
 import { Role } from "@/db/enum";
 
@@ -81,5 +81,26 @@ export const workspaceMemberRepository = {
       )
       .returning();
     return updated;
+  },
+
+  getTotalMembersByWorkspaceId: async (workspaceId: string) => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.workspaceId, workspaceId));
+    return result.count;
+  },
+
+  getMembersByWorkspaceId: async (workspaceId: string) => {
+    return await db
+      .select({
+        userId: workspaceMembers.userId,
+        userName: sql<string>`users.name`,
+        userEmail: sql<string>`users.email`,
+        userImage: sql<string | null>`users.image`,
+      })
+      .from(workspaceMembers)
+      .innerJoin(sql`users`, sql`users.id = ${workspaceMembers.userId}`)
+      .where(eq(workspaceMembers.workspaceId, workspaceId));
   },
 };

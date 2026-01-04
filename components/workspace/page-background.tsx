@@ -7,3 +7,16 @@ export function PageBackground() {
     </>
   );
 }
+
+
+// export function PageBackground() {
+//   return (
+//     <>
+//       <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+
+//       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+
+//       <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+//     </>
+//   );
+// }

@@ -22,13 +22,13 @@ export const WorkspaceInviteMember = ({
 
   return (
     <Button
-      variant="ghost"
+      variant="default"
       size="sm"
       onClick={handleInviteMember}
-      className="h-9 hover:bg-primary/10 hover:text-primary"
+      className="h-9 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
     >
-      <UserPlus className="w-4 h-4 mr-1.5" />
-      Invite
+      <UserPlus className="h-4 w-4" />
+      <span className="font-medium">Invite</span>
     </Button>
   );
 };

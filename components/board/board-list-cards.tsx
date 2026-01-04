@@ -34,11 +34,11 @@ export const BoardListCards = ({
   const sortedCards = [...list.cards].sort((a, b) => a.position - b.position);
 
   return (
-    <div ref={setNodeRef} className="flex-1 p-1">
+    <div ref={setNodeRef} className="p-2">
       <div
         className={cn(
-          "space-y-2 p-1 min-h-[100px] transition-colors",
-          isOver && "bg-primary/5 rounded-lg"
+          "space-y-2 min-h-[100px] rounded-lg transition-colors",
+          isOver && "bg-primary/5"
         )}
       >
         <SortableContext
@@ -57,7 +57,7 @@ export const BoardListCards = ({
         </SortableContext>
 
         {sortedCards.length === 0 && (
-          <div className="flex items-center justify-center h-24 text-sm text-muted-foreground border-2 border-dashed border-border/50 rounded-lg bg-muted/20">
+          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground border-2 border-dashed border-border rounded-lg">
             Drop cards here
           </div>
         )}

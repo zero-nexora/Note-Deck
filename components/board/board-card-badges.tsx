@@ -61,15 +61,13 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
       <div
         key="due-date"
         className={cn(
-          "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium transition-colors",
-          dueDateStatus === "overdue" &&
-            "bg-destructive text-destructive-foreground",
-          dueDateStatus === "due-soon" && "bg-yellow-500 text-white",
-          dueDateStatus === "normal" &&
-            "bg-muted text-muted-foreground hover:bg-muted/80"
+          "flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
+          dueDateStatus === "overdue" && "bg-destructive/10 text-destructive",
+          dueDateStatus === "due-soon" && "bg-orange-500/10 text-orange-600",
+          dueDateStatus === "normal" && "bg-muted text-muted-foreground"
         )}
       >
-        <Clock className="w-3 h-3" />
+        <Clock className="h-3 w-3" />
         <span>{formatDueDate(card.dueDate!)}</span>
       </div>
     );
@@ -79,10 +77,10 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
     badges.push(
       <div
         key="description"
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-muted-foreground hover:bg-muted transition-colors"
+        className="flex items-center justify-center h-6 w-6 text-muted-foreground"
         title="This card has a description"
       >
-        <MessageSquare className="w-3 h-3" />
+        <MessageSquare className="h-3 w-3" />
       </div>
     );
   }
@@ -91,13 +89,13 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
     badges.push(
       <div
         key="comments"
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-muted-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-1 text-muted-foreground"
         title={`${card.comments.length} comment${
           card.comments.length > 1 ? "s" : ""
         }`}
       >
-        <MessageSquare className="w-3 h-3" />
-        <span className="font-medium">{card.comments.length}</span>
+        <MessageSquare className="h-3 w-3" />
+        <span className="text-xs">{card.comments.length}</span>
       </div>
     );
   }
@@ -106,13 +104,13 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
     badges.push(
       <div
         key="attachments"
-        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-muted-foreground hover:bg-muted transition-colors"
+        className="flex items-center gap-1 text-muted-foreground"
         title={`${card.attachments.length} attachment${
           card.attachments.length > 1 ? "s" : ""
         }`}
       >
-        <Paperclip className="w-3 h-3" />
-        <span className="font-medium">{card.attachments.length}</span>
+        <Paperclip className="h-3 w-3" />
+        <span className="text-xs">{card.attachments.length}</span>
       </div>
     );
   }
@@ -122,14 +120,12 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
       <div
         key="checklist"
         className={cn(
-          "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium transition-colors",
-          allChecklistsCompleted
-            ? "bg-green-500 text-white"
-            : "text-muted-foreground hover:bg-muted"
+          "flex items-center gap-1 text-xs font-medium",
+          allChecklistsCompleted ? "text-primary" : "text-muted-foreground"
         )}
         title={`${completedChecklistItems}/${totalChecklistItems} checklist items completed`}
       >
-        <CheckSquare className="w-3 h-3" />
+        <CheckSquare className="h-3 w-3" />
         <span>
           {completedChecklistItems}/{totalChecklistItems}
         </span>
@@ -139,5 +135,5 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
 
   if (badges.length === 0) return null;
 
-  return <div className="flex flex-wrap items-center gap-1">{badges}</div>;
+  return <div className="flex items-center gap-2 flex-wrap">{badges}</div>;
 };

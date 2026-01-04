@@ -17,29 +17,37 @@ import { sendWorkspaceInviteEmail } from "@/lib/email";
 export const workspaceInviteService = {
   create: async (userId: string, data: CreateInviteInput) => {
     const workspace = await workspaceRepository.findById(data.workspaceId);
-    if (!workspace) throw new Error("Workspace not found");
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    const existingUser = await userRepository.findByEmail(data.email);
+    const normalizedEmail = data.email.toLowerCase().trim();
+
+    const existingUser = await userRepository.findByEmail(normalizedEmail);
     if (existingUser) {
       const existingMember =
         await workspaceMemberRepository.findByWorkspaceIdAndUserId(
           data.workspaceId,
           existingUser.id
         );
-      if (existingMember) throw new Error("User is already a member");
+      if (existingMember) {
+        throw new Error("User is already a member");
+      }
     }
 
     const existingInvite =
       await workspaceInviteRepository.findByWorkspaceIdAndEmail(
         data.workspaceId,
-        data.email
+        normalizedEmail
       );
     if (existingInvite && !existingInvite.acceptedAt) {
       const now = new Date();
@@ -52,15 +60,17 @@ export const workspaceInviteService = {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (data.expiresInDays || 7));
 
+    const role = data.role || "normal";
+
     const invite = await workspaceInviteRepository.create({
       workspaceId: data.workspaceId,
-      email: data.email,
-      role: data.role || "normal",
+      email: normalizedEmail,
+      role,
       token,
       expiresAt,
     });
 
-    sendWorkspaceInviteEmail(data.email, workspace.name, token);
+    await sendWorkspaceInviteEmail(normalizedEmail, workspace.name, token);
 
     await auditLogRepository.create({
       workspaceId: data.workspaceId,
@@ -68,7 +78,11 @@ export const workspaceInviteService = {
       action: "workspace_invite.created",
       entityType: "workspace_invite",
       entityId: invite.id,
-      metadata: { email: data.email, role: data.role },
+      metadata: {
+        email: normalizedEmail,
+        role,
+        expiresAt: expiresAt.toISOString(),
+      },
     });
 
     return invite;
@@ -76,17 +90,26 @@ export const workspaceInviteService = {
 
   resend: async (userId: string, data: ResendInviteInput) => {
     const invite = await workspaceInviteRepository.findById(data.id);
-    if (!invite) throw new Error("Invite not found");
+    if (!invite) {
+      throw new Error("Invite not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
       invite.workspaceId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     if (invite.acceptedAt) {
       throw new Error("Invite has already been accepted");
+    }
+
+    const workspace = await workspaceRepository.findById(invite.workspaceId);
+    if (!workspace) {
+      throw new Error("Workspace not found");
     }
 
     const expiresAt = new Date();
@@ -97,13 +120,18 @@ export const workspaceInviteService = {
       expiresAt
     );
 
+    await sendWorkspaceInviteEmail(invite.email, workspace.name, invite.token);
+
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
       action: "workspace_invite.resent",
       entityType: "workspace_invite",
       entityId: data.id,
-      metadata: { email: invite.email },
+      metadata: {
+        email: invite.email,
+        newExpiresAt: expiresAt.toISOString(),
+      },
     });
 
     return updated;
@@ -111,27 +139,43 @@ export const workspaceInviteService = {
 
   revoke: async (userId: string, data: RevokeInviteInput) => {
     const invite = await workspaceInviteRepository.findByToken(data.token);
-    if (!invite) throw new Error("Invalid invite token");
+    if (!invite) {
+      throw new Error("Invalid invite token");
+    }
+
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      invite.workspaceId,
+      "admin"
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     if (invite.acceptedAt) {
       throw new Error("Invite already accepted");
     }
 
-    await workspaceInviteRepository.revoke(invite.id);
-
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.revoked_by_email",
+      action: "workspace_invite.revoked",
       entityType: "workspace_invite",
       entityId: invite.id,
-      metadata: { email: invite.email },
+      metadata: {
+        email: invite.email,
+        role: invite.role,
+      },
     });
+
+    await workspaceInviteRepository.revoke(invite.id);
   },
 
   accept: async (userId: string, data: AcceptInviteInput) => {
     const invite = await workspaceInviteRepository.findByToken(data.token);
-    if (!invite) throw new Error("Invalid invite token");
+    if (!invite) {
+      throw new Error("Invalid invite token");
+    }
 
     if (invite.acceptedAt) {
       throw new Error("Invite has already been accepted");
@@ -143,9 +187,14 @@ export const workspaceInviteService = {
     }
 
     const user = await userRepository.findById(userId);
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw new Error("User not found");
+    }
 
-    if (user.email !== invite.email) {
+    const normalizedUserEmail = user.email?.toLowerCase().trim();
+    const normalizedInviteEmail = invite.email.toLowerCase().trim();
+
+    if (normalizedUserEmail !== normalizedInviteEmail) {
       throw new Error("This invite is for a different email address");
     }
 
@@ -154,7 +203,9 @@ export const workspaceInviteService = {
         invite.workspaceId,
         userId
       );
-    if (existingMember) throw new Error("You are already a member");
+    if (existingMember) {
+      throw new Error("You are already a member of this workspace");
+    }
 
     await workspaceMemberRepository.add({
       workspaceId: invite.workspaceId,
@@ -170,7 +221,10 @@ export const workspaceInviteService = {
       action: "workspace_invite.accepted",
       entityType: "workspace_invite",
       entityId: invite.id,
-      metadata: { email: invite.email },
+      metadata: {
+        email: invite.email,
+        role: invite.role,
+      },
     });
 
     return invite;
@@ -178,16 +232,29 @@ export const workspaceInviteService = {
 
   expire: async (userId: string, data: ExpireInviteInput) => {
     const invite = await workspaceInviteRepository.findById(data.id);
-    if (!invite) throw new Error("Invite not found");
+    if (!invite) {
+      throw new Error("Invite not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
       invite.workspaceId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    if (invite.acceptedAt) {
+      throw new Error("Invite has already been accepted");
+    }
 
     const now = new Date();
+
+    if (invite.expiresAt <= now) {
+      return invite;
+    }
+
     await workspaceInviteRepository.updateExpiry(data.id, now);
 
     await auditLogRepository.create({
@@ -196,7 +263,13 @@ export const workspaceInviteService = {
       action: "workspace_invite.expired",
       entityType: "workspace_invite",
       entityId: data.id,
-      metadata: { email: invite.email },
+      metadata: {
+        email: invite.email,
+        oldExpiresAt: invite.expiresAt.toISOString(),
+        newExpiresAt: now.toISOString(),
+      },
     });
+
+    return { ...invite, expiresAt: now };
   },
 };

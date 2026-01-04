@@ -1,5 +1,4 @@
 "use client";
-
 import { Settings, User, Bell, Shield, CreditCard } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "./profile-tab";
@@ -16,10 +15,10 @@ interface SettingTapsProps {
 
 export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="w-6 h-6" />
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+          <Settings className="h-8 w-8 text-primary" />
           Settings
         </h1>
         <p className="text-muted-foreground">
@@ -28,21 +27,33 @@ export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="profile" className="gap-2">
-            <User className="w-4 h-4" />
+        <TabsList className="grid w-full grid-cols-4 bg-muted p-1">
+          <TabsTrigger
+            value="profile"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <User className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="w-4 h-4" />
+          <TabsTrigger
+            value="notifications"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <Bell className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="w-4 h-4" />
+          <TabsTrigger
+            value="security"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <Shield className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-2">
-            <CreditCard className="w-4 h-4" />
+          <TabsTrigger
+            value="billing"
+            className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
         </TabsList>

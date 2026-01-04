@@ -3,7 +3,14 @@
 import { BoardWithMember } from "@/domain/types/board.type";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Archive, Users, MoreVertical, Edit, Trash2, Clock } from "lucide-react";
+import {
+  Archive,
+  Users,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Clock,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { useModal } from "@/stores/modal-store";
@@ -52,7 +59,8 @@ export const BoardCard = ({ board }: BoardCardProps) => {
     e.stopPropagation();
     openConfirm({
       title: "Delete Board",
-      description: "Are you sure you want to delete this board? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this board? This action cannot be undone.",
       onConfirm: async () => {
         await deleteBoard({ id: board.id });
       },
@@ -61,16 +69,15 @@ export const BoardCard = ({ board }: BoardCardProps) => {
 
   return (
     <Link href={`/workspaces/${board.workspaceId}/boards/${board.id}`}>
-      <Card className="h-full bg-card border border-border rounded-lg hover:border-primary/30 cursor-pointer">
-        <CardContent className="space-y-3">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-2">
+      <Card className="group border-border hover:border-primary/50 hover:shadow-lg transition-all duration-200">
+        <CardContent>
+          <div className="flex items-start justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base text-foreground truncate">
+              <h3 className="text-lg font-semibold text-foreground mb-1 truncate group-hover:text-primary transition-colors">
                 {board.name}
               </h3>
               {board.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-2">
                   {board.description}
                 </p>
               )}
@@ -81,78 +88,93 @@ export const BoardCard = ({ board }: BoardCardProps) => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Edit className="mr-2 h-4 w-4" />
+              <DropdownMenuContent
+                align="end"
+                className="bg-popover text-popover-foreground border-border"
+              >
+                <DropdownMenuItem
+                  onClick={handleEdit}
+                  className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
                   Edit Board
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuItem
                   onClick={handleDelete}
-                  className="text-destructive focus:text-destructive"
+                  className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer text-destructive"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4 mr-2" />
                   Delete Board
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
 
-          {/* Badges */}
           {board.isArchived && (
-            <Badge variant="secondary" className="text-xs">
-              <Archive className="w-3 h-3 mr-1" />
+            <Badge
+              variant="secondary"
+              className="mb-4 bg-secondary text-secondary-foreground"
+            >
+              <Archive className="h-3 w-3 mr-1" />
               Archived
             </Badge>
           )}
 
-          {/* Members */}
-          <div className="flex items-center justify-between pt-2">
-            {visibleMembers.length > 0 ? (
-              <div className="flex items-center -space-x-2">
-                {visibleMembers.map((member) => (
-                  <Avatar
-                    key={member.id}
-                    className="h-7 w-7 border-2 border-card ring-1 ring-border"
-                    title={member.user.name || member.user.email || ""}
-                  >
-                    <AvatarImage
-                      src={member.user.image || undefined}
-                      alt={member.user.name || "User"}
-                    />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-semibold">
-                      {getInitials(member.user)}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {remainingMembers > 0 && (
-                  <div className="h-7 w-7 rounded-full border-2 border-card bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground ring-1 ring-border">
-                    +{remainingMembers}
+          <div className="space-y-3 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              {visibleMembers.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    {visibleMembers.map((member) => (
+                      <Avatar
+                        key={member.id}
+                        className="h-8 w-8 ring-2 ring-card"
+                        title={member.user.name || member.user.email || ""}
+                      >
+                        <AvatarImage src={member.user.image || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {getInitials(member.user)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Users className="w-3.5 h-3.5" />
-                <span className="text-xs">No members</span>
-              </div>
-            )}
+                  {remainingMembers > 0 && (
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center ring-2 ring-card">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        +{remainingMembers}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm">No members</span>
+                </div>
+              )}
 
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Users className="w-3 h-3" />
-              <span className="font-medium">{board.members.length}</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
+                  {board.members.length}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border">
-            <Clock className="w-3 h-3" />
-            <span>Updated {formatDistanceToNow(new Date(board.updatedAt), { addSuffix: true })}</span>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              <span className="text-xs">
+                {formatDistanceToNow(new Date(board.updatedAt), {
+                  addSuffix: true,
+                })}
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>

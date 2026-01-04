@@ -71,7 +71,6 @@ export const BoardListItem = ({
       description: "Are you sure you want to duplicate this list?",
       onConfirm: async () => {
         await duplicateList({ id: list.id });
-        // realtimeUtils?.broadcastListCreated({ listId: list.id });
       },
     });
   };
@@ -81,25 +80,25 @@ export const BoardListItem = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "w-72 shrink-0 flex flex-col glass-card relative",
-        isDragging && "opacity-50",
-        isDraggingByOthers && "opacity-70"
+        "w-[320px] shrink-0 flex flex-col rounded-lg bg-card border border-border shadow-sm",
+        isDragging && "opacity-50 cursor-grabbing",
+        isDraggingByOthers && "opacity-50 pointer-events-none"
       )}
     >
       {isDraggingByOthers && draggingUser && (
         <div
-          className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] rounded-lg border-2 border-dashed z-20 flex items-center justify-center pointer-events-none"
+          className="absolute inset-0 rounded-lg border-2 z-10"
           style={{
             borderColor: draggingUser.user.color,
           }}
         >
           <div
-            className="px-3 py-2 rounded-md text-sm font-medium text-foreground shadow-lg flex items-center gap-2"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-2 rounded-lg text-white font-medium shadow-lg flex items-center gap-2"
             style={{
               backgroundColor: draggingUser.user.color,
             }}
           >
-            <User className="w-4 h-4" />
+            <User className="h-4 w-4" />
             <span>{draggingUser.user.name} is moving this list...</span>
           </div>
         </div>

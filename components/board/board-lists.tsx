@@ -18,7 +18,7 @@ export const BoardLists = ({ board, realtimeUtils }: BoardListsProps) => {
   const sortedLists = [...board.lists].sort((a, b) => a.position - b.position);
 
   return (
-    <div className="flex gap-4 h-full pb-4">
+    <div className="flex gap-4 h-full">
       <SortableContext
         items={sortedLists.map((l) => l.id)}
         strategy={horizontalListSortingStrategy}

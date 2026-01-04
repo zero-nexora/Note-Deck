@@ -22,8 +22,8 @@ export const BoardCardItemDetail = ({
   realtimeUtils,
 }: BoardCardItemDetailProps) => {
   return (
-    <div className="h-full w-full mx-auto">
-      <div className="flex flex-col gap-5">
+    <div className="space-y-6 pb-6">
+      <div className="space-y-4">
         <BoardCardItemTitleDescDueDate
           cardId={card.id}
           title={card.title}
@@ -32,7 +32,11 @@ export const BoardCardItemDetail = ({
           realtimeUtils={realtimeUtils}
         />
 
-        <BoardCardItemCoverImage cardId={card.id} coverImage={card.coverImage} realtimeUtils={realtimeUtils} />
+        <BoardCardItemCoverImage
+          cardId={card.id}
+          coverImage={card.coverImage}
+          realtimeUtils={realtimeUtils}
+        />
 
         <BoardCardItemMembers
           cardId={card.id}

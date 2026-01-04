@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Users, Shield, CheckCircle2 } from "lucide-react";
+import { Users, Shield, CheckCircle2, Sparkles } from "lucide-react";
 import {
   PERMISSION_CATEGORIES,
   PERMISSION_PRESETS,
@@ -139,13 +139,13 @@ export const CreateUserGroupForm = ({
 
   return (
     <Form {...form}>
-      <div className="space-y-6">
+      <div className="space-y-6 px-1">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
+              <FormLabel className="flex items-center gap-2 text-foreground font-medium">
                 <Users className="h-4 w-4 text-primary" />
                 Group Name
               </FormLabel>
@@ -153,35 +153,40 @@ export const CreateUserGroupForm = ({
                 <Input
                   {...field}
                   placeholder="e.g., Developers, Designers, Managers"
-                  className="h-10"
                   disabled={isLoading}
+                  className="bg-background border-border focus-visible:ring-ring"
                 />
               </FormControl>
-              <FormDescription className="text-xs">
+              <FormDescription className="text-muted-foreground text-sm">
                 Choose a descriptive name for this user group
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-destructive" />
             </FormItem>
           )}
         />
 
-        {/* Permission Presets */}
-        <div className="space-y-3">
+        <div className="space-y-3 p-4 rounded-lg bg-accent/50 border border-border">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            <label className="text-sm font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <label className="text-sm font-medium text-foreground">
               Quick Setup
             </label>
           </div>
           <Select value={selectedPreset} onValueChange={applyPreset}>
-            <SelectTrigger className="h-10">
+            <SelectTrigger className="bg-background border-border hover:bg-accent focus:ring-ring">
               <SelectValue placeholder="Choose a preset or customize below" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-popover border-border">
               {Object.entries(PERMISSION_PRESETS).map(([key, preset]) => (
-                <SelectItem key={key} value={key}>
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">{preset.name}</span>
+                <SelectItem
+                  key={key}
+                  value={key}
+                  className="hover:bg-accent focus:bg-accent cursor-pointer"
+                >
+                  <div className="flex flex-col gap-1 py-1">
+                    <span className="font-semibold text-foreground">
+                      {preset.name}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {preset.description}
                     </span>
@@ -194,8 +199,8 @@ export const CreateUserGroupForm = ({
 
         {selectedPermissions.size > 0 && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-primary">
               {selectedPermissions.size} permission
               {selectedPermissions.size !== 1 ? "s" : ""} selected
             </span>
@@ -203,80 +208,96 @@ export const CreateUserGroupForm = ({
         )}
 
         <div className="space-y-4">
-          <label className="text-sm font-semibold text-foreground">
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
             Custom Permissions
           </label>
 
-          {PERMISSION_CATEGORIES.map((category) => {
-            const categoryPerms = getCategoryPermissions(category.id);
-            const isSelected = isCategorySelected(category.id);
-            const isPartial = isCategoryPartiallySelected(category.id);
+          <div className="space-y-3">
+            {PERMISSION_CATEGORIES.map((category) => {
+              const categoryPerms = getCategoryPermissions(category.id);
+              const isSelected = isCategorySelected(category.id);
+              const isPartial = isCategoryPartiallySelected(category.id);
 
-            return (
-              <div
-                key={category.id}
-                className="space-y-2 p-4 rounded-lg border border-border bg-secondary/20"
-              >
+              return (
                 <div
-                  className="flex items-center justify-between cursor-pointer group"
-                  onClick={() => toggleCategory(category.id)}
+                  key={category.id}
+                  className="border border-border rounded-lg overflow-hidden bg-card"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Checkbox
-                      checked={isSelected}
-                      className={isPartial ? "opacity-50" : ""}
-                    />
-                    <span className="text-lg">{category.icon}</span>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
-                        {category.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {
-                          categoryPerms.filter((p) =>
-                            selectedPermissions.has(p.id)
-                          ).length
-                        }{" "}
-                        / {categoryPerms.length} selected
-                      </span>
-                    </div>
-                  </div>
-                  <Badge
-                    variant={isSelected ? "default" : "secondary"}
-                    className="text-xs"
+                  <div
+                    onClick={() => toggleCategory(category.id)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent transition-colors"
                   >
-                    {isSelected ? "All" : isPartial ? "Partial" : "None"}
-                  </Badge>
-                </div>
-
-                <div className="pl-11 space-y-2 pt-2">
-                  {categoryPerms.map((permission) => (
-                    <div
-                      key={permission.id}
-                      className="flex items-start gap-3 p-2 rounded-md hover:bg-secondary/50 cursor-pointer transition-colors"
-                      onClick={() => togglePermission(permission.id)}
-                    >
+                    <div className="flex items-center gap-3">
                       <Checkbox
-                        checked={selectedPermissions.has(permission.id)}
-                        className="mt-0.5"
+                        checked={isSelected}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground leading-tight">
-                          {permission.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground leading-tight mt-0.5">
-                          {permission.description}
-                        </p>
+                      <category.icon className="h-5 w-5 text-primary" />
+                      <div className="space-y-0.5">
+                        <span className="font-medium text-foreground">
+                          {category.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground block">
+                          {
+                            categoryPerms.filter((p) =>
+                              selectedPermissions.has(p.id)
+                            ).length
+                          }{" "}
+                          / {categoryPerms.length} selected
+                        </span>
                       </div>
                     </div>
-                  ))}
+                    <Badge
+                      variant={isSelected ? "default" : "secondary"}
+                      className={
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }
+                    >
+                      {isSelected ? "All" : isPartial ? "Partial" : "None"}
+                    </Badge>
+                  </div>
+
+                  <div className="border-t border-border bg-muted/30 divide-y divide-border">
+                    {categoryPerms.map((permission) => (
+                      <div
+                        key={permission.id}
+                        onClick={() => togglePermission(permission.id)}
+                        className="flex items-start gap-3 p-3 cursor-pointer hover:bg-accent transition-colors"
+                      >
+                        <Checkbox
+                          checked={selectedPermissions.has(permission.id)}
+                          className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {permission.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 pt-4 border-t border-border">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border sticky bottom-0 bg-background">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={close}
+            disabled={isLoading}
+            className="border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+          >
+            Cancel
+          </Button>
           <Button
             type="button"
             onClick={form.handleSubmit(handleSubmit)}
@@ -285,18 +306,19 @@ export const CreateUserGroupForm = ({
               !form.getValues("name") ||
               selectedPermissions.size === 0
             }
-            className="flex-1 h-10"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm min-w-[140px]"
           >
-            {isLoading ? <Loading /> : "Create Group"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={close}
-            disabled={isLoading}
-            className="h-10"
-          >
-            Cancel
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <Loading />
+                <span>Creating...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Create Group</span>
+              </div>
+            )}
           </Button>
         </div>
       </div>

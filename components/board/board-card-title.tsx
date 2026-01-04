@@ -6,7 +6,7 @@ interface BoardCardTitleProps {
 
 export const BoardCardTitle = ({ title }: BoardCardTitleProps) => {
   return (
-    <h4 className="text-sm font-normal text-card-foreground line-clamp-3 leading-relaxed wrap-break-word">
+    <h4 className="text-sm font-medium text-foreground line-clamp-3 group-hover:text-primary transition-colors">
       {title}
     </h4>
   );

@@ -13,18 +13,29 @@ import { executeAutomations } from "./automation.service";
 export const commentService = {
   create: async (userId: string, data: CreateCommentInput) => {
     const card = await cardRepository.findById(data.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const trimmedContent = data.content.trim();
+    if (!trimmedContent) {
+      throw new Error("Comment content cannot be empty");
+    }
 
     if (data.parentId) {
       const parent = await commentRepository.findById(data.parentId);
-      if (!parent) throw new Error("Parent comment not found");
+      if (!parent) {
+        throw new Error("Parent comment not found");
+      }
       if (parent.cardId !== data.cardId) {
         throw new Error("Parent comment does not belong to this card");
       }
@@ -32,11 +43,12 @@ export const commentService = {
 
     const comment = await commentRepository.create({
       ...data,
+      content: trimmedContent,
       userId,
     });
 
     if (!comment) {
-      throw new Error("Comment cannot create");
+      throw new Error("Failed to create comment");
     }
 
     await activityRepository.create({
@@ -46,7 +58,11 @@ export const commentService = {
       action: "comment.created",
       entityType: "comment",
       entityId: comment.id,
-      metadata: { content: comment.content, parentId: data.parentId },
+      metadata: {
+        content: comment.content.substring(0, 100),
+        parentId: data.parentId,
+        hasParent: !!data.parentId,
+      },
     });
 
     await executeAutomations({
@@ -58,14 +74,16 @@ export const commentService = {
     });
 
     if (data.mentions && data.mentions.length > 0) {
-      for (const mentionedUserId of data.mentions) {
+      const uniqueMentions = [...new Set(data.mentions)];
+
+      for (const mentionedUserId of uniqueMentions) {
         if (mentionedUserId === userId) continue;
 
         await notificationRepository.create({
           userId: mentionedUserId,
           type: "mention",
           title: "You were mentioned in a comment",
-          message: "You were mentioned in a comment",
+          message: `You were mentioned in a comment on "${card.title}"`,
           entityType: "comment",
           entityId: comment.id,
         });
@@ -84,23 +102,49 @@ export const commentService = {
 
   update: async (userId: string, id: string, data: UpdateCommentInput) => {
     const comment = await commentRepository.findById(id);
-    if (!comment) throw new Error("Comment not found");
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
 
     if (comment.userId !== userId) {
       throw new Error("You can only edit your own comments");
     }
 
     const card = await cardRepository.findById(comment.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    const updated = await commentRepository.update(id, data);
+    const updateData = { ...data };
+
+    if (data.content !== undefined) {
+      const trimmedContent = data.content.trim();
+      if (!trimmedContent) {
+        throw new Error("Comment content cannot be empty");
+      }
+      updateData.content = trimmedContent;
+
+      if (comment.content === trimmedContent && !data.mentions) {
+        return comment;
+      }
+    }
+
+    const updated = await commentRepository.update(id, updateData);
+
+    const metadata: Record<string, any> = {};
+    if (data.content !== undefined) {
+      metadata.oldContent = comment.content.substring(0, 100);
+      metadata.newContent = updateData.content?.substring(0, 100);
+    }
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -109,16 +153,22 @@ export const commentService = {
       action: "comment.updated",
       entityType: "comment",
       entityId: comment.id,
-      metadata: data,
+      metadata,
     });
 
     if (data.mentions && data.mentions.length > 0) {
-      for (const mentionedUserId of data.mentions) {
+      const uniqueMentions = [...new Set(data.mentions)];
+      const oldMentions = new Set((comment.mentions as string[]) || []);
+      const newMentions = uniqueMentions.filter((uid) => !oldMentions.has(uid));
+
+      for (const mentionedUserId of newMentions) {
+        if (mentionedUserId === userId) continue;
+
         await notificationRepository.create({
           userId: mentionedUserId,
           type: "mention",
           title: "You were mentioned",
-          message: `You were mentioned in a comment on ${card.title}`,
+          message: `You were mentioned in a comment on "${card.title}"`,
           entityType: "comment",
           entityId: id,
         });
@@ -130,12 +180,16 @@ export const commentService = {
 
   delete: async (userId: string, data: DeleteCommentInput) => {
     const comment = await commentRepository.findById(data.id);
-    if (!comment) throw new Error("Comment not found");
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    const card = await cardRepository.findById(comment.cardId);
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     if (comment.userId !== userId) {
-      const card = await cardRepository.findById(comment.cardId);
-      if (!card) throw new Error("Card not found");
-
       const hasAdminPermission = await checkBoardPermission(
         userId,
         card.boardId,
@@ -146,11 +200,6 @@ export const commentService = {
       }
     }
 
-    const card = await cardRepository.findById(comment.cardId);
-    if (!card) throw new Error("Card not found");
-
-    await commentRepository.delete(data.id);
-
     await activityRepository.create({
       boardId: card.boardId,
       cardId: card.id,
@@ -158,7 +207,12 @@ export const commentService = {
       action: "comment.deleted",
       entityType: "comment",
       entityId: comment.id,
-      metadata: { content: comment.content },
+      metadata: {
+        content: comment.content.substring(0, 100),
+        wasOwnComment: comment.userId === userId,
+      },
     });
+
+    await commentRepository.delete(data.id);
   },
 };

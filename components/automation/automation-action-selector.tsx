@@ -131,7 +131,7 @@ const ActionSelectorContent = ({
             className="cursor-pointer hover:bg-primary/10 text-xs"
             onClick={() => setSelectedCategory(category.id)}
           >
-            {category.icon} {category.label}
+            <category.icon /> {category.label}
           </Badge>
         ))}
       </div>
@@ -143,7 +143,7 @@ const ActionSelectorContent = ({
             onClick={() => onSelect(action)}
             className="w-full flex items-start gap-3 p-2.5 rounded-lg border border-border bg-background hover:bg-secondary/50 hover:border-primary/30 transition-all text-left"
           >
-            <span className="text-xl shrink-0">{action.icon}</span>
+            <action.icon />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-foreground leading-tight">
                 {action.name}

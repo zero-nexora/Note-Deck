@@ -22,13 +22,11 @@ const UserGroupsPage = async ({ params }: UserGroupPageProps) => {
     (resultWorkspaceMember.data as WorkspaceWithOwnerMembers).members || [];
 
   return (
-    <div>
-      <UserGroupsList
-        workspaceMembers={workspaceMembers}
-        userGroups={userGroup}
-        workspaceId={workspaceId}
-      />
-    </div>
+    <UserGroupsList
+      workspaceMembers={workspaceMembers}
+      userGroups={userGroup}
+      workspaceId={workspaceId}
+    />
   );
 };
 

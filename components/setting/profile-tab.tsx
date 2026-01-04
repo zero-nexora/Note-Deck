@@ -29,6 +29,9 @@ import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { UserSession } from "@/domain/types/user.type";
 import { Loading } from "../common/loading";
+import { Camera, Save, X } from "lucide-react";
+import { useModal } from "@/stores/modal-store";
+import { ImageAttachmentPicker } from "../common/image-attachment-picker";
 
 interface ProfileTabProps {
   user: UserSession;
@@ -37,6 +40,7 @@ interface ProfileTabProps {
 export const ProfileTab = ({ user }: ProfileTabProps) => {
   const { updateUser } = useUser();
   const [isEditing, setIsEditing] = useState(false);
+  const { open, close } = useModal();
 
   const form = useForm<UpdateUserInput>({
     resolver: zodResolver(UpdateUserSchema),
@@ -59,31 +63,52 @@ export const ProfileTab = ({ user }: ProfileTabProps) => {
     setIsEditing(false);
   };
 
+  const handleSelect = (image: string) => {
+    form.setValue("image", image);
+    close();
+  };
+
+  const handleOpenChangeAvatar = () => {
+    open({
+      title: "Change Avatar",
+      description: "Select a new avatar for your profile",
+      children: (
+        <ImageAttachmentPicker
+          onSelect={(image: string) => handleSelect(image)}
+          mode="cover"
+        />
+      ),
+    });
+  };
+
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-foreground">
+              Profile Information
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
               Update your account details and preferences
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">Edit Mode</span>
             <Switch
               checked={isEditing}
               onCheckedChange={setIsEditing}
               disabled={isLoading}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center gap-6">
-          <Avatar className="h-20 w-20">
-            <AvatarImage src={user?.image || ""} />
-            <AvatarFallback className="gradient-primary text-2xl text-primary-foreground">
+        <div className="flex items-center gap-6 p-4 rounded-lg bg-muted/50 border border-border">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+            <AvatarImage src={form.getValues("image") || user.image || ""} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
               {(user?.name || "U")
                 .split(" ")
                 .map((n) => n[0])
@@ -91,11 +116,18 @@ export const ProfileTab = ({ user }: ProfileTabProps) => {
                 .toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <Button variant="outline" size="sm" disabled={!isEditing}>
+          <div className="flex-1 space-y-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isEditing}
+              className="border-border hover:bg-accent hover:text-accent-foreground"
+              onClick={handleOpenChangeAvatar}
+            >
+              <Camera className="h-4 w-4 mr-2" />
               Change Avatar
             </Button>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               JPG, PNG or GIF. Max 2MB
             </p>
           </div>
@@ -104,23 +136,24 @@ export const ProfileTab = ({ user }: ProfileTabProps) => {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-5"
+            className="space-y-6"
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel className="text-foreground">Full Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         disabled={!isEditing || isLoading}
                         placeholder="Enter your name"
+                        className="bg-background border-border focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
@@ -130,37 +163,50 @@ export const ProfileTab = ({ user }: ProfileTabProps) => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-foreground">Email</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="email"
                         disabled={true}
                         placeholder="Enter your email"
+                        className="bg-muted border-border text-muted-foreground cursor-not-allowed"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-destructive" />
                   </FormItem>
                 )}
               />
             </div>
 
             {isEditing && (
-              <div className="flex gap-2">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="gradient-primary text-primary-foreground"
-                >
-                  {isLoading ? <Loading /> : "Save Changes"}
-                </Button>
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleCancel}
                   disabled={isLoading}
+                  className="border-border text-muted-foreground hover:text-foreground hover:bg-accent"
                 >
+                  <X className="h-4 w-4 mr-2" />
                   Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loading />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             )}

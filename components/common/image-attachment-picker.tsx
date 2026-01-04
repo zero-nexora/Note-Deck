@@ -97,7 +97,7 @@ export function ImageAttachmentPicker(props: ImageAttachmentPickerProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 py-1">
       <UploadButton
         endpoint="cardAttachments"
         disabled={disabled}

@@ -78,107 +78,105 @@ export const BoardCardItemCoverImage = ({
   };
 
   return (
-    <Card className="p-5 bg-card border-border/60">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-              <ImageIcon className="h-4 w-4 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground">Cover Image</h3>
-            {coverImage && (
-              <Badge
-                variant="secondary"
-                className="rounded-full h-5 min-w-5 px-1.5"
-              >
-                1
-              </Badge>
-            )}
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <ImageIcon className="h-5 w-5 text-primary" />
           </div>
-          {!coverImage && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsAdding(!isAdding)}
-              className="h-8 hover:bg-primary/10 hover:text-primary"
-              disabled={isUpdating}
+          <h3 className="text-base font-semibold text-foreground">
+            Cover Image
+          </h3>
+          {coverImage && (
+            <Badge
+              variant="secondary"
+              className="bg-secondary text-secondary-foreground"
             >
-              {isAdding ? (
-                <>
-                  <X className="h-4 w-4 mr-1.5" />
-                  Cancel
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Add
-                </>
-              )}
-            </Button>
+              1
+            </Badge>
           )}
         </div>
-
-        {isAdding && (
-          <div className="p-4 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-colors">
-            <ImageAttachmentPicker
-              onSelect={handleAddCover}
-              disabled={isUpdating}
-              mode="cover"
-            />
-          </div>
-        )}
-
-        {coverImage && (
-          <div className="group relative rounded-lg overflow-hidden border border-border bg-secondary/30 hover:bg-secondary/50 hover:border-border transition-all">
-            <div className="relative w-full aspect-video">
-              <Image
-                src={coverImage}
-                alt="Card cover"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 600px"
-              />
-            </div>
-
-            <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setIsAdding(true)}
-                  disabled={isUpdating}
-                  className="h-8 shadow-lg hover:bg-primary/90 hover:text-primary-foreground"
-                >
-                  <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
-                  Change
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={handleRemoveCover}
-                  disabled={isUpdating}
-                  className="h-8 shadow-lg"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Remove
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!coverImage && !isAdding && (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
-              <ImageIcon className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">No cover image</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Click &quot;Add&quot; to set a cover image
-            </p>
-          </div>
+        {!coverImage && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsAdding(!isAdding)}
+            disabled={isUpdating}
+            className="text-muted-foreground hover:text-foreground hover:bg-accent disabled:opacity-50"
+          >
+            {isAdding ? (
+              <>
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </>
+            )}
+          </Button>
         )}
       </div>
+
+      {isAdding && (
+        <div className="p-4 bg-muted/30">
+          <ImageAttachmentPicker
+            onSelect={handleAddCover}
+            disabled={isUpdating}
+            mode="cover"
+          />
+        </div>
+      )}
+
+      {coverImage && (
+        <div className="p-4 space-y-4">
+          <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
+            <Image
+              src={coverImage}
+              alt="Card cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setIsAdding(true)}
+              disabled={isUpdating}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Change
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleRemoveCover}
+              disabled={isUpdating}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Remove
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!coverImage && !isAdding && (
+        <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-3">
+            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="font-medium text-foreground mb-1">No cover image</p>
+          <p className="text-sm text-muted-foreground">
+            Click &quot;Add&quot; to set a cover image
+          </p>
+        </div>
+      )}
     </Card>
   );
 };

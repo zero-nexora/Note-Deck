@@ -37,7 +37,6 @@ export const BoardCardItemLabels = ({
       await removeLabel({ cardId, labelId });
       setCardLabels((prev) => prev.filter((cl) => cl.label.id !== labelId));
 
-      // ✨ Broadcast label removed
       realtimeUtils.broadcastLabelRemoved({
         cardId,
         labelId,
@@ -63,7 +62,6 @@ export const BoardCardItemLabels = ({
             },
           ]);
 
-          // ✨ Broadcast label added
           realtimeUtils.broadcastLabelAdded({
             cardId,
             labelId,
@@ -75,86 +73,85 @@ export const BoardCardItemLabels = ({
   };
 
   return (
-    <Card className="p-5 bg-card border-border/60">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-              <Tag className="h-4 w-4 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground">Labels</h3>
-            {cardLabels.length > 0 && (
-              <Badge variant="secondary" className="rounded-full">
-                {cardLabels.length}
-              </Badge>
-            )}
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Tag className="h-5 w-5 text-primary" />
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsAdding(!isAdding)}
-            className="h-8 hover:bg-primary/10 hover:text-primary"
-          >
-            {isAdding ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add
-              </>
-            )}
-          </Button>
+          <h3 className="text-base font-semibold text-foreground">Labels</h3>
+          {cardLabels.length > 0 && (
+            <Badge
+              variant="secondary"
+              className="bg-secondary text-secondary-foreground"
+            >
+              {cardLabels.length}
+            </Badge>
+          )}
         </div>
-
-        {cardLabels.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {cardLabels.map(({ label }) => (
-              <Badge
-                key={label.id}
-                style={{ backgroundColor: label.color }}
-                className="px-3 py-1.5 text-white font-medium hover:opacity-90 transition-opacity cursor-pointer group relative"
-                onClick={() => handleToggleLabel(label.id)}
-              >
-                {label.name || "Untitled"}
-                <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <X className="h-3 w-3 inline" />
-                </span>
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {isAdding && (
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
-            {boardLabels
-              .filter((l) => !assignedLabelIds.has(l.id))
-              .map((label) => (
-                <Button
-                  key={label.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToggleLabel(label.id)}
-                  style={{ borderColor: label.color }}
-                  className="justify-start hover:bg-secondary/50"
-                >
-                  <div
-                    className="w-4 h-4 rounded mr-2"
-                    style={{ backgroundColor: label.color }}
-                  />
-                  <span className="text-sm truncate">
-                    {label.name || "Untitled"}
-                  </span>
-                </Button>
-              ))}
-          </div>
-        )}
-
-        {cardLabels.length === 0 && !isAdding && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No labels added yet
-          </p>
-        )}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setIsAdding(!isAdding)}
+          className="text-muted-foreground hover:text-foreground hover:bg-accent"
+        >
+          {isAdding ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </>
+          )}
+        </Button>
       </div>
+
+      {cardLabels.length > 0 && (
+        <div className="p-4 flex flex-wrap gap-2">
+          {cardLabels.map(({ label }) => (
+            <Badge
+              key={label.id}
+              style={{ backgroundColor: label.color }}
+              className="text-white font-medium px-3 py-1.5 cursor-pointer hover:opacity-80 transition-opacity group"
+              onClick={() => handleToggleLabel(label.id)}
+            >
+              {label.name || "Untitled"}
+              <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <X className="h-3 w-3 inline" />
+              </span>
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      {isAdding && (
+        <div className="p-4 space-y-2 border-t border-border bg-muted/30">
+          {boardLabels
+            .filter((l) => !assignedLabelIds.has(l.id))
+            .map((label) => (
+              <Button
+                key={label.id}
+                variant="outline"
+                size="sm"
+                onClick={() => handleToggleLabel(label.id)}
+                style={{ borderColor: label.color }}
+                className="w-full justify-start gap-3 hover:bg-accent hover:text-accent-foreground"
+              >
+                <div
+                  className="h-4 w-4 rounded-full shrink-0"
+                  style={{ backgroundColor: label.color }}
+                />
+                <span className="font-medium">{label.name || "Untitled"}</span>
+              </Button>
+            ))}
+        </div>
+      )}
+
+      {cardLabels.length === 0 && !isAdding && (
+        <div className="p-6 text-center">
+          <p className="text-sm text-muted-foreground">No labels added yet</p>
+        </div>
+      )}
     </Card>
   );
 };

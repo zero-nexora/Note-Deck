@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewLabel, UpdateLabel } from "../types/label.type";
-import { labels } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { boards, cardLabels, labels } from "@/db/schema";
+import { count, desc, eq } from "drizzle-orm";
 
 export const labelRepository = {
   create: async (data: NewLabel) => {
@@ -35,5 +35,21 @@ export const labelRepository = {
 
   delete: async (id: string) => {
     await db.delete(labels).where(eq(labels.id, id));
+  },
+
+  getLabelDataByWorkspaceId: async (workspaceId: string) => {
+    return await db
+      .select({
+        labelId: labels.id,
+        labelName: labels.name,
+        labelColor: labels.color,
+        cardsCount: count(cardLabels.id),
+      })
+      .from(labels)
+      .innerJoin(boards, eq(labels.boardId, boards.id))
+      .leftJoin(cardLabels, eq(cardLabels.labelId, labels.id))
+      .where(eq(boards.workspaceId, workspaceId))
+      .groupBy(labels.id, labels.name, labels.color)
+      .orderBy(desc(count(cardLabels.id)));
   },
 };

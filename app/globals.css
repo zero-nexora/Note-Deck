@@ -5,7 +5,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
+html,
+body {
+  min-height: 100vh;
+  /* overflow: hidden; */
+}
+
+/* @theme inline {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -174,8 +180,102 @@
   --sidebar-accent-foreground: hsl(240 5.9% 10%);
   --sidebar-border: hsl(220 13% 91%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+} */
+
+@theme inline {
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
 }
 
+:root {
+  --background: hsl(260 25% 98%);
+  --foreground: hsl(260 30% 12%);
+  
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(260 25% 15%);
+  
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(260 30% 12%);
+  
+  --primary: hsl(265 85% 58%);
+  --primary-foreground: hsl(0 0% 100%);
+  
+  --secondary: hsl(260 20% 94%);
+  --secondary-foreground: hsl(260 40% 25%);
+  
+  --muted: hsl(260 18% 96%);
+  --muted-foreground: hsl(260 15% 48%);
+  
+  --accent: hsl(270 80% 95%);
+  --accent-foreground: hsl(265 85% 55%);
+  
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  
+  --border: hsl(260 25% 88%);
+  --input: hsl(260 20% 90%);
+  
+  --ring: hsl(265 85% 58%);
+  
+  --radius: 1rem;
+}
+
+.dark {
+  --background: hsl(255 20% 8%);
+  --foreground: hsl(270 30% 95%);
+  
+  --card: hsl(255 25% 12%);
+  --card-foreground: hsl(270 25% 92%);
+  
+  --popover: hsl(255 28% 10%);
+  --popover-foreground: hsl(270 30% 95%);
+  
+  --primary: hsl(265 75% 65%);
+  --primary-foreground: hsl(255 20% 8%);
+  
+  --secondary: hsl(260 20% 18%);
+  --secondary-foreground: hsl(270 25% 85%);
+  
+  --muted: hsl(260 18% 16%);
+  --muted-foreground: hsl(260 12% 58%);
+  
+  --accent: hsl(265 60% 22%);
+  --accent-foreground: hsl(265 75% 70%);
+  
+  --destructive: hsl(0 75% 58%);
+  --destructive-foreground: hsl(270 30% 98%);
+  
+  --border: hsl(260 25% 22%);
+  --input: hsl(260 22% 18%);
+  
+  --ring: hsl(265 75% 65%);
+  
+  --radius: 1rem;
+}
 
 @layer base {
   * {

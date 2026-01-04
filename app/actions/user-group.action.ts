@@ -33,9 +33,9 @@ export const createUserGroupAction = async (input: CreateUserGroupInput) => {
 
 export const findUserGroupByIdAction = async (id: string) => {
   try {
-    await requireAuth();
+    const user = await requireAuth();
 
-    const group = await userGroupService.findById(id);
+    const group = await userGroupService.findById(user.id, id);
     return success("", group);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -44,9 +44,9 @@ export const findUserGroupByIdAction = async (id: string) => {
 
 export const findUserGroupsByWorkspaceAction = async (workspaceId: string) => {
   try {
-    await requireAuth();
+    const user = await requireAuth();
 
-    const groups = await userGroupService.findByWorkspaceId(workspaceId);
+    const groups = await userGroupService.findByWorkspaceId(user.id, workspaceId);
     return success("", groups);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");

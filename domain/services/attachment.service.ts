@@ -10,19 +10,40 @@ import {
 export const attachmentService = {
   create: async (userId: string, data: CreateAttachmentInput) => {
     const card = await cardRepository.findById(data.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    const attachment = await attachmentRepository.create({
+    const trimmedFileName = data.fileName.trim();
+    if (!trimmedFileName) {
+      throw new Error("File name cannot be empty");
+    }
+
+    if (data.fileSize <= 0) {
+      throw new Error("File size must be greater than 0");
+    }
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    if (data.fileSize > MAX_FILE_SIZE) {
+      throw new Error("File size cannot exceed 50MB");
+    }
+
+    const attachmentData = {
       ...data,
+      fileName: trimmedFileName,
       userId,
-    });
+    };
+
+    const attachment = await attachmentRepository.create(attachmentData);
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -35,6 +56,7 @@ export const attachmentService = {
         fileName: attachment.fileName,
         fileType: attachment.fileType,
         fileSize: attachment.fileSize,
+        cardTitle: card.title,
       },
     });
 
@@ -43,10 +65,14 @@ export const attachmentService = {
 
   delete: async (userId: string, data: DeleteAttachmentInput) => {
     const attachment = await attachmentRepository.findById(data.id);
-    if (!attachment) throw new Error("Attachment not found");
+    if (!attachment) {
+      throw new Error("Attachment not found");
+    }
 
     const card = await cardRepository.findById(attachment.cardId);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     if (attachment.userId !== userId) {
       const hasAdminPermission = await checkBoardPermission(
@@ -59,8 +85,6 @@ export const attachmentService = {
       }
     }
 
-    await attachmentRepository.delete(data.id);
-
     await activityRepository.create({
       boardId: card.boardId,
       cardId: card.id,
@@ -68,7 +92,15 @@ export const attachmentService = {
       action: "attachment.deleted",
       entityType: "attachment",
       entityId: data.id,
-      metadata: { fileName: attachment.fileName },
+      metadata: {
+        fileName: attachment.fileName,
+        fileType: attachment.fileType,
+        fileSize: attachment.fileSize,
+        cardTitle: card.title,
+        wasOwnAttachment: attachment.userId === userId,
+      },
     });
+
+    await attachmentRepository.delete(data.id);
   },
 };

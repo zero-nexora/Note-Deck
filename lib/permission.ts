@@ -1,3 +1,5 @@
+import { Building2, LayoutList, Settings, Ticket, Users } from "lucide-react";
+
 export interface Permission {
   id: string;
   name: string;
@@ -6,11 +8,11 @@ export interface Permission {
 }
 
 export const PERMISSION_CATEGORIES = [
-  { id: "workspace", label: "Workspace", icon: "🏢" },
-  { id: "board", label: "Board", icon: "📋" },
-  { id: "card", label: "Card", icon: "🎫" },
-  { id: "member", label: "Member", icon: "👥" },
-  { id: "admin", label: "Admin", icon: "⚙️" },
+  { id: "workspace", label: "Workspace", icon: Building2 },
+  { id: "board", label: "Board", icon: LayoutList },
+  { id: "card", label: "Card", icon: Ticket },
+  { id: "member", label: "Member", icon: Users },
+  { id: "admin", label: "Admin", icon: Settings },
 ] as const;
 
 export const PERMISSIONS: Permission[] = [

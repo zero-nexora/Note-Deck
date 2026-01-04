@@ -2,9 +2,8 @@
 
 import { useModal } from "@/stores/modal-store";
 import { BoardHeaderNameDescriptionForm } from "./board-header-name-description-form";
-import { Pencil } from "lucide-react";
 
-interface BoardHeaderNameProps {
+interface BoardHeaderNameDescriptionProps {
   boardId: string;
   boardName: string;
   boardDescription: string | null;
@@ -12,15 +11,15 @@ interface BoardHeaderNameProps {
 
 export const BoardHeaderNameDescription = ({
   boardId,
-  boardDescription,
   boardName,
-}: BoardHeaderNameProps) => {
+  boardDescription,
+}: BoardHeaderNameDescriptionProps) => {
   const { open } = useModal();
 
-  const handleOpenEditNameDescriptionBoard = () => {
+  const handleEdit = () => {
     open({
-      title: "Edit board name and description",
-      description: "",
+      title: "Edit Board",
+      description: "Update board name and description",
       children: (
         <BoardHeaderNameDescriptionForm
           boardId={boardId}
@@ -32,22 +31,18 @@ export const BoardHeaderNameDescription = ({
   };
 
   return (
-    <div className="space-y-2">
-      <div
-        className="group relative cursor-pointer rounded-md px-3 py-2 transition-colors flex gap-2"
-        onClick={handleOpenEditNameDescriptionBoard}
-        title="Click to edit"
-      >
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-foreground transition-colors group-hover:text-primary">
-            {boardName}
-          </h1>
-          <p className="min-h-5 flex-1 text-sm text-muted-foreground transition-colors group-hover:text-foreground">
-            {boardDescription || "Add a description..."}
-          </p>
-        </div>
-        <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-      </div>
-    </div>
+    <button
+      onClick={handleEdit}
+      className="group flex flex-col items-start gap-1 text-left hover:opacity-80 transition-opacity"
+    >
+      <h1 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+        {boardName}
+      </h1>
+      {boardDescription && (
+        <p className="text-sm text-muted-foreground line-clamp-1 max-w-md">
+          {boardDescription}
+        </p>
+      )}
+    </button>
   );
 };

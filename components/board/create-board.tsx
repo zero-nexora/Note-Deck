@@ -21,18 +21,18 @@ export const CreateBoard = ({ workspaceId }: CreateBoardProps) => {
   return (
     <Button
       variant="outline"
-      className="h-full min-h-40 rounded-lg border-2 border-dashed border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50 flex flex-col items-center justify-center gap-3"
       onClick={handleCreateBoard}
+      className="h-full border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent hover:text-accent-foreground transition-all duration-200 group"
     >
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-        <Plus className="w-6 h-6 text-primary" />
-      </div>
-      <div className="text-center">
-        <div className="text-sm font-semibold text-foreground">
-          Create New Board
+      <div className="flex flex-col items-center justify-center gap-4 text-center">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+          <Plus className="h-6 w-6 text-primary" />
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
-          Start organizing your tasks
+        <div className="space-y-1">
+          <div className="font-semibold text-foreground">Create New Board</div>
+          <div className="text-sm text-muted-foreground">
+            Start organizing your tasks
+          </div>
         </div>
       </div>
     </Button>

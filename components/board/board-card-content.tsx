@@ -17,7 +17,7 @@ export const BoardCardContent = ({ card, hasCover }: BoardCardContentProps) => {
   const hasMembers = card.members && card.members.length > 0;
 
   return (
-    <div className={cn("p-2.5 space-y-2", hasCover && "pt-2.5")}>
+    <div className={cn("p-3 space-y-2", hasCover && "pt-2")}>
       {hasLabels && <BoardCardLabels cardLabels={card.cardLabels} />}
 
       <BoardCardTitle title={card.title} />

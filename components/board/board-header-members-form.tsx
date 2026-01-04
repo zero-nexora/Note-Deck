@@ -1,7 +1,6 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Button } from "../ui/button";
 import { X } from "lucide-react";
 import { useBoardMember } from "@/hooks/use-board-member";
 import {
@@ -12,8 +11,10 @@ import {
   SelectValue,
 } from "../ui/select";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
-import { Badge } from "../ui/badge";
 import { useEffect, useState } from "react";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardHeaderMembersFormProps {
   boardMembers: BoardWithListColumnLabelAndMember["members"];
@@ -32,8 +33,8 @@ export const BoardHeaderMembersForm = ({
   boardId,
 }: BoardHeaderMembersFormProps) => {
   const { changeRole, removeMember } = useBoardMember();
-
   const [boardMembers, setBoardMembers] = useState(initialBoardMembers);
+  const { open } = useConfirm();
 
   useEffect(() => {
     setBoardMembers(initialBoardMembers);
@@ -45,18 +46,24 @@ export const BoardHeaderMembersForm = ({
     memberId: string,
     newRole: "admin" | "normal" | "observer"
   ) => {
-    const member = await changeRole({
-      boardId,
-      userId: memberId,
-      role: newRole,
+    open({
+      title: "Change role",
+      description: "Are you sure you want to change role?",
+      onConfirm: async () => {
+        const member = await changeRole({
+          boardId,
+          userId: memberId,
+          role: newRole,
+        });
+        if (member) {
+          setBoardMembers((prev) =>
+            prev.map((m) =>
+              m.userId === member.userId ? { ...m, role: member.role } : m
+            )
+          );
+        }
+      },
     });
-    if (member) {
-      setBoardMembers((prev) =>
-        prev.map((m) =>
-          m.userId === member.userId ? { ...m, role: member.role } : m
-        )
-      );
-    }
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -65,40 +72,49 @@ export const BoardHeaderMembersForm = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {membersOnline.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-semibold text-foreground">
               Currently viewing ({membersOnline.length})
             </h3>
-            <Badge variant="secondary" className="text-xs">
+            <Badge
+              variant="secondary"
+              className="bg-primary/10 text-primary border-primary/20"
+            >
               Online
             </Badge>
           </div>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-3">
             {membersOnline.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-accent/30"
+                className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 border border-border"
               >
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="w-10 h-10">
-                      {member.image ? (
-                        <AvatarImage src={member.image} alt={member.name} />
-                      ) : null}
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {(member.name || "U").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-                  </div>
+                <div className="relative">
+                  <Avatar className="h-10 w-10 ring-2 ring-background">
+                    {member.image ? (
+                      <AvatarImage src={member.image} alt={member.name} />
+                    ) : null}
+                    <AvatarFallback
+                      style={{ backgroundColor: member.color }}
+                      className="text-white font-medium"
+                    >
+                      {(member.name || "U").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div
+                    className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background"
+                    style={{ backgroundColor: member.color }}
+                  />
+                </div>
 
-                  <div>
-                    <p className="font-medium text-sm">{member.name}</p>
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate">
+                    {member.name}
+                  </p>
                 </div>
               </div>
             ))}
@@ -106,8 +122,8 @@ export const BoardHeaderMembersForm = ({
         </div>
       )}
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold">
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold text-foreground">
           All board members ({boardMembers.length})
         </h3>
 
@@ -118,77 +134,106 @@ export const BoardHeaderMembersForm = ({
             return (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
+                className="p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Avatar className="w-10 h-10">
-                      {member.user.image ? (
-                        <AvatarImage
-                          src={member.user.image}
-                          alt={member.user.name || ""}
-                        />
-                      ) : null}
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {(member.user.name || "U").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    {isOnline && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-                    )}
-                  </div>
+                <div className="flex items-start justify-between gap-4 min-w-0">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="relative">
+                      <Avatar className="h-12 w-12 ring-2 ring-background">
+                        {member.user.image ? (
+                          <AvatarImage
+                            src={member.user.image}
+                            alt={member.user.name || ""}
+                          />
+                        ) : null}
+                        <AvatarFallback className="bg-primary text-primary-foreground font-medium">
+                          {(member.user.name || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {isOnline && (
+                        <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-primary border-2 border-background" />
+                      )}
+                    </div>
 
-                  <div>
-                    <p className="font-medium text-sm">
-                      {member.user.name || "Unnamed"}
-                    </p>
-                    {member.user.email && (
-                      <p className="text-xs text-muted-foreground">
-                        {member.user.email}
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <p className="font-semibold text-foreground truncate">
+                        {member.user.name || "Unnamed"}
                       </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge
-                        variant={
-                          member.role === "admin" ? "default" : "secondary"
-                        }
-                      >
-                        {member.role.charAt(0).toUpperCase() +
-                          member.role.slice(1)}
-                      </Badge>
-                      {isOnline && <Badge variant="outline">Online now</Badge>}
+                      {member.user.email && (
+                        <p className="text-sm text-muted-foreground truncate">
+                          {member.user.email}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge
+                          variant={
+                            member.role === "admin" ? "default" : "secondary"
+                          }
+                          className={
+                            member.role === "admin"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-secondary text-secondary-foreground"
+                          }
+                        >
+                          {member.role.charAt(0).toUpperCase() +
+                            member.role.slice(1)}
+                        </Badge>
+                        {isOnline && (
+                          <Badge
+                            variant="outline"
+                            className="border-primary/50 text-primary"
+                          >
+                            Online now
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={member.role}
-                    onValueChange={(value) =>
-                      handleChangeRole(
-                        member.userId,
-                        value as "admin" | "normal" | "observer"
-                      )
-                    }
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="normal">Member</SelectItem>
-                      <SelectItem value="observer">Observer</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={member.role}
+                      onValueChange={(value) =>
+                        handleChangeRole(
+                          member.userId,
+                          value as "admin" | "normal" | "observer"
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-[130px] bg-input border-border text-foreground focus:ring-ring">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover text-popover-foreground border-border">
+                        <SelectItem
+                          value="admin"
+                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
+                          Admin
+                        </SelectItem>
+                        <SelectItem
+                          value="normal"
+                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
+                          Member
+                        </SelectItem>
+                        <SelectItem
+                          value="observer"
+                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                        >
+                          Observer
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveMember(member.userId)}
-                    className="hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveMember(member.userId)}
+                      className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             );

@@ -7,15 +7,13 @@ import { CreateWorkspace } from "@/components/workspace/create-workspace";
 
 const WorkspacesPage = async () => {
   const result = await findWorkspacesByUserAction();
-
   const workspaces = (result.success ? result.data : []) as Workspace[];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="relative min-h-screen bg-background">
       <PageBackground />
-
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-8">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+        <div className="w-full max-w-4xl space-y-8">
           <WorkspaceHeader />
           <WorkspaceList workspaces={workspaces} />
           <CreateWorkspace />

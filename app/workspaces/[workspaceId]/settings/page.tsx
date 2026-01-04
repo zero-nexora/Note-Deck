@@ -16,11 +16,7 @@ const SettingPage = async ({ params }: SettingsPageProps) => {
 
   const workspace = result.data as WorkspaceWithOwnerMembers;
 
-  return (
-    <div>
-      <SettingTabs workspace={workspace} user={user} />
-    </div>
-  );
+  return <SettingTabs workspace={workspace} user={user} />;
 };
 
 export default SettingPage;

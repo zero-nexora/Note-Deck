@@ -24,18 +24,29 @@ import { attachmentRepository } from "../repositories/attachment.repository";
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
     const list = await listRepository.findById(data.listId);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const trimmedTitle = data.title.trim();
+    if (!trimmedTitle) {
+      throw new Error("Card title cannot be empty");
+    }
 
     const maxPosition = await cardRepository.getMaxPosition(data.listId);
+
     const card = await cardRepository.create({
       ...data,
+      title: trimmedTitle,
       boardId: list.boardId,
       position: maxPosition + 1,
     });
@@ -75,20 +86,46 @@ export const cardService = {
 
   update: async (userId: string, id: string, data: UpdateCardInput) => {
     const card = await cardRepository.findById(id);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    if (data.title !== undefined && data.title.trim() === "") {
-      throw new Error("Card title cannot be empty");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
     }
 
-    const updated = await cardRepository.update(id, data);
+    const updateData = { ...data };
+
+    if (data.title !== undefined) {
+      const trimmedTitle = data.title.trim();
+      if (!trimmedTitle) {
+        throw new Error("Card title cannot be empty");
+      }
+      updateData.title = trimmedTitle;
+    }
+
+    const metadata: Record<string, any> = {};
+    if (data.title !== undefined && card.title !== updateData.title) {
+      metadata.oldTitle = card.title;
+      metadata.newTitle = updateData.title;
+    }
+    if (data.description !== undefined) {
+      metadata.descriptionUpdated = true;
+    }
+    if (data.dueDate !== undefined) {
+      metadata.oldDueDate = card.dueDate;
+      metadata.newDueDate = data.dueDate;
+    }
+    if (data.coverImage !== undefined) {
+      metadata.coverImageUpdated = true;
+    }
+
+    const updated = await cardRepository.update(id, updateData);
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -97,11 +134,17 @@ export const cardService = {
       action: "card.updated",
       entityType: "card",
       entityId: id,
-      metadata: data,
+      metadata,
     });
 
-    if (data.dueDate && card.members) {
+    if (
+      data.dueDate !== undefined &&
+      data.dueDate !== card.dueDate &&
+      card.members
+    ) {
       for (const member of card.members) {
+        if (member.userId === userId) continue;
+
         await notificationRepository.create({
           userId: member.userId,
           type: "due_date",
@@ -118,7 +161,9 @@ export const cardService = {
 
   move: async (userId: string, data: MoveCardInput) => {
     const card = await cardRepository.findById(data.id);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const sourceList = await listRepository.findById(data.sourceListId);
     const destinationList = await listRepository.findById(
@@ -156,6 +201,7 @@ export const cardService = {
     } else {
       await cardRepository.update(data.id, {
         listId: data.destinationListId,
+        boardId: destinationList.boardId,
       });
 
       if (data.sourceOrders.length > 0) {
@@ -167,6 +213,7 @@ export const cardService = {
           data.destinationOrders
         );
       }
+
       await activityRepository.create({
         boardId: destinationList.boardId,
         cardId: data.id,
@@ -175,13 +222,18 @@ export const cardService = {
         entityType: "card",
         entityId: data.id,
         metadata: {
+          cardTitle: card.title,
           sourceListId: data.sourceListId,
-          targetListId: data.destinationListId,
+          destinationListId: data.destinationListId,
+          sourceBoardId: sourceList.boardId,
+          destinationBoardId: destinationList.boardId,
         },
       });
 
       if (card.members?.length) {
         for (const member of card.members) {
+          if (member.userId === userId) continue;
+
           await notificationRepository.create({
             userId: member.userId,
             type: "card_moved",
@@ -196,26 +248,34 @@ export const cardService = {
 
     await executeAutomations({
       type: "CARD_MOVED",
-      boardId: card.boardId,
+      boardId: destinationList.boardId,
       cardId: card.id,
       fromListId: data.sourceListId,
       toListId: data.destinationListId,
       userId,
     });
 
-    return card;
+    return {
+      ...card,
+      listId: data.destinationListId,
+      boardId: destinationList.boardId,
+    };
   },
 
   reorders: async (userId: string, data: ReorderCardsInput) => {
     const list = await listRepository.findById(data.listId);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const allCards = await cardRepository.findAllByListId(data.listId);
     const listCardIds = new Set(allCards.map((c) => c.id));
@@ -238,21 +298,28 @@ export const cardService = {
       entityId: data.listId,
       metadata: {
         cardCount: data.orders.length,
-        orders: data.orders,
       },
     });
   },
 
   archive: async (userId: string, data: ArchiveCardInput) => {
     const card = await cardRepository.findById(data.id);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
+
+    if (card.isArchived) {
+      return card;
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await cardRepository.update(data.id, {
       isArchived: true,
@@ -280,14 +347,22 @@ export const cardService = {
 
   restore: async (userId: string, data: RestoreCardInput) => {
     const card = await cardRepository.findById(data.id);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
+
+    if (!card.isArchived) {
+      return card;
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await cardRepository.update(data.id, {
       isArchived: false,
@@ -308,16 +383,20 @@ export const cardService = {
 
   delete: async (userId: string, data: DeleteCardInput) => {
     const card = await cardRepository.findById(data.id);
-    if (!card) throw new Error("Card not found");
+    if (!card) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    await cardRepository.delete(data.id);
+    const board = await boardRepository.findById(card.boardId);
 
     await activityRepository.create({
       boardId: card.boardId,
@@ -325,10 +404,9 @@ export const cardService = {
       action: "card.deleted",
       entityType: "card",
       entityId: data.id,
-      metadata: { title: card.title },
+      metadata: { title: card.title, listId: card.listId },
     });
 
-    const board = await boardRepository.findById(card.boardId);
     if (board) {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
@@ -339,18 +417,24 @@ export const cardService = {
         metadata: { title: card.title, boardId: card.boardId },
       });
     }
+
+    await cardRepository.delete(data.id);
   },
 
   duplicate: async (userId: string, data: DuplicateCardInput) => {
     const originalCard = await cardRepository.findCardDetails(data.id);
-    if (!originalCard) throw new Error("Card not found");
+    if (!originalCard) {
+      throw new Error("Card not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       originalCard.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const maxPosition = await cardRepository.getMaxPosition(
       originalCard.listId
@@ -416,6 +500,7 @@ export const cardService = {
         newCardTitle: newCard.title,
         checklistsCount: originalCard.checklists.length,
         attachmentsCount: originalCard.attachments.length,
+        labelsCount: originalCard.cardLabels.length,
       },
     });
 
@@ -427,6 +512,8 @@ export const cardService = {
       entityId: newCard.id,
       metadata: {
         originalCardId: originalCard.id,
+        originalCardTitle: originalCard.title,
+        newCardTitle: newCard.title,
         listId: originalCard.listId,
       },
     });

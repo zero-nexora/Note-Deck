@@ -45,13 +45,13 @@ const WorkspaceDetailLayout = async ({
         workspaceId={workspaceId}
         workspaces={result.data || []}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 h-full flex-col overflow-hidden">
         <Navbar
           notifications={notifications}
           workspace={currentWorkspace}
           user={user}
         />
-        <main className="flex-1 overflow-auto p-4">{children}</main>
+        <main className="flex-1 h-full overflow-auto p-4">{children}</main>
       </div>
     </div>
   );

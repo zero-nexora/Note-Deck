@@ -38,7 +38,6 @@ export const BoardCardItemMembers = ({
       await removeMember({ cardId, userId });
       setCardMembers((prev) => prev.filter((m) => m.user.id !== userId));
 
-      // ✨ Broadcast member unassigned
       realtimeUtils.broadcastMemberUnassigned({
         cardId,
         memberId: userId,
@@ -59,7 +58,6 @@ export const BoardCardItemMembers = ({
             },
           ]);
 
-          // ✨ Broadcast member assigned
           realtimeUtils.broadcastMemberAssigned({
             cardId,
             memberId: userId,
@@ -71,96 +69,99 @@ export const BoardCardItemMembers = ({
   };
 
   return (
-    <Card className="p-5 bg-card border-border/60">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <h3 className="font-semibold text-foreground">Members</h3>
-            {cardMembers.length > 0 && (
-              <Badge variant="secondary" className="rounded-full">
-                {cardMembers.length}
-              </Badge>
-            )}
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Users className="h-5 w-5 text-primary" />
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsAdding(!isAdding)}
-            className="h-8 hover:bg-primary/10 hover:text-primary"
-          >
-            {isAdding ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add
-              </>
-            )}
-          </Button>
+          <h3 className="text-base font-semibold text-foreground">Members</h3>
+          {cardMembers.length > 0 && (
+            <Badge
+              variant="secondary"
+              className="bg-secondary text-secondary-foreground"
+            >
+              {cardMembers.length}
+            </Badge>
+          )}
         </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setIsAdding(!isAdding)}
+          className="text-muted-foreground hover:text-foreground hover:bg-accent"
+        >
+          {isAdding ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </>
+          )}
+        </Button>
+      </div>
 
-        {cardMembers.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {cardMembers.map((member) => (
-              <div
-                key={member.id}
-                className="group relative flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-secondary/50 hover:bg-secondary transition-colors"
+      {cardMembers.length > 0 && (
+        <div className="p-4 space-y-2">
+          {cardMembers.map((member) => (
+            <div
+              key={member.id}
+              className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors group"
+            >
+              <Avatar className="h-10 w-10 ring-2 ring-background">
+                <AvatarImage src={member.user.image ?? undefined} />
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                  {member.user.name?.[0] ?? "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="flex-1 font-medium text-foreground">
+                {member.user.name ?? "Unknown"}
+              </span>
+              <button
+                onClick={() => handleToggleMember(member.user.id)}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
               >
-                <Avatar className="h-7 w-7 border-2 border-background">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isAdding && (
+        <div className="p-4 space-y-2 border-t border-border bg-muted/30">
+          {boardMembers
+            .filter((m) => !assignedUserIds.has(m.user.id))
+            .map((member) => (
+              <Button
+                key={member.id}
+                variant="outline"
+                size="sm"
+                onClick={() => handleToggleMember(member.user.id)}
+                className="w-full justify-start gap-3 border-border hover:bg-accent hover:text-accent-foreground"
+              >
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={member.user.image ?? undefined} />
-                  <AvatarFallback className="text-xs">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {member.user.name?.[0] ?? "U"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-foreground">
+                <span className="font-medium">
                   {member.user.name ?? "Unknown"}
                 </span>
-                <button
-                  onClick={() => handleToggleMember(member.user.id)}
-                  className="opacity-0 group-hover:opacity-100 ml-1 flex items-center justify-center w-4 h-4 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive transition-opacity"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+              </Button>
             ))}
-          </div>
-        )}
+        </div>
+      )}
 
-        {isAdding && (
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
-            {boardMembers
-              .filter((m) => !assignedUserIds.has(m.user.id))
-              .map((member) => (
-                <Button
-                  key={member.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToggleMember(member.user.id)}
-                  className="justify-start h-auto py-2 hover:bg-primary/5 hover:border-primary/50"
-                >
-                  <Avatar className="h-6 w-6 mr-2">
-                    <AvatarImage src={member.user.image ?? undefined} />
-                    <AvatarFallback className="text-xs">
-                      {member.user.name?.[0] ?? "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm truncate">
-                    {member.user.name ?? "Unknown"}
-                  </span>
-                </Button>
-              ))}
-          </div>
-        )}
-
-        {cardMembers.length === 0 && !isAdding && (
-          <p className="text-sm text-muted-foreground text-center py-4">
+      {cardMembers.length === 0 && !isAdding && (
+        <div className="p-6 text-center">
+          <p className="text-sm text-muted-foreground">
             No members assigned yet
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };

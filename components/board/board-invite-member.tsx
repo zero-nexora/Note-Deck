@@ -1,12 +1,12 @@
-import { useModal } from "@/stores/modal-store";
-import { BoardInviteMemberForm } from "./board-invite-member-form";
 import { useCallback } from "react";
 import { Button } from "../ui/button";
+import { BoardInviteMemberForm } from "./board-invite-member-form";
+import { useModal } from "@/stores/modal-store";
 import { UserPlus } from "lucide-react";
-import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 
-interface BoardInviteMember {
+interface BoardInviteMemberProps {
   boardId: string;
   boardMembers: BoardWithListColumnLabelAndMember["members"];
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
@@ -16,7 +16,7 @@ export const BoardInviteMember = ({
   boardId,
   boardMembers,
   workspaceMembers,
-}: BoardInviteMember) => {
+}: BoardInviteMemberProps) => {
   const { open } = useModal();
 
   const handleBoardInviteMember = useCallback(() => {
@@ -34,8 +34,12 @@ export const BoardInviteMember = ({
   }, [open, boardMembers, workspaceMembers, boardId]);
 
   return (
-    <Button className="shrink-0" onClick={handleBoardInviteMember}>
-      <UserPlus className="w-4 h-4 mr-2" />
+    <Button
+      onClick={handleBoardInviteMember}
+      size="sm"
+      className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+    >
+      <UserPlus className="h-4 w-4" />
       Invite
     </Button>
   );

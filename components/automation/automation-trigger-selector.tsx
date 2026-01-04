@@ -55,7 +55,7 @@ export const TriggerSelector = ({
             className="cursor-pointer hover:bg-primary/10"
             onClick={() => setSelectedCategory(category.id)}
           >
-            {category.icon} {category.label}
+            <category.icon /> {category.label}
           </Badge>
         ))}
       </div>
@@ -68,7 +68,7 @@ export const TriggerSelector = ({
             onClick={() => onSelect(trigger)}
             className="w-full flex items-start gap-3 p-3 rounded-lg border border-border bg-secondary/20 hover:bg-secondary/40 hover:border-primary/30 transition-all text-left"
           >
-            <span className="text-2xl shrink-0">{trigger.icon}</span>
+            <trigger.icon />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-foreground leading-tight">
                 {trigger.name}

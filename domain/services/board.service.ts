@@ -19,7 +19,9 @@ import {
 export const boardService = {
   create: async (userId: string, data: CreateBoardInput) => {
     const workspace = await workspaceRepository.findById(data.workspaceId);
-    if (!workspace) throw new Error("Workspace not found");
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
@@ -27,9 +29,21 @@ export const boardService = {
       "normal"
     );
 
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
-    const board = await boardRepository.create(data);
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      throw new Error("Board name cannot be empty");
+    }
+
+    const boardData = {
+      ...data,
+      name: trimmedName,
+    };
+
+    const board = await boardRepository.create(boardData);
 
     await boardMemberRepository.add({
       boardId: board.id,
@@ -62,28 +76,45 @@ export const boardService = {
 
   findById: async (userId: string, boardId: string) => {
     const board = await boardRepository.findById(boardId);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       board.id,
       "observer"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     return board;
   },
 
   findByWorkspaceId: async (userId: string, workspaceId: string) => {
     const workspace = await workspaceRepository.findById(workspaceId);
-    if (!workspace) throw new Error("Workspace not found");
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
+
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      workspaceId,
+      "observer"
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const boards = await boardRepository.findByWorkspaceId(workspaceId);
 
     const result = [];
     for (const board of boards) {
       const allowed = await checkBoardPermission(userId, board.id, "observer");
-      if (allowed) result.push(board);
+      if (allowed) {
+        result.push(board);
+      }
     }
 
     return result;
@@ -91,16 +122,43 @@ export const boardService = {
 
   update: async (userId: string, id: string, data: UpdateBoardInput) => {
     const board = await boardRepository.findById(id);
-    if (!board) throw new Error("Board not found");
-
-    const hasPermission = await checkBoardPermission(userId, id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
-
-    if (data.name && data.name.trim() === "") {
-      throw new Error("Board name cannot be empty");
+    if (!board) {
+      throw new Error("Board not found");
     }
 
-    const updated = await boardRepository.update(id, data);
+    const hasPermission = await checkBoardPermission(userId, id, "admin");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const updateData = { ...data };
+
+    if (data.name !== undefined) {
+      const trimmedName = data.name.trim();
+      if (!trimmedName) {
+        throw new Error("Board name cannot be empty");
+      }
+      updateData.name = trimmedName;
+    }
+
+    const metadata: Record<string, any> = {};
+    if (data.name !== undefined && board.name !== updateData.name) {
+      metadata.oldName = board.name;
+      metadata.newName = updateData.name;
+    }
+    if (data.description !== undefined) {
+      metadata.descriptionUpdated = true;
+    }
+
+    if (
+      data.name !== undefined &&
+      board.name === updateData.name &&
+      !data.description
+    ) {
+      return board;
+    }
+
+    const updated = await boardRepository.update(id, updateData);
 
     await activityRepository.create({
       boardId: updated.id,
@@ -108,7 +166,7 @@ export const boardService = {
       action: "board.updated",
       entityType: "board",
       entityId: updated.id,
-      metadata: data,
+      metadata,
     });
 
     await auditLogRepository.create({
@@ -117,7 +175,7 @@ export const boardService = {
       action: "board.updated",
       entityType: "board",
       entityId: id,
-      metadata: data,
+      metadata,
     });
 
     // await elasticsearchService.indexBoard(updated.id);
@@ -127,12 +185,14 @@ export const boardService = {
 
   delete: async (userId: string, data: DeleteBoardInput) => {
     const board = await boardRepository.findById(data.id);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
 
     const hasPermission = await checkBoardPermission(userId, data.id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
-
-    await boardRepository.delete(data.id);
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
@@ -142,14 +202,24 @@ export const boardService = {
       entityId: data.id,
       metadata: { name: board.name },
     });
+
+    await boardRepository.delete(data.id);
   },
 
   archive: async (userId: string, data: ArchiveBoardInput) => {
     const board = await boardRepository.findById(data.id);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    if (board.isArchived) {
+      return board;
+    }
 
     const hasPermission = await checkBoardPermission(userId, data.id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await boardRepository.update(data.id, {
       isArchived: true,
@@ -161,7 +231,7 @@ export const boardService = {
       action: "board.archived",
       entityType: "board",
       entityId: data.id,
-      metadata: {},
+      metadata: { name: board.name },
     });
 
     await auditLogRepository.create({
@@ -170,7 +240,7 @@ export const boardService = {
       action: "board.archived",
       entityType: "board",
       entityId: data.id,
-      metadata: {},
+      metadata: { name: board.name },
     });
 
     return updated;
@@ -178,10 +248,18 @@ export const boardService = {
 
   restore: async (userId: string, data: RestoreBoardInput) => {
     const board = await boardRepository.findById(data.id);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    if (!board.isArchived) {
+      return board;
+    }
 
     const hasPermission = await checkBoardPermission(userId, data.id, "admin");
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await boardRepository.update(data.id, {
       isArchived: false,
@@ -193,7 +271,7 @@ export const boardService = {
       action: "board.restored",
       entityType: "board",
       entityId: data.id,
-      metadata: {},
+      metadata: { name: board.name },
     });
 
     await auditLogRepository.create({
@@ -202,7 +280,7 @@ export const boardService = {
       action: "board.restored",
       entityType: "board",
       entityId: data.id,
-      metadata: {},
+      metadata: { name: board.name },
     });
 
     return updated;

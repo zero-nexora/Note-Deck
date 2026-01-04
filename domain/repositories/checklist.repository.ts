@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewChecklist, UpdateChecklist } from "../types/check-list.type";
-import { checklists } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { boards, cards, checklistItems, checklists } from "@/db/schema";
+import { count, eq, sql } from "drizzle-orm";
 
 export const checklistRepository = {
   create: async (data: NewChecklist) => {
@@ -49,5 +49,22 @@ export const checklistRepository = {
       limit: 1,
     });
     return result[0]?.position ?? -1;
+  },
+
+  getChecklistDataByWorkspaceId: async (workspaceId: string) => {
+    return await db
+      .select({
+        checklistId: checklists.id,
+        totalItems: count(checklistItems.id),
+        completedItems: sql<number>`
+        SUM(CASE WHEN ${checklistItems.isCompleted} THEN 1 ELSE 0 END)
+      `,
+      })
+      .from(checklists)
+      .innerJoin(cards, eq(checklists.cardId, cards.id))
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .leftJoin(checklistItems, eq(checklistItems.checklistId, checklists.id))
+      .where(eq(boards.workspaceId, workspaceId))
+      .groupBy(checklists.id);
   },
 };

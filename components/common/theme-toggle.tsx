@@ -21,7 +21,7 @@ export const ThemeToggle = () => {
   return (
     <motion.button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="relative p-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors duration-300"
+      className="relative p-2 rounded-xl bg-secondary hover:bg-secondary/80"
       whileTap={{ scale: 0.95 }}
       aria-label="Toggle theme"
     >

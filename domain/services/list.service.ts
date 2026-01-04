@@ -23,18 +23,29 @@ import { attachmentRepository } from "../repositories/attachment.repository";
 export const listService = {
   create: async (userId: string, data: CreateListInput) => {
     const board = await boardRepository.findById(data.boardId);
-    if (!board) throw new Error("Board not found");
+    if (!board) {
+      throw new Error("Board not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      throw new Error("List name cannot be empty");
+    }
 
     const maxPosition = await listRepository.getMaxPosition(data.boardId);
+
     const list = await listRepository.create({
       ...data,
+      name: trimmedName,
       position: maxPosition + 1,
     });
 
@@ -68,29 +79,50 @@ export const listService = {
 
   update: async (userId: string, id: string, data: UpdateListInput) => {
     const list = await listRepository.findById(id);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    if (data.name !== undefined && data.name.trim() === "") {
-      throw new Error("List name cannot be empty");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
     }
 
-    const updated = await listRepository.update(id, data);
+    const updateData = { ...data };
+
+    if (data.name !== undefined) {
+      const trimmedName = data.name.trim();
+      if (!trimmedName) {
+        throw new Error("List name cannot be empty");
+      }
+      updateData.name = trimmedName;
+
+      if (list.name === trimmedName) {
+        return list;
+      }
+    }
+
+    const updated = await listRepository.update(id, updateData);
 
     const board = await boardRepository.findById(list.boardId);
+
+    const metadata: Record<string, any> = {};
+    if (data.name !== undefined) {
+      metadata.oldName = list.name;
+      metadata.newName = updateData.name;
+    }
+
     await activityRepository.create({
       boardId: list.boardId,
       userId,
       action: "list.updated",
       entityType: "list",
       entityId: id,
-      metadata: data,
+      metadata,
     });
 
     if (board) {
@@ -100,7 +132,7 @@ export const listService = {
         action: "list.updated",
         entityType: "list",
         entityId: id,
-        metadata: data,
+        metadata,
       });
     }
 
@@ -118,7 +150,9 @@ export const listService = {
       data.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const allLists = await listRepository.findAllByBoardId(data.boardId);
     const boardListIds = new Set(allLists.map((l) => l.id));
@@ -144,11 +178,28 @@ export const listService = {
         orders: data.orders,
       },
     });
+
+    await auditLogRepository.create({
+      workspaceId: board.workspaceId,
+      userId,
+      action: "lists.reordered",
+      entityType: "board",
+      entityId: data.boardId,
+      metadata: {
+        listCount: data.orders.length,
+      },
+    });
   },
 
   move: async (userId: string, data: MoveListInput) => {
     const list = await listRepository.findById(data.id);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
+
+    if (list.boardId === data.boardId) {
+      throw new Error("List is already on this board");
+    }
 
     const hasPermissionOld = await checkBoardPermission(
       userId,
@@ -165,7 +216,13 @@ export const listService = {
       throw new Error("Permission denied");
     }
 
+    const newBoard = await boardRepository.findById(data.boardId);
+    if (!newBoard) {
+      throw new Error("Target board not found");
+    }
+
     const updated = await listRepository.update(data.id, {
+      boardId: data.boardId,
       position: data.position,
     });
 
@@ -175,7 +232,40 @@ export const listService = {
       action: "list.moved",
       entityType: "list",
       entityId: data.id,
-      metadata: { oldBoardId: list.boardId, newBoardId: data.boardId },
+      metadata: {
+        oldBoardId: list.boardId,
+        newBoardId: data.boardId,
+        listName: list.name,
+      },
+    });
+
+    const oldBoard = await boardRepository.findById(list.boardId);
+    if (oldBoard) {
+      await auditLogRepository.create({
+        workspaceId: oldBoard.workspaceId,
+        userId,
+        action: "list.moved_out",
+        entityType: "list",
+        entityId: data.id,
+        metadata: {
+          oldBoardId: list.boardId,
+          newBoardId: data.boardId,
+          listName: list.name,
+        },
+      });
+    }
+
+    await auditLogRepository.create({
+      workspaceId: newBoard.workspaceId,
+      userId,
+      action: "list.moved_in",
+      entityType: "list",
+      entityId: data.id,
+      metadata: {
+        oldBoardId: list.boardId,
+        newBoardId: data.boardId,
+        listName: list.name,
+      },
     });
 
     return updated;
@@ -183,14 +273,22 @@ export const listService = {
 
   archive: async (userId: string, data: ArchiveListInput) => {
     const list = await listRepository.findById(data.id);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
+
+    if (list.isArchived) {
+      return list;
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await listRepository.update(data.id, {
       isArchived: true,
@@ -205,6 +303,18 @@ export const listService = {
       metadata: { name: list.name },
     });
 
+    const board = await boardRepository.findById(list.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "list.archived",
+        entityType: "list",
+        entityId: data.id,
+        metadata: { boardId: list.boardId, name: list.name },
+      });
+    }
+
     await executeAutomations({
       type: "LIST_ARCHIVED",
       boardId: list.boardId,
@@ -217,14 +327,22 @@ export const listService = {
 
   restore: async (userId: string, data: RestoreListInput) => {
     const list = await listRepository.findById(data.id);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
+
+    if (!list.isArchived) {
+      return list;
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const updated = await listRepository.update(data.id, {
       isArchived: false,
@@ -239,23 +357,38 @@ export const listService = {
       metadata: { name: list.name },
     });
 
+    const board = await boardRepository.findById(list.boardId);
+    if (board) {
+      await auditLogRepository.create({
+        workspaceId: board.workspaceId,
+        userId,
+        action: "list.restored",
+        entityType: "list",
+        entityId: data.id,
+        metadata: { boardId: list.boardId, name: list.name },
+      });
+    }
+
     return updated;
   },
 
   delete: async (userId: string, data: DeleteListInput) => {
     const list = await listRepository.findById(data.id);
-    if (!list) throw new Error("List not found");
+    if (!list) {
+      throw new Error("List not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
       "admin"
     );
-    if (!hasPermission) throw new Error("Permission denied");
-
-    await listRepository.delete(data.id);
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const board = await boardRepository.findById(list.boardId);
+
     await activityRepository.create({
       boardId: list.boardId,
       userId,
@@ -275,18 +408,24 @@ export const listService = {
         metadata: { boardId: list.boardId, name: list.name },
       });
     }
+
+    await listRepository.delete(data.id);
   },
 
   duplicate: async (userId: string, data: DuplicateListInput) => {
     const originalList = await listRepository.findListDetails(data.id);
-    if (!originalList) throw new Error("List not found");
+    if (!originalList) {
+      throw new Error("List not found");
+    }
 
     const hasPermission = await checkBoardPermission(
       userId,
       originalList.boardId,
       "normal"
     );
-    if (!hasPermission) throw new Error("Permission denied");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
 
     const maxPosition = await listRepository.getMaxPosition(
       originalList.boardId
@@ -375,10 +514,11 @@ export const listService = {
       entityId: newList.id,
       metadata: {
         originalListId: originalList.id,
+        originalListName: originalList.name,
+        newListName: newList.name,
         cardsCount: originalList.cards.length,
       },
     });
-
 
     return newList;
   },

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewComment, UpdateComment } from "../types/comment.type";
-import { comments } from "@/db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { boards, cards, comments } from "@/db/schema";
+import { and, count, eq, isNull } from "drizzle-orm";
 
 export const commentRepository = {
   create: async (data: NewComment) => {
@@ -71,5 +71,17 @@ export const commentRepository = {
 
   delete: async (id: string) => {
     await db.delete(comments).where(eq(comments.id, id));
+  },
+
+  getCommentsCountByUserId: async (userId: string, workspaceId: string) => {
+    const [res] = await db
+      .select({ count: count() })
+      .from(comments)
+      .innerJoin(cards, eq(comments.cardId, cards.id))
+      .innerJoin(boards, eq(cards.boardId, boards.id))
+      .where(
+        and(eq(comments.userId, userId), eq(boards.workspaceId, workspaceId))
+      );
+    return res.count;
   },
 };
