@@ -1,42 +1,43 @@
-import { Zap } from "lucide-react";
+import { AutomationDetails } from "@/domain/types/automation.type";
 import { AutomationListItem } from "./automation-item";
-
-interface AutomationDetails {
-  id: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  boardId: string;
-  trigger: unknown;
-  actions: unknown;
-  isActive: boolean;
-}
+import { BoardWithUser } from "@/domain/types/board-member.type";
+import { LabelDetail } from "@/domain/types/label.type";
+import { Zap } from "lucide-react";
 
 interface AutomationListProps {
   automations: AutomationDetails[];
+  boardMembers: BoardWithUser[];
+  labels: LabelDetail[];
 }
 
-export const AutomationList = ({ automations }: AutomationListProps) => {
-  if (automations.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 px-4">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Zap className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          No automations yet
-        </h3>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
-          Create your first automation to streamline your workflow
-        </p>
-      </div>
-    );
-  }
+export const AutomationList = ({
+  automations,
+  boardMembers,
+  labels,
+}: AutomationListProps) => {
+  // if (automations.length === 0) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center py-16 px-4 bg-card border border-border rounded-lg">
+  //       <Zap className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
+  //       <h3 className="text-xl font-semibold text-foreground mb-2">
+  //         No automations yet
+  //       </h3>
+  //       <p className="text-muted-foreground text-center max-w-md">
+  //         Create your first automation to streamline your workflow
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {automations.map((automation) => (
-        <AutomationListItem key={automation.id} automation={automation} />
+        <AutomationListItem
+          key={automation.id}
+          boardMembers={boardMembers}
+          labels={labels}
+          automation={automation}
+        />
       ))}
     </div>
   );

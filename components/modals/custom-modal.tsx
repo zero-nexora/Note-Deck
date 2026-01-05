@@ -24,9 +24,9 @@ export const CustomModal = () => {
             <DialogDescription>{data.description}</DialogDescription>
           )}
         </DialogHeader>
-        <ScrollArea className="h-[calc(100vh-300px)] p-4">
-          {data?.children}
-        </ScrollArea>
+        <div className="overflow-auto">{data?.children}</div>
+        {/* <ScrollArea className="h-[calc(100vh-300px)] p-4">
+        </ScrollArea> */}
       </DialogContent>
     </Dialog>
   );

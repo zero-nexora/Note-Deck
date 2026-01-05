@@ -29,6 +29,17 @@ export const createLabelAction = async (input: CreateLabelInput) => {
   }
 };
 
+export const findLabelsByBoardIdAction = async (boardId: string) => {
+  try {
+    const user = await requireAuth();
+
+    const labels = await labelService.findLabelByBoardId(user.id, boardId);
+    return success("", labels);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
 export const updateLabelAction = async (
   id: string,
   input: UpdateLabelInput

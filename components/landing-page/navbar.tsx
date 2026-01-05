@@ -46,20 +46,15 @@ export const Navbar = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="glass-panel px-6 py-3 flex items-center justify-between">
-          {/* Logo */}
           <Logo />
 
-          {/* Desktop navigation */}
           <DesktopNavigation />
 
-          {/* Desktop actions */}
           <DesktopActions />
 
-          {/* Mobile menu button */}
           <MobileMenuButton isOpen={isOpen} onToggle={toggleMobileMenu} />
         </div>
 
-        {/* Mobile menu */}
         <MobileMenu isOpen={isOpen} onClose={closeMobileMenu} />
       </div>
     </motion.div>
@@ -68,7 +63,7 @@ export const Navbar = () => {
 
 const Logo = () => {
   return (
-    <Link href="#" className="flex items-center gap-2 group">
+    <Link href="/" className="flex items-center gap-2 group">
       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
         <Layers className="w-5 h-5 text-primary" />
       </div>
@@ -147,7 +142,6 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
           className="md:hidden mt-2 glass-panel p-4"
         >
           <div className="flex flex-col gap-4">
-            {/* Navigation links */}
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.name}
@@ -161,14 +155,17 @@ const MobileMenu = ({ isOpen, onClose }: MobileMenuProps) => {
 
             <hr className="border-border" />
 
-            {/* Action buttons */}
-            <Button className="w-full rounded-full bg-transparent border border-primary/40 text-foreground px-6 py-2 font-medium transition-all duration-300 hover:border-primary hover:shadow-[0_0_20px_hsl(270_70%_60%/0.5)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95">
-              Sign In
-            </Button>
+            <Link href={"/sign-in"}>
+              <Button className="w-full rounded-full bg-transparent border border-primary/40 text-foreground px-6 py-2 font-medium transition-all duration-300 hover:border-primary hover:shadow-[0_0_20px_hsl(270_70%_60%/0.5)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95">
+                Sign In
+              </Button>
+            </Link>
 
-            <Button className="w-full rounded-full bg-linear-to-r from-primary to-primary-glow text-primary-foreground px-6 py-2 font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_hsl(270_70%_60%/0.5)] focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95">
-              Get Started Free
-            </Button>
+            <Link href={"/sign-up"}>
+              <Button className="w-full rounded-full bg-linear-to-r from-primary to-primary-glow text-primary-foreground px-6 py-2 font-medium transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_hsl(270_70%_60%/0.5)] focus:outline-none focus:ring-2 focus:ring-primary/50 active:scale-95">
+                Get Started Free
+              </Button>
+            </Link>
           </div>
         </motion.div>
       )}

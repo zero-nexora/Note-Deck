@@ -1,5 +1,6 @@
 import { listNotificationsAction } from "@/app/actions/notification.action";
 import { findWorkspacesByUserAction } from "@/app/actions/workspace.action";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Navbar } from "@/components/workspace/navbar";
 import { Sidebar } from "@/components/workspace/sidebar";
 import { WorkspaceWithMember } from "@/domain/types/workspace.type";
@@ -35,23 +36,21 @@ const WorkspaceDetailLayout = async ({
 
   const currentWorkspace = result.data!.find(
     (workspace: WorkspaceWithMember) => workspace.id === workspaceId
-  );currentWorkspace
+  );
+  currentWorkspace;
 
   if (!currentWorkspace) return null;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      <Sidebar
-        workspaceId={workspaceId}
-        workspaces={result.data || []}
-      />
+      <Sidebar workspaceId={workspaceId} workspaces={result.data || []} />
       <div className="flex flex-1 h-full flex-col overflow-hidden">
         <Navbar
           notifications={notifications}
           workspace={currentWorkspace}
           user={user}
         />
-        <main className="flex-1 h-full overflow-auto p-4">{children}</main>
+        <ScrollArea className="flex-1 overflow-auto p-4">{children}</ScrollArea>
       </div>
     </div>
   );

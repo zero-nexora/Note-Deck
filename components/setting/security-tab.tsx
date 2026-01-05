@@ -19,17 +19,28 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface SettingTapsProps {
   user: UserSession;
 }
 
 export const SecurityTab = ({ user }: SettingTapsProps) => {
+  const { open } = useConfirm();
+
   const form = useForm({
     defaultValues: {
       password: "••••••••••••",
     },
   });
+
+  const handleSignOut = () => {
+    open({
+      title: "Sign out",
+      description: "Are you sure you want to sign out?",
+      onConfirm: () => signOut(),
+    });
+  };
 
   return (
     <Card className="border-border bg-card">
@@ -106,7 +117,7 @@ export const SecurityTab = ({ user }: SettingTapsProps) => {
             </div>
             <Button
               variant="ghost"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={handleSignOut}
               className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
             >
               <LogOut className="h-4 w-4 mr-2" />

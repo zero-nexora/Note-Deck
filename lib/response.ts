@@ -21,3 +21,8 @@ export type ActionResult<T = unknown> =
       message: string;
       errors?: any;
     };
+
+export function unwrapActionResult<T>(result: ActionResult<T>): T | null {
+  if (!result.success || result.data == null) return null;
+  return result.data;
+}

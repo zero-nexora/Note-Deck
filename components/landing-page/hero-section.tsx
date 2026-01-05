@@ -66,16 +66,13 @@ const SYNC_BADGE_ANIMATION = {
 export const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16 px-4">
-      {/* Background effects */}
       <div className="light-ray animate-pulse-glow" />
       <div className="absolute inset-0 bg-grid-pattern bg-size-[60px_60px] opacity-[0.03]" />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Hero content */}
           <HeroContent />
 
-          {/* Demo board */}
           <DemoBoard />
         </div>
       </div>
@@ -91,7 +88,6 @@ const HeroContent = () => {
       transition={HERO_ANIMATION.transition}
       className="text-center lg:text-left"
     >
-      {/* Announcement badge */}
       <motion.div
         initial={BADGE_ANIMATION.initial}
         animate={BADGE_ANIMATION.animate}
@@ -104,20 +100,17 @@ const HeroContent = () => {
         </span>
       </motion.div>
 
-      {/* Heading */}
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
         Collaborate in Real-Time.{" "}
         <span className="gradient-text">Get Work Done Faster.</span>
       </h1>
 
-      {/* Description */}
       <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
         Organize projects with boards, lists, and cards. See every edit as it
         happens. Work together like you&apos;re in the same room—anywhere in the
         world.
       </p>
-
-      {/* CTA buttons */}
+      
       <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-10">
         <Link href={"/sign-up"}>
           <motion.button

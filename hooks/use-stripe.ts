@@ -1,6 +1,9 @@
 "use client";
 
-import { createStripeCheckoutAction } from "@/app/actions/stripe.action";
+import {
+  createStripeCheckoutAction,
+  getStripeCustomerPortalAction,
+} from "@/app/actions/stripe.action";
 import { toast } from "sonner";
 
 export function useStripe() {
@@ -18,7 +21,22 @@ export function useStripe() {
     }
   };
 
+  const openCustomerPortal = async (workspaceId: string) => {
+    try {
+      const result = await getStripeCustomerPortalAction(workspaceId);
+
+      if (result.success && result.data) {
+        window.location.href = result.data.url as string;
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   return {
     checkout,
+    openCustomerPortal,
   };
 }

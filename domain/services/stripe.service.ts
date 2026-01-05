@@ -80,4 +80,18 @@ export const stripeService = {
       limits: STRIPE_PLANS.free.limits,
     });
   },
+
+  getCustomerPortalUrl: async (workspaceId: string) => {
+    const workspace = await workspaceRepository.findById(workspaceId);
+    if (!workspace?.stripeCustomerId) {
+      throw new Error("Workspace does not have a Stripe Customer ID");
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: workspace.stripeCustomerId,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${workspaceId}`,
+    });
+
+    return session.url;
+  },
 };

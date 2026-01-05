@@ -7,8 +7,8 @@
 
 html,
 body {
-  min-height: 100vh;
-  /* overflow: hidden; */
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* @theme inline {
@@ -116,21 +116,29 @@ body {
   --background: hsl(252 20% 5%);
   --background-elevated: hsl(252 25% 8%);
   --foreground: hsl(270 30% 90%);
+
   --card: hsl(252 30% 10%);
   --card-foreground: hsl(270 30% 90%);
+
   --popover: hsl(252 25% 8%);
   --popover-foreground: hsl(270 30% 90%);
+
   --primary: hsl(270 70% 70%);
   --primary-foreground: hsl(252 20% 5%);
   --primary-glow: hsl(270 80% 75%);
+
   --secondary: hsl(260 20% 20%);
   --secondary-foreground: hsl(270 20% 75%);
+
   --muted: hsl(260 15% 18%);
   --muted-foreground: hsl(260 15% 55%);
+
   --accent: hsl(275 60% 50%);
   --accent-foreground: hsl(270 30% 95%);
+
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(210 40% 98%);
+
   --border: hsl(260 30% 20%);
   --input: hsl(260 25% 15%);
   --ring: hsl(270 70% 60%);
@@ -211,7 +219,7 @@ body {
   --color-card-foreground: var(--card-foreground);
 }
 
-:root {
+/* :root {
   --background: hsl(260 25% 98%);
   --foreground: hsl(260 30% 12%);
   
@@ -248,7 +256,7 @@ body {
   --background: hsl(255 20% 8%);
   --foreground: hsl(270 30% 95%);
   
-  --card: hsl(255 25% 12%);
+  --card: hsl(252 30% 10%);
   --card-foreground: hsl(270 25% 92%);
   
   --popover: hsl(255 28% 10%);
@@ -273,6 +281,73 @@ body {
   --input: hsl(260 22% 18%);
   
   --ring: hsl(265 75% 65%);
+  
+  --radius: 1rem;
+} */
+
+/* Purple Dream */
+:root {
+  --background: hsl(270 20% 98%);
+  --foreground: hsl(270 15% 10%);
+  
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(270 15% 10%);
+  
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(270 15% 10%);
+  
+  --primary: hsl(262 83% 58%);
+  --primary-foreground: hsl(0 0% 100%);
+  
+  --secondary: hsl(270 10% 96%);
+  --secondary-foreground: hsl(270 15% 15%);
+  
+  --muted: hsl(270 10% 96%);
+  --muted-foreground: hsl(270 8% 46%);
+  
+  --accent: hsl(262 90% 96%);
+  --accent-foreground: hsl(262 80% 50%);
+  
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+  
+  --border: hsl(270 12% 90%);
+  --input: hsl(270 12% 90%);
+  
+  --ring: hsl(262 83% 58%);
+  
+  --radius: 1rem;
+}
+
+.dark {
+  --background: hsl(270 30% 6%);
+  --foreground: hsl(270 20% 92%);
+  
+  --card: hsl(270 28% 8%);
+  --card-foreground: hsl(270 20% 92%);
+  
+  --popover: hsl(270 28% 8%);
+  --popover-foreground: hsl(270 20% 92%);
+  
+  --primary: hsl(262 80% 65%);
+  --primary-foreground: hsl(270 30% 6%);
+  
+  --secondary: hsl(270 20% 14%);
+  --secondary-foreground: hsl(270 20% 92%);
+  
+  --muted: hsl(270 20% 14%);
+  --muted-foreground: hsl(270 12% 60%);
+  
+  --accent: hsl(262 70% 18%);
+  --accent-foreground: hsl(262 85% 75%);
+  
+  --destructive: hsl(0 62% 50%);
+  --destructive-foreground: hsl(270 20% 98%);
+  
+  --border: hsl(270 20% 18%);
+  --input: hsl(270 20% 18%);
+  
+  --ring: hsl(262 80% 65%);
   
   --radius: 1rem;
 }

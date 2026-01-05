@@ -1,7 +1,4 @@
-import {
-  CreateAutomationInput,
-  CreateAutomationSchema,
-} from "@/domain/schemas/automation.schema";
+import { AutomationDetails } from "@/domain/types/automation.type";
 import { useAutomation } from "@/hooks/use-automation";
 import { useModal } from "@/stores/modal-store";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,34 +38,37 @@ import {
   ACTION_CATEGORIES,
   TRIGGER_CATEGORIES,
 } from "@/lib/automation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LabelDetail } from "@/domain/types/label.type";
 import { BoardWithUser } from "@/domain/types/board-member.type";
+import {
+  UpdateAutomationInput,
+  UpdateAutomationSchema,
+} from "@/domain/schemas/automation.schema";
 
-interface CreateAutomationFormProps {
-  boardId: string;
+interface UpdateAutomationFormProps {
+  automation: AutomationDetails;
   boardMembers: BoardWithUser[];
   labels: LabelDetail[];
 }
 
-export const CreateAutomationForm = ({
-  boardId,
+export const UpdateAutomationForm = ({
+  automation,
   boardMembers,
   labels,
-}: CreateAutomationFormProps) => {
-  const { createAutomation } = useAutomation();
+}: UpdateAutomationFormProps) => {
+  const { updateAutomation } = useAutomation();
   const { close } = useModal();
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerOption | null>(
     null
   );
 
-  const form = useForm<CreateAutomationInput>({
-    resolver: zodResolver(CreateAutomationSchema),
+  const form = useForm<UpdateAutomationInput>({
+    resolver: zodResolver(UpdateAutomationSchema),
     defaultValues: {
-      boardId,
-      name: "",
-      actions: [],
-      trigger: {},
+      name: automation.name,
+      trigger: automation.trigger as any,
+      actions: automation.actions as any,
     },
   });
 
@@ -77,8 +77,20 @@ export const CreateAutomationForm = ({
     name: "actions",
   });
 
-  const handleSubmit = async (values: CreateAutomationInput) => {
-    await createAutomation(values);
+  useEffect(() => {
+    const triggerData = automation.trigger as { type?: string };
+    if (triggerData?.type) {
+      const trigger = AUTOMATION_TRIGGERS.find(
+        (t) => t.id === triggerData.type
+      );
+      if (trigger) {
+        setSelectedTrigger(trigger);
+      }
+    }
+  }, [automation.trigger]);
+
+  const handleSubmit = async (values: UpdateAutomationInput) => {
+    await updateAutomation(automation.id, values);
     form.reset();
     close();
   };
@@ -87,24 +99,24 @@ export const CreateAutomationForm = ({
     const trigger = AUTOMATION_TRIGGERS.find((t) => t.id === triggerId);
     if (trigger) {
       setSelectedTrigger(trigger);
-      form.setValue("trigger", { type: triggerId });
+      form.setValue("trigger", { type: triggerId } as any);
     }
   };
 
-  const handleAddAction = (actionId: string) => {
-    append({ type: actionId });
+  const handleAddAction = () => {
+    append({ type: "" } as any);
   };
 
   const getDynamicOptions = (actionType: string, fieldName: string) => {
     if (fieldName === "userId") {
-      return boardMembers?.map((member) => ({
+      return boardMembers.map((member) => ({
         label: member.user.name || member.user.email || "Unknown User",
         value: member.userId,
       }));
     }
 
     if (fieldName === "labelId") {
-      return labels?.map((label) => ({
+      return labels.map((label) => ({
         label: label.name,
         value: label.id,
       }));
@@ -119,7 +131,7 @@ export const CreateAutomationForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6 px-1"
+        className="space-y-6 max-h-[70vh] overflow-y-auto px-1"
       >
         <FormField
           control={form.control}
@@ -171,7 +183,7 @@ export const CreateAutomationForm = ({
                     field.onChange(value);
                     handleTriggerSelect(value);
                   }}
-                  defaultValue={field.value}
+                  value={field.value || ""}
                   disabled={isLoading}
                 >
                   <FormControl>
@@ -223,7 +235,7 @@ export const CreateAutomationForm = ({
             )}
           />
 
-          {selectedTrigger?.fields && (
+          {selectedTrigger?.fields && selectedTrigger.fields.length > 0 && (
             <Card className="border-border bg-muted/30">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm text-foreground">
@@ -257,12 +269,19 @@ export const CreateAutomationForm = ({
                         <FormItem>
                           <FormLabel className="text-foreground">
                             {field.label}
+                            {field.required && (
+                              <span className="text-destructive ml-1">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             {field.type === "select" ? (
                               <Select
                                 onValueChange={formField.onChange}
-                                defaultValue={formField.value}
+                                value={
+                                  formField.value
+                                    ? String(formField.value)
+                                    : undefined
+                                }
                                 disabled={isLoading}
                               >
                                 <SelectTrigger className="bg-background border-border hover:bg-accent focus:ring-ring">
@@ -288,8 +307,13 @@ export const CreateAutomationForm = ({
                                 placeholder={field.placeholder}
                                 disabled={isLoading}
                                 {...formField}
+                                value={formField.value ?? ""}
                                 onChange={(e) =>
-                                  formField.onChange(Number(e.target.value))
+                                  formField.onChange(
+                                    e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined
+                                  )
                                 }
                                 className="bg-background border-border focus-visible:ring-ring"
                               />
@@ -299,6 +323,7 @@ export const CreateAutomationForm = ({
                                 placeholder={field.placeholder}
                                 disabled={isLoading}
                                 {...formField}
+                                value={formField.value ?? ""}
                                 className="bg-background border-border focus-visible:ring-ring"
                               />
                             )}
@@ -341,8 +366,9 @@ export const CreateAutomationForm = ({
           )}
 
           {fields.map((field, index) => {
+            const actionType = form.watch(`actions.${index}.type`) as string;
             const actionOption = AUTOMATION_ACTIONS.find(
-              (a) => a.id === form.watch(`actions.${index}.type`)
+              (a) => a.id === actionType
             );
             const Icon = actionOption?.icon;
 
@@ -383,7 +409,7 @@ export const CreateAutomationForm = ({
                         </FormLabel>
                         <Select
                           onValueChange={formField.onChange}
-                          defaultValue={formField.value}
+                          value={formField.value ? String(formField.value) : ""}
                           disabled={isLoading}
                         >
                           <FormControl>
@@ -436,11 +462,8 @@ export const CreateAutomationForm = ({
                   />
 
                   {actionOption?.fields?.map((actionField) => {
-                    const currentActionType = form.watch(
-                      `actions.${index}.type`
-                    );
                     const dynamicOptions = getDynamicOptions(
-                      currentActionType,
+                      actionType,
                       actionField.name
                     );
 
@@ -466,7 +489,11 @@ export const CreateAutomationForm = ({
                               {actionField.type === "select" ? (
                                 <Select
                                   onValueChange={formField.onChange}
-                                  defaultValue={formField.value}
+                                  value={
+                                    formField.value
+                                      ? String(formField.value)
+                                      : undefined
+                                  }
                                   disabled={isLoading}
                                 >
                                   <SelectTrigger className="bg-background border-border hover:bg-accent focus:ring-ring">
@@ -491,6 +518,7 @@ export const CreateAutomationForm = ({
                                   placeholder={actionField.placeholder}
                                   disabled={isLoading}
                                   {...formField}
+                                  value={formField.value ?? ""}
                                   className="min-h-20 bg-background border-border focus-visible:ring-ring"
                                 />
                               ) : actionField.type === "number" ? (
@@ -499,8 +527,13 @@ export const CreateAutomationForm = ({
                                   placeholder={actionField.placeholder}
                                   disabled={isLoading}
                                   {...formField}
+                                  value={formField.value ?? ""}
                                   onChange={(e) =>
-                                    formField.onChange(Number(e.target.value))
+                                    formField.onChange(
+                                      e.target.value
+                                        ? Number(e.target.value)
+                                        : undefined
+                                    )
                                   }
                                   className="bg-background border-border focus-visible:ring-ring"
                                 />
@@ -510,6 +543,7 @@ export const CreateAutomationForm = ({
                                   placeholder={actionField.placeholder}
                                   disabled={isLoading}
                                   {...formField}
+                                  value={formField.value ?? ""}
                                   className="bg-background border-border focus-visible:ring-ring"
                                 />
                               )}
@@ -529,7 +563,7 @@ export const CreateAutomationForm = ({
             type="button"
             variant="outline"
             className="w-full border-border hover:bg-accent hover:text-accent-foreground"
-            onClick={() => handleAddAction("")}
+            onClick={handleAddAction}
             disabled={isLoading}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -554,7 +588,7 @@ export const CreateAutomationForm = ({
             disabled={isLoading}
             className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
           >
-            {isLoading ? "Creating..." : "Create Automation"}
+            {isLoading ? "Updating..." : "Update Automation"}
           </Button>
         </div>
       </form>

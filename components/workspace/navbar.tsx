@@ -10,6 +10,7 @@ import {
   LogOut,
   Check,
   X,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ import { WorkspaceInviteMember } from "./workspace-invite-member";
 import { signOut } from "next-auth/react";
 import { NotificationWithUser } from "@/domain/types/notification.type";
 import { useNotification } from "@/hooks/use-notification";
+import { useConfirm } from "@/stores/confirm-store";
+import { useStripe } from "@/hooks/use-stripe";
 
 interface NavbarProps {
   notifications: NotificationWithUser[];
@@ -61,6 +64,8 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { updateNameWorkspace } = useWorkspace();
   const { markAsRead, markAllAsRead } = useNotification();
+  const { open } = useConfirm();
+  const { openCustomerPortal } = useStripe();
 
   const form = useForm<UpdateWorkspaceNameInput>({
     resolver: zodResolver(UpdateWorkspaceNameSchema),
@@ -76,6 +81,14 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const handleCancel = () => {
     setIsEditing(false);
     form.reset({ name: workspace.name });
+  };
+
+  const handleSignOut = () => {
+    open({
+      title: "Sign out",
+      description: "Are you sure you want to sign out?",
+      onConfirm: () => signOut(),
+    });
   };
 
   const isLoading = form.formState.isSubmitting;
@@ -151,6 +164,14 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+
+          <Button
+            onClick={() => openCustomerPortal(workspace.id)}
+            className="flex items-center gap-2"
+          >
+            <CreditCard className="w-4 h-4" />
+            Manage Billing
+          </Button>
 
           <WorkspaceInviteMember workspaceId={workspace.id} />
 
@@ -290,7 +311,10 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
                 asChild
                 className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
               >
-                <Link href="/profile" className="flex items-center gap-2">
+                <Link
+                  href={`/workspaces/${workspace.id}/settings`}
+                  className="flex items-center gap-2"
+                >
                   <User className="h-4 w-4" />
                   Profile
                 </Link>
@@ -299,7 +323,10 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
                 asChild
                 className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
               >
-                <Link href="/settings" className="flex items-center gap-2">
+                <Link
+                  href={`/workspaces/${workspace.id}/settings`}
+                  className="flex items-center gap-2"
+                >
                   <Settings className="h-4 w-4" />
                   Settings
                 </Link>
@@ -312,7 +339,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
               <DropdownMenuSeparator className="bg-border" />
 
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={handleSignOut}
                 className="cursor-pointer text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 <LogOut className="h-4 w-4 mr-2" />

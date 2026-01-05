@@ -8,21 +8,21 @@ interface AutomationStatsProps {
 
 export const AutomaitonStats = ({ automation }: AutomationStatsProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <AutomationStatsCard
         title="Total Automations"
         count={automation.length}
-        icon={<Zap className="w-6 h-6 text-primary" />}
+        icon={<Zap className="h-6 w-6 text-primary" />}
       />
       <AutomationStatsCard
         title="Active"
         count={automation.filter((a) => a.isActive).length}
-        icon={<Play className="w-6 h-6 text-label-green" />}
+        icon={<Play className="h-6 w-6 text-primary" />}
       />
       <AutomationStatsCard
         title="Paused"
         count={automation.filter((a) => !a.isActive).length}
-        icon={<Pause className="w-6 h-6 text-muted-foreground" />}
+        icon={<Pause className="h-6 w-6 text-primary" />}
       />
     </div>
   );

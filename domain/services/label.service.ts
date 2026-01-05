@@ -174,4 +174,20 @@ export const labelService = {
 
     await labelRepository.delete(data.id);
   },
+
+  findLabelByBoardId: async (userId: string, boardId: string) => {
+    const board = await boardRepository.findById(boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const labels = await labelRepository.findByBoardId(boardId);
+
+    return labels;
+  },
 };

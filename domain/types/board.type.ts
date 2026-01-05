@@ -12,3 +12,4 @@ export type BoardWithMember = Awaited<
 export type BoardWithListColumnLabelAndMember = Awaited<
   ReturnType<typeof boardService.findById>
 >;
+

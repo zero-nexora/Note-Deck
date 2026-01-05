@@ -24,3 +24,19 @@ export const createStripeCheckoutAction = async (
     return error(err.message ?? "Something went wrong");
   }
 };
+
+export const getStripeCustomerPortalAction = async (workspaceId: string) => {
+  try {
+    await requireAuth();
+
+    if (!workspaceId) {
+      return error("Invalid workspace ID");
+    }
+
+    const url = await stripeService.getCustomerPortalUrl(workspaceId);
+
+    return success("Customer portal URL retrieved", { url });
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};

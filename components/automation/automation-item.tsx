@@ -1,33 +1,80 @@
 "use client";
 
 import { AutomationDetails } from "@/domain/types/automation.type";
-import { useState } from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Calendar, ChevronRight, Pencil, Trash2, Zap } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
+import { useAutomation } from "@/hooks/use-automation";
+import { useConfirm } from "@/stores/confirm-store";
+import { useModal } from "@/stores/modal-store";
+import { UpdateAutomationForm } from "./update-automation-form";
+import { BoardWithUser } from "@/domain/types/board-member.type";
+import { LabelDetail } from "@/domain/types/label.type";
+import { ViewDetailAutomationForm } from "./view-detail-automation-form";
 
 interface AutomationItemProps {
   automation: AutomationDetails;
+  boardMembers: BoardWithUser[];
+  labels: LabelDetail[];
 }
 
-export const AutomationListItem = ({ automation }: AutomationItemProps) => {
-  const [isActive, setIsActive] = useState(automation.isActive);
-  const [isLoading, setIsLoading] = useState(false);
+export const AutomationListItem = ({
+  automation,
+  boardMembers,
+  labels,
+}: AutomationItemProps) => {
+  const { deleteAutomation, enableAutomation, disableAutomation } =
+    useAutomation();
+  const { open: openConfirm } = useConfirm();
+  const { open: openModal } = useModal();
 
   const handleToggle = async (checked: boolean) => {
-    setIsLoading(true);
-    
-    setIsLoading(false);
+    if (checked) {
+      await enableAutomation({ id: automation.id });
+    } else {
+      await disableAutomation({ id: automation.id });
+    }
   };
 
   const handleEdit = () => {
-    
+    openModal({
+      title: "Edit Automation",
+      description: "Update your automation details",
+      children: (
+        <UpdateAutomationForm
+          boardMembers={boardMembers}
+          labels={labels}
+          automation={automation}
+        />
+      ),
+    });
   };
 
   const handleDelete = () => {
-    
+    openConfirm({
+      title: "Delete Automation",
+      description:
+        "Are you sure you want to delete this automation? This action cannot be undone.",
+      onConfirm: async () => {
+        await deleteAutomation({ id: automation.id });
+      },
+    });
+  };
+
+  const handleViewDetailsAutomation = () => {
+    openModal({
+      title: "Automation Details",
+      description: "View your automation details",
+      children: (
+        <ViewDetailAutomationForm
+          boardMembers={boardMembers}
+          labels={labels}
+          automation={automation}
+        />
+      ),
+    });
   };
 
   const formatDate = (date: Date) => {
@@ -39,36 +86,38 @@ export const AutomationListItem = ({ automation }: AutomationItemProps) => {
   };
 
   return (
-    <Card className="hover:border-primary/50 transition-colors">
+    <Card className="border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all duration-200 group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 text-primary" />
+          <div className="flex items-start gap-3 flex-1">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Zap className="h-5 w-5 text-primary group-hover:text-primary-foreground" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base text-foreground leading-tight mb-1">
+            <div className="flex-1 space-y-2">
+              <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
                 {automation.name}
               </h3>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge
-                  variant={isActive ? "default" : "secondary"}
-                  className="text-xs"
+                  className={
+                    automation.isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }
                 >
-                  {isActive ? "Active" : "Inactive"}
+                  {automation.isActive ? "Active" : "Inactive"}
                 </Badge>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
                   <span>Updated {formatDate(automation.updatedAt)}</span>
                 </div>
               </div>
             </div>
           </div>
           <Switch
-            checked={isActive}
+            checked={automation.isActive}
             onCheckedChange={handleToggle}
-            disabled={isLoading}
-            className="shrink-0"
+            className="data-[state=checked]:bg-primary"
           />
         </div>
       </CardHeader>
@@ -79,32 +128,32 @@ export const AutomationListItem = ({ automation }: AutomationItemProps) => {
               variant="ghost"
               size="sm"
               onClick={handleEdit}
-              className="h-8 text-xs"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-accent"
             >
-              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
               Edit
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
             >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
               Delete
             </Button>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => console.log("View details:", automation.id)}
-            className="h-8 text-xs"
+            onClick={handleViewDetailsAutomation}
+            className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             Details
-            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            <ChevronRight className="h-3.5 w-3.5 ml-1" />
           </Button>
         </div>
       </CardContent>
     </Card>
   );
-}
+};

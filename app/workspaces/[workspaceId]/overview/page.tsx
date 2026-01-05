@@ -91,7 +91,7 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
       : null;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           Workspace Overview

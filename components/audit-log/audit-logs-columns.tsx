@@ -77,8 +77,6 @@ export const columns: ColumnDef<
         ? user.email.toLowerCase().includes(searchValue)
         : user.name?.toLowerCase().includes(searchValue) ?? false;
     },
-
-    accessorFn: (row) => `${row.user?.name ?? ""} ${row.user?.email ?? ""}`,
   },
   {
     accessorKey: "action",

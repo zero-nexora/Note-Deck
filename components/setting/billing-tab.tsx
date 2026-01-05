@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { STRIPE_PLANS } from "@/lib/constants";
 import { useConfirm } from "@/stores/confirm-store";
 import { useStripe } from "@/hooks/use-stripe";
-import { Check, Crown, Zap, Rocket } from "lucide-react";
+import { Check, Crown, Zap, Rocket, CreditCard } from "lucide-react";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 
 interface BillingTabProps {
@@ -26,6 +26,7 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
   const { open } = useConfirm();
   const { checkout } = useStripe();
   const currentPlan = workspace.plan;
+  const { openCustomerPortal } = useStripe();
 
   const handleUpgrade = (plan: "pro" | "enterprise") => {
     const planData = STRIPE_PLANS[plan];
@@ -113,13 +114,23 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
 
   return (
     <Card className="border-border bg-card">
-      <CardHeader>
-        <CardTitle className="text-foreground">
-          Billing & Subscription
-        </CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Manage your subscription and payment methods
-        </CardDescription>
+      <CardHeader className="flex flex-row justify-between">
+        <div>
+          <CardTitle className="text-foreground">
+            Billing & Subscription
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Manage your subscription and payment methods
+          </CardDescription>
+        </div>
+
+        <Button
+          onClick={() => openCustomerPortal(workspace.id)}
+          className="flex items-center gap-2"
+        >
+          <CreditCard className="w-4 h-4" />
+          Manage Billing
+        </Button>
       </CardHeader>
       <CardContent className="grid gap-6 md:grid-cols-3">
         {renderPlanCard(
