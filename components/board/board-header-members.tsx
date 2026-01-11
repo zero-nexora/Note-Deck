@@ -1,15 +1,16 @@
 "use client";
+
 import { Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { BoardHeaderMembersForm } from "./board-header-members-form";
 import { useOthers, useSelf } from "@/lib/liveblocks";
 import { useModal } from "@/stores/modal-store";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 
 interface BoardHeaderMembersProps {
   boardId: string;
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
 }
 
 export const BoardHeaderMembers = ({

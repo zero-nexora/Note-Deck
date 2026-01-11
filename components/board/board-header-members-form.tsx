@@ -10,14 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useEffect, useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardHeaderMembersFormProps {
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
   membersOnline: {
     id: string;
     name: string;

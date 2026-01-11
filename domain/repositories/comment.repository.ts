@@ -5,7 +5,34 @@ import { and, count, eq, isNull } from "drizzle-orm";
 
 export const commentRepository = {
   create: async (data: NewComment) => {
-    const [comment] = await db.insert(comments).values(data).returning();
+    const [inserted] = await db.insert(comments).values(data).returning({
+      id: comments.id,
+    });
+
+    const comment = await db.query.comments.findFirst({
+      where: eq(comments.id, inserted.id),
+      with: {
+        user: true,
+
+        replies: {
+          with: {
+            user: true,
+            reactions: {
+              with: {
+                user: true,
+              },
+            },
+          },
+        },
+
+        reactions: {
+          with: {
+            user: true,
+          },
+        },
+      },
+    });
+
     return comment;
   },
 

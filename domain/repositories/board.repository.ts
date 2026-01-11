@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { NewBoard, UpdateBoard } from "../types/board.type";
 import { boards, cards, comments, lists } from "@/db/schema";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, sql } from "drizzle-orm";
 
 export const boardRepository = {
   create: async (data: NewBoard) => {
@@ -30,11 +30,13 @@ export const boardRepository = {
       where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
       with: {
         workspace: true,
+
         members: {
           with: {
             user: true,
           },
         },
+
         lists: {
           where: eq(lists.isArchived, false),
           orderBy: (lists, { asc }) => [asc(lists.position)],
@@ -42,45 +44,51 @@ export const boardRepository = {
             cards: {
               where: eq(cards.isArchived, false),
               orderBy: (cards, { asc }) => [asc(cards.position)],
+
+              extras: {
+                attachmentsCount: sql<number>`
+                (
+                  select count(*) 
+                  from attachments 
+                  where attachments.card_id = ${cards.id}
+                )
+              `.as("attachmentsCount"),
+
+                commentsCount: sql<number>`
+                (
+                  select count(*) 
+                  from comments 
+                  where comments.card_id = ${cards.id}
+                    and comments.parent_id is null
+                )
+              `.as("commentsCount"),
+
+                checklistsCount: sql<number>`
+                (
+                  select count(*) 
+                  from checklists
+                  where checklists.card_id = ${cards.id}
+                )
+              `.as("checklistsCount"),
+              },
+
               with: {
                 members: {
                   with: {
                     user: true,
                   },
                 },
-                attachments: {
-                  columns: {
-                    id: true,
-                  },
-                },
-                comments: {
-                  columns: {
-                    id: true,
-                  },
-                  where: isNull(comments.parentId),
-                },
-                checklists: {
-                  columns: {
-                    id: true,
-                  },
-                  with: {
-                    items: {
-                      columns: {
-                        id: true,
-                        isCompleted: true,
-                      },
-                    },
-                  },
-                },
+
                 cardLabels: {
                   with: {
                     label: true,
-                  }
+                  },
                 },
               },
             },
           },
         },
+
         labels: true,
       },
     });

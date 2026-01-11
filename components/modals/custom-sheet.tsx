@@ -20,7 +20,7 @@ export const CustomSheet = () => {
           <SheetDescription>{data?.description}</SheetDescription>
         </SheetHeader>
         <Separator />
-        <div className="p-4 overflow-auto">{data?.children}</div>
+        <div className="p-2 overflow-auto">{data?.children}</div>
       </SheetContent>
     </Sheet>
   );

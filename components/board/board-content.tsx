@@ -1,5 +1,5 @@
 "use client";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useBoardDragDropRealtime } from "@/hooks/use-board-drag-drop-realtime";
 import {
   DndContext,
@@ -14,7 +14,7 @@ import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { BoardOverlay } from "./board-overlay";
 
 interface BoardContentProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

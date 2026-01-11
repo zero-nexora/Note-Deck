@@ -101,7 +101,7 @@ export const cardService = {
       throw new Error("Permission denied");
     }
 
-    return card;
+    return card ? card : null;
   },
 
   update: async (userId: string, cardId: string, data: UpdateCardInput) => {

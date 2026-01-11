@@ -1,5 +1,6 @@
 "use client";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { BoardContent } from "./board-content";
 import { User } from "@/domain/types/user.type";
 import { BoardHeader } from "./board-header";
@@ -11,7 +12,7 @@ import { LiveCursors } from "./live-cursors";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
 
 interface BoardContainerProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
   user: User;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }

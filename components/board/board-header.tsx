@@ -1,7 +1,8 @@
 "use client";
+
 import Link from "next/link";
 import { Zap } from "lucide-react";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { BoardHeaderNameDescription } from "./board-header-name-description";
 import { BoardHeaderLabels } from "./board-header-labels";
@@ -10,7 +11,7 @@ import { BoardInviteMember } from "./board-invite-member";
 import { Button } from "../ui/button";
 
 interface BoardHeaderProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 

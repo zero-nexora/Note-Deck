@@ -1,9 +1,9 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 
 interface BoardCardLabelsProps {
-  cardLabels: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["cardLabels"];
+  cardLabels: BoardWithListLabelsAndMembers["lists"][number]["cards"][number]["cardLabels"];
 }
 
 export const BoardCardLabels = ({ cardLabels }: BoardCardLabelsProps) => {

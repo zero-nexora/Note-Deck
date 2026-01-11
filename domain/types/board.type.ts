@@ -9,7 +9,6 @@ export type BoardWithMember = Awaited<
   ReturnType<typeof boardService.findByWorkspaceId>
 >[number];
 
-export type BoardWithListColumnLabelAndMember = Awaited<
+export type BoardWithListLabelsAndMembers = Awaited<
   ReturnType<typeof boardService.findById>
 >;
-

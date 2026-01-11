@@ -3,12 +3,12 @@ import { Button } from "../ui/button";
 import { BoardInviteMemberForm } from "./board-invite-member-form";
 import { useModal } from "@/stores/modal-store";
 import { UserPlus } from "lucide-react";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 
 interface BoardInviteMemberProps {
   boardId: string;
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 

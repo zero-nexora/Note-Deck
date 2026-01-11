@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
@@ -13,9 +13,9 @@ import { CardDraggingIndicator } from "./card-dragging-indicator";
 import { useEffect } from "react";
 
 interface BoardCardItemProps {
-  card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
-  boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  card: BoardWithListLabelsAndMembers["lists"][number]["cards"][number];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
+  boardLabels: BoardWithListLabelsAndMembers["labels"];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
@@ -69,7 +69,7 @@ export const BoardCardItem = ({
         <BoardCardItemDetail
           boardMembers={boardMembers}
           boardLabels={boardLabels}
-          card={card}
+          cardId={card.id}
           realtimeUtils={realtimeUtils}
         />
       ),

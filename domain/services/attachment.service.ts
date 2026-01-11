@@ -50,6 +50,10 @@ export const attachmentService = {
 
     const attachment = await attachmentRepository.create(attachmentData);
 
+    if (!attachment) {
+      throw new Error("Failed to create attachment");
+    }
+
     await activityRepository.create({
       boardId: card.boardId,
       cardId: card.id,

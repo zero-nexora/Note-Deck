@@ -5,10 +5,19 @@ import { NewCommentReaction } from "../types/comment-reaction.type";
 
 export const commentReactionRepository = {
   add: async (data: NewCommentReaction) => {
-    const [reaction] = await db
+    const [inserted] = await db
       .insert(commentReactions)
       .values(data)
-      .returning();
+      .returning({
+        id: commentReactions.id,
+      });
+
+    const reaction = await db.query.commentReactions.findFirst({
+      where: eq(commentReactions.id, inserted.id),
+      with: {
+        user: true,
+      },
+    });
 
     return reaction;
   },

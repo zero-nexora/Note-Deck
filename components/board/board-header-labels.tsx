@@ -2,13 +2,13 @@
 
 import { useModal } from "@/stores/modal-store";
 import { BoardHeaderLabelsDetail } from "./board-header-labels-detail";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { Tag } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface BoardHeaderLabelsProps {
   boardId: string;
-  boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  boardLabels: BoardWithListLabelsAndMembers["labels"];
 }
 
 export const BoardHeaderLabels = ({

@@ -1,10 +1,10 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface BoardCardMembersProps {
-  members: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["members"];
+  members: BoardWithListLabelsAndMembers["lists"][number]["cards"][number]["members"];
 }
 
 export const BoardCardMembers = ({ members }: BoardCardMembersProps) => {

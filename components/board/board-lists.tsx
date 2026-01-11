@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import {
   SortableContext,
   horizontalListSortingStrategy,
@@ -10,7 +10,7 @@ import { CreateList } from "./create-list";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardListsProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

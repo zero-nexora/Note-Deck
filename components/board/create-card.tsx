@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Plus, X } from "lucide-react";
@@ -7,7 +7,7 @@ import {
   CreateCardInput,
   CreateCardSchema,
 } from "@/domain/schemas/card.schema";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -21,7 +21,7 @@ import { Loading } from "../common/loading";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface CreateCardProps {
-  list: BoardWithListColumnLabelAndMember["lists"][number];
+  list: BoardWithListLabelsAndMembers["lists"][number];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

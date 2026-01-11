@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { DragOverlay, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { BoardCardItem } from "./board-card-item";
 import { BoardListItem } from "./board-list-item";
@@ -8,9 +8,9 @@ import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardOverlayProps {
   activeCard:
-    | BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]
+    | BoardWithListLabelsAndMembers["lists"][number]["cards"][number]
     | null | undefined;
-  activeList: BoardWithListColumnLabelAndMember["lists"][number] | null | undefined;
+  activeList: BoardWithListLabelsAndMembers["lists"][number] | null | undefined;
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

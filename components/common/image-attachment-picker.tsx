@@ -67,7 +67,7 @@ export function ImageAttachmentPicker(props: ImageAttachmentPickerProps) {
         fileName: img.alt_description ?? "unsplash-image",
         fileUrl: img.urls.regular,
         fileType: "image/jpeg",
-        fileSize: 0,
+        fileSize: 1,
         uploadThingKey: `unsplash_${img.id}`,
         expiresAt: null,
       };

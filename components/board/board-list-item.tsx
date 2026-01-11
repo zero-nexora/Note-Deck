@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useList } from "@/hooks/use-list";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -13,9 +13,9 @@ import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { User } from "lucide-react";
 
 interface BoardListItemProps {
-  list: BoardWithListColumnLabelAndMember["lists"][number];
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
-  boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  list: BoardWithListLabelsAndMembers["lists"][number];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
+  boardLabels: BoardWithListLabelsAndMembers["labels"];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

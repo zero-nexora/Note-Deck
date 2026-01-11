@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Users, Plus, X } from "lucide-react";
 import { useCardMember } from "@/hooks/use-card-member";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { Badge } from "@/components/ui/badge";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 
 interface BoardCardItemMembersProps {
   cardId: string;
-  cardMembers: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number]["members"];
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  cardMembers: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["members"];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

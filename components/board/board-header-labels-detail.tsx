@@ -1,4 +1,4 @@
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useLabel } from "@/hooks/use-label";
 import { useState, useEffect } from "react";
 import { HexColorPicker } from "react-colorful";
@@ -27,7 +27,7 @@ import { Loading } from "../common/loading";
 
 interface BoardHeaderLabelsDetailProps {
   boardId: string;
-  boardLabels: BoardWithListColumnLabelAndMember["labels"];
+  boardLabels: BoardWithListLabelsAndMembers["labels"];
 }
 
 export const BoardHeaderLabelsDetail = ({
@@ -36,7 +36,7 @@ export const BoardHeaderLabelsDetail = ({
 }: BoardHeaderLabelsDetailProps) => {
   const [labels, setLabels] = useState(initialLabels);
   const [editingLabel, setEditingLabel] = useState<
-    BoardWithListColumnLabelAndMember["labels"][0] | null
+    BoardWithListLabelsAndMembers["labels"][0] | null
   >(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -97,7 +97,7 @@ export const BoardHeaderLabelsDetail = ({
   };
 
   const startEditing = (
-    label: BoardWithListColumnLabelAndMember["labels"][0]
+    label: BoardWithListLabelsAndMembers["labels"][0]
   ) => {
     setEditingLabel(label);
     setIsCreating(false);

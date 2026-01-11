@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { ActionsMenu } from "../common/actions-menu";
 import { GripVertical } from "lucide-react";
 import { DraggableAttributes } from "@dnd-kit/core";
@@ -8,7 +8,7 @@ import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { Button } from "../ui/button";
 
 interface BoardListHeaderProps {
-  list: BoardWithListColumnLabelAndMember["lists"][number];
+  list: BoardWithListLabelsAndMembers["lists"][number];
   dragHandleProps: {
     attributes: DraggableAttributes;
     listeners: SyntheticListenerMap | undefined;

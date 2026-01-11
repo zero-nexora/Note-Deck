@@ -1,10 +1,11 @@
 "use client";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { CreateCard } from "./create-card";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardListFooterProps {
-  list: BoardWithListColumnLabelAndMember["lists"][number];
+  list: BoardWithListLabelsAndMembers["lists"][number];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 

@@ -1,4 +1,4 @@
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { User } from "@/domain/types/user.type";
 import { useCallback, useEffect } from "react";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/lib/liveblocks";
 
 interface UseBoardRealtimeProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
   user: User;
   onBoardUpdate: () => void;
 }

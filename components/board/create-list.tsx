@@ -7,7 +7,7 @@ import {
   CreateListInput,
   CreateListSchema,
 } from "@/domain/schemas/list.schema";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -20,7 +20,7 @@ import {
 import { Loading } from "../common/loading";
 
 interface CreateListProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
 }
 
 export const CreateList = ({ board }: CreateListProps) => {

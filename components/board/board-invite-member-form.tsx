@@ -5,7 +5,7 @@ import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { useBoardMember } from "@/hooks/use-board-member";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield, Users } from "lucide-react";
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useModal } from "@/stores/modal-store";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -22,7 +22,7 @@ type Role = "admin" | "normal" | "observer";
 
 interface BoardInviteMemberFormProps {
   boardId: string;
-  boardMembers: BoardWithListColumnLabelAndMember["members"];
+  boardMembers: BoardWithListLabelsAndMembers["members"];
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
 }
 

@@ -1,62 +1,46 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { MessageSquare, Paperclip, CheckSquare, Clock } from "lucide-react";
 import { format, isToday, isTomorrow, isPast, isThisWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface BoardCardBadgesProps {
-  card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
+  card: {
+    description: string | null;
+    dueDate: Date | null;
+    attachmentsCount: number;
+    commentsCount: number;
+    checklistsCount: number;
+  };
 }
 
 export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
   const hasDescription = !!card.description;
   const hasDueDate = !!card.dueDate;
-  const hasComments = card.comments && card.comments.length > 0;
-  const hasAttachments = card.attachments && card.attachments.length > 0;
-  const hasChecklists = card.checklists && card.checklists.length > 0;
-
-  const totalChecklistItems =
-    card.checklists?.reduce(
-      (sum, checklist) => sum + checklist.items.length,
-      0
-    ) || 0;
-
-  const completedChecklistItems =
-    card.checklists?.reduce(
-      (sum, checklist) =>
-        sum + checklist.items.filter((item) => item.isCompleted).length,
-      0
-    ) || 0;
-
-  const allChecklistsCompleted =
-    totalChecklistItems > 0 && completedChecklistItems === totalChecklistItems;
+  const hasComments = card.commentsCount > 0;
+  const hasAttachments = card.attachmentsCount > 0;
+  const hasChecklists = card.checklistsCount > 0;
 
   const formatDueDate = (date: Date) => {
-    const dueDate = new Date(date);
-    if (isToday(dueDate)) return "Today";
-    if (isTomorrow(dueDate)) return "Tomorrow";
-    if (isThisWeek(dueDate)) return format(dueDate, "EEE");
-    return format(dueDate, "MMM d");
+    if (isToday(date)) return "Today";
+    if (isTomorrow(date)) return "Tomorrow";
+    if (isThisWeek(date)) return format(date, "EEE");
+    return format(date, "MMM d");
   };
 
   const getDueDateStatus = (date: Date) => {
-    const dueDate = new Date(date);
-
-    if (isPast(dueDate) && !isToday(dueDate)) {
-      return "overdue";
-    }
-    if (isToday(dueDate)) {
-      return "due-soon";
-    }
+    if (isPast(date) && !isToday(date)) return "overdue";
+    if (isToday(date)) return "due-soon";
     return "normal";
   };
 
-  const dueDateStatus = hasDueDate ? getDueDateStatus(card.dueDate!) : null;
+  const dueDateStatus =
+    hasDueDate && card.dueDate ? getDueDateStatus(card.dueDate) : null;
 
-  const badges = [];
+  const badges: React.ReactNode[] = [];
 
-  if (hasDueDate) {
+  /* Due date */
+  if (hasDueDate && card.dueDate) {
     badges.push(
       <div
         key="due-date"
@@ -68,11 +52,12 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
         )}
       >
         <Clock className="h-3 w-3" />
-        <span>{formatDueDate(card.dueDate!)}</span>
+        <span>{formatDueDate(card.dueDate)}</span>
       </div>
     );
   }
 
+  /* Description */
   if (hasDescription) {
     badges.push(
       <div
@@ -85,50 +70,50 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
     );
   }
 
+  /* Comments */
   if (hasComments) {
     badges.push(
       <div
         key="comments"
         className="flex items-center gap-1 text-muted-foreground"
-        title={`${card.comments.length} comment${
-          card.comments.length > 1 ? "s" : ""
+        title={`${card.commentsCount} comment${
+          card.commentsCount > 1 ? "s" : ""
         }`}
       >
         <MessageSquare className="h-3 w-3" />
-        <span className="text-xs">{card.comments.length}</span>
+        <span className="text-xs">{card.commentsCount}</span>
       </div>
     );
   }
 
+  /* Attachments */
   if (hasAttachments) {
     badges.push(
       <div
         key="attachments"
         className="flex items-center gap-1 text-muted-foreground"
-        title={`${card.attachments.length} attachment${
-          card.attachments.length > 1 ? "s" : ""
+        title={`${card.attachmentsCount} attachment${
+          card.attachmentsCount > 1 ? "s" : ""
         }`}
       >
         <Paperclip className="h-3 w-3" />
-        <span className="text-xs">{card.attachments.length}</span>
+        <span className="text-xs">{card.attachmentsCount}</span>
       </div>
     );
   }
 
+  /* Checklists (count only) */
   if (hasChecklists) {
     badges.push(
       <div
-        key="checklist"
-        className={cn(
-          "flex items-center gap-1 text-xs font-medium",
-          allChecklistsCompleted ? "text-primary" : "text-muted-foreground"
-        )}
-        title={`${completedChecklistItems}/${totalChecklistItems} checklist items completed`}
+        key="checklists"
+        className="flex items-center gap-1 text-muted-foreground text-xs"
+        title={`${card.checklistsCount} checklist${
+          card.checklistsCount > 1 ? "s" : ""
+        }`}
       >
         <CheckSquare className="h-3 w-3" />
-        <span>
-          {completedChecklistItems}/{totalChecklistItems}
-        </span>
+        <span>{card.checklistsCount}</span>
       </div>
     );
   }

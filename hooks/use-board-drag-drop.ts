@@ -1,4 +1,4 @@
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import {
   DragEndEvent,
   DragOverEvent,
@@ -11,7 +11,7 @@ import { useList } from "./use-list";
 import { useCard } from "./use-card";
 
 interface UseBoardDragDropProps {
-  board: BoardWithListColumnLabelAndMember;
+  board: BoardWithListLabelsAndMembers;
 }
 
 type DragType = "list" | "card" | null;

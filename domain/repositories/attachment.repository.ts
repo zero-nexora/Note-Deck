@@ -5,7 +5,17 @@ import { NewAttachment } from "../types/attachment.type";
 
 export const attachmentRepository = {
   create: async (data: NewAttachment) => {
-    const [attachment] = await db.insert(attachments).values(data).returning();
+    const [inserted] = await db.insert(attachments).values(data).returning({
+      id: attachments.id,
+    });
+
+    const attachment = await db.query.attachments.findFirst({
+      where: eq(attachments.id, inserted.id),
+      with: {
+        user: true,
+      },
+    });
+
     return attachment;
   },
 

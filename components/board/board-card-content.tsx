@@ -1,6 +1,6 @@
 "use client";
 
-import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
+import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { cn } from "@/lib/utils";
 import { BoardCardLabels } from "./board-card-labels";
 import { BoardCardTitle } from "./board-card-title";
@@ -8,7 +8,7 @@ import { BoardCardMembers } from "./board-card-members";
 import { BoardCardBadges } from "./board-card-badges";
 
 interface BoardCardContentProps {
-  card: BoardWithListColumnLabelAndMember["lists"][number]["cards"][number];
+  card: BoardWithListLabelsAndMembers["lists"][number]["cards"][number];
   hasCover: boolean;
 }
 
