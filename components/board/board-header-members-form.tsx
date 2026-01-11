@@ -32,7 +32,7 @@ export const BoardHeaderMembersForm = ({
   membersOnline = [],
   boardId,
 }: BoardHeaderMembersFormProps) => {
-  const { changeRole, removeMember } = useBoardMember();
+  const { changeBoardMemberRole, removeBoardMember } = useBoardMember();
   const [boardMembers, setBoardMembers] = useState(initialBoardMembers);
   const { open } = useConfirm();
 
@@ -50,7 +50,7 @@ export const BoardHeaderMembersForm = ({
       title: "Change role",
       description: "Are you sure you want to change role?",
       onConfirm: async () => {
-        const member = await changeRole({
+        const member = await changeBoardMemberRole({
           boardId,
           userId: memberId,
           role: newRole,
@@ -67,7 +67,7 @@ export const BoardHeaderMembersForm = ({
   };
 
   const handleRemoveMember = async (memberId: string) => {
-    await removeMember({ boardId, userId: memberId });
+    await removeBoardMember({ boardId, userId: memberId });
     setBoardMembers((prev) => prev.filter((m) => m.userId !== memberId));
   };
 

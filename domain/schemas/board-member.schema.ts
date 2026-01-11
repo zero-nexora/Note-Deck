@@ -1,25 +1,25 @@
+import { ROLE } from "@/lib/constants";
 import { z } from "zod";
-import { RoleEnum } from "@/db/enum";
 
 export const AddBoardMemberSchema = z.object({
-  boardId: z.string().min(1),
-  userId: z.string().min(1),
-  role: RoleEnum.optional().default("normal"),
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+  role: z.nativeEnum(ROLE).default("normal"),
 });
 
 export const RemoveBoardMemberSchema = z.object({
-  boardId: z.string().min(1),
-  userId: z.string().min(1),
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 export const ChangeBoardMemberRoleSchema = z.object({
-  boardId: z.string().min(1),
-  userId: z.string().min(1),
-  role: RoleEnum,
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+  role: z.nativeEnum(ROLE, { message: "Invalid role value" }),
 });
 
 export const ListBoardMembersSchema = z.object({
-  boardId: z.string().min(1),
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
 });
 
 export type AddBoardMemberInput = z.infer<typeof AddBoardMemberSchema>;

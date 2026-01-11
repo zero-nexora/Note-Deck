@@ -1,8 +1,9 @@
 "use client";
+
 import {
   addCardMemberAction,
   removeCardMemberAction,
-} from "@/app/actions/card-member.action";
+} from "@/domain/actions/card-member.action";
 import {
   AddCardMemberInput,
   RemoveCardMemberInput,
@@ -13,40 +14,31 @@ import { toast } from "sonner";
 export function useCardMember() {
   const router = useRouter();
 
-  const addMember = async (input: AddCardMemberInput) => {
-    try {
-      const result = await addCardMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const addCardMember = async (input: AddCardMemberInput) => {
+    const result = await addCardMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
-  const removeMember = async (input: RemoveCardMemberInput) => {
-    try {
-      const result = await removeCardMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const removeCardMember = async (input: RemoveCardMemberInput) => {
+    const result = await removeCardMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {
-    addMember,
-    removeMember,
+    addCardMember,
+    removeCardMember,
   };
 }

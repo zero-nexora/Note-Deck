@@ -1,9 +1,11 @@
+"use client";
+
 import {
   logBoardActionAction,
-  logCardActionAction,
   logListActionAction,
+  logCardActionAction,
   readActivityAction,
-} from "@/app/actions/activity.action";
+} from "@/domain/actions/activity.action";
 import {
   LogBoardActionInput,
   LogCardActionInput,
@@ -14,51 +16,27 @@ import { toast } from "sonner";
 
 export function useActivity() {
   const logBoardAction = async (input: LogBoardActionInput) => {
-    try {
-      const result = await logBoardActionAction(input);
-      if (!result.success) {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await logBoardActionAction(input);
+    if (!result.success) return toast.error(result.message);
   };
 
   const logListAction = async (input: LogListActionInput) => {
-    try {
-      const result = await logListActionAction(input);
-      if (!result.success) {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await logListActionAction(input);
+    if (!result.success) return toast.error(result.message);
   };
 
   const logCardAction = async (input: LogCardActionInput) => {
-    try {
-      const result = await logCardActionAction(input);
-      if (!result.success) {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await logCardActionAction(input);
+    if (!result.success) return toast.error(result.message);
   };
 
   const readActivity = async (input: ReadActivityInput) => {
-    try {
-      const result = await readActivityAction(input);
-      if (result.success) {
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await readActivityAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    return result.data;
   };
 
   return {

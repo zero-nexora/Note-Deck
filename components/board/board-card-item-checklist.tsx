@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CreateChecklistInput,
   CreateChecklistSchema,
-} from "@/domain/schemas/check-list.schema";
+} from "@/domain/schemas/checklist.schema";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
@@ -233,9 +233,9 @@ export const BoardCardItemChecklists = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckSquare className="h-4 w-4 text-primary" />
-                    <h4 className="font-semibold text-foreground">
+                    {/* <h4 className="font-semibold text-foreground">
                       {checklist.title}
-                    </h4>
+                    </h4> */}
                   </div>
                   <Button
                     variant="ghost"
@@ -274,7 +274,7 @@ export const BoardCardItemChecklists = ({
                         }
                         className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                       />
-                      <span
+                      {/* <span
                         className={cn(
                           "flex-1 text-sm",
                           item.isCompleted
@@ -283,7 +283,7 @@ export const BoardCardItemChecklists = ({
                         )}
                       >
                         {item.text}
-                      </span>
+                      </span> */}
                       <Button
                         variant="ghost"
                         size="icon"

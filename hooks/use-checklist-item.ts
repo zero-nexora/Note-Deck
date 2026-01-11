@@ -4,16 +4,16 @@ import {
   createChecklistItemAction,
   toggleChecklistItemAction,
   updateChecklistItemAction,
-  deleteChecklistItemAction,
   reorderChecklistItemAction,
-} from "@/app/actions/checklist-item.action";
+  deleteChecklistItemAction,
+} from "@/domain/actions/checklist-item.action";
 import {
   CreateChecklistItemInput,
-  DeleteChecklistItemInput,
-  ReorderChecklistItemInput,
   ToggleChecklistItemInput,
   UpdateChecklistItemInput,
-} from "@/domain/schemas/check-list-item.schema";
+  ReorderChecklistItemInput,
+  DeleteChecklistItemInput,
+} from "@/domain/schemas/checklist-item.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -21,83 +21,58 @@ export function useChecklistItem() {
   const router = useRouter();
 
   const createChecklistItem = async (input: CreateChecklistItemInput) => {
-    try {
-      const result = await createChecklistItemAction(input);
-
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await createChecklistItemAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const toggleChecklistItem = async (input: ToggleChecklistItemInput) => {
-    try {
-      const result = await toggleChecklistItemAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await toggleChecklistItemAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const updateChecklistItem = async (
     id: string,
     input: UpdateChecklistItemInput
   ) => {
-    try {
-      const result = await updateChecklistItemAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await updateChecklistItemAction(id, input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const reorderChecklistItem = async (input: ReorderChecklistItemInput) => {
-    try {
-      const result = await reorderChecklistItemAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await reorderChecklistItemAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const deleteChecklistItem = async (input: DeleteChecklistItemInput) => {
-    try {
-      const result = await deleteChecklistItemAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await deleteChecklistItemAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {

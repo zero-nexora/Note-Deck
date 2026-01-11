@@ -35,7 +35,7 @@ export const BoardHeaderNameDescription = ({
       onClick={handleEdit}
       className="group flex flex-col items-start gap-1 text-left hover:opacity-80 transition-opacity"
     >
-      <h1 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+      <h1 className="font-bold text-foreground group-hover:text-primary transition-colors">
         {boardName}
       </h1>
       {boardDescription && (

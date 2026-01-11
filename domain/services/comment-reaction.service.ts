@@ -7,6 +7,7 @@ import {
 import { commentRepository } from "../repositories/comment.repository";
 import { cardRepository } from "../repositories/card.repository";
 import { activityRepository } from "../repositories/activity.repository";
+import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
 
 export const commentReactionService = {
   add: async (userId: string, data: AddCommentReactionInput) => {
@@ -23,7 +24,7 @@ export const commentReactionService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "observer"
+      ROLE.OBSERVER
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -34,12 +35,13 @@ export const commentReactionService = {
       throw new Error("Emoji cannot be empty");
     }
 
-    const exists = await commentReactionRepository.findByCommentUserEmoji(
-      data.commentId,
-      userId,
-      trimmedEmoji
-    );
-    if (exists) {
+    const existingReaction =
+      await commentReactionRepository.findByCommentIdUserEmoji(
+        data.commentId,
+        userId,
+        trimmedEmoji
+      );
+    if (existingReaction) {
       throw new Error("You have already added this reaction");
     }
 
@@ -53,8 +55,8 @@ export const commentReactionService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "comment.reaction.added",
-      entityType: "comment",
+      action: ACTIVITY_ACTION.COMMENT_REACTION_ADDED,
+      entityType: ENTITY_TYPE.COMMENT,
       entityId: data.commentId,
       metadata: { emoji: trimmedEmoji },
     });
@@ -76,7 +78,7 @@ export const commentReactionService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "observer"
+      ROLE.OBSERVER
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -84,12 +86,13 @@ export const commentReactionService = {
 
     const trimmedEmoji = data.emoji.trim();
 
-    const exists = await commentReactionRepository.findByCommentUserEmoji(
-      data.commentId,
-      userId,
-      trimmedEmoji
-    );
-    if (!exists) {
+    const existingReaction =
+      await commentReactionRepository.findByCommentIdUserEmoji(
+        data.commentId,
+        userId,
+        trimmedEmoji
+      );
+    if (!existingReaction) {
       throw new Error("Reaction not found");
     }
 
@@ -97,8 +100,8 @@ export const commentReactionService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "comment.reaction.removed",
-      entityType: "comment",
+      action: ACTIVITY_ACTION.COMMENT_REACTION_REMOVED,
+      entityType: ENTITY_TYPE.COMMENT,
       entityId: data.commentId,
       metadata: { emoji: trimmedEmoji },
     });

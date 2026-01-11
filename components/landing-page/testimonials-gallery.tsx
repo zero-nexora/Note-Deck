@@ -62,20 +62,21 @@ const TESTIMONIALS: Testimonial[] = [
 ];
 
 const HEADER_ANIMATION = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.5 },
 };
 
 const PARALLAX_SPRING = {
   type: "spring" as const,
-  stiffness: 50,
-  damping: 20,
+  stiffness: 60,
+  damping: 25,
 };
 
 const AVATAR_SPRING = {
   type: "spring" as const,
-  stiffness: 300,
+  stiffness: 250,
+  damping: 20,
 };
 
 export const TestimonialsGallery = () => {
@@ -91,28 +92,26 @@ export const TestimonialsGallery = () => {
     const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
     const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
 
-    setMousePosition({ x: x * 10, y: y * 10 });
+    setMousePosition({ x: x * 8, y: y * 8 });
   };
 
   return (
     <section
-      className="py-24 px-4 relative overflow-hidden"
+      className="section-padding px-4 relative overflow-hidden"
       onMouseMove={handleMouseMove}
     >
-      {/* Parallax background effects */}
       <motion.div
         animate={{ x: mousePosition.x, y: mousePosition.y }}
         transition={PARALLAX_SPRING}
-        className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none"
+        className="absolute top-20 left-20 w-64 h-64 rounded-full bg-primary/8 blur-3xl pointer-events-none"
       />
       <motion.div
         animate={{ x: -mousePosition.x, y: -mousePosition.y }}
         transition={PARALLAX_SPRING}
-        className="absolute bottom-20 right-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl pointer-events-none"
+        className="absolute bottom-20 right-20 w-64 h-64 rounded-full bg-primary/8 blur-3xl pointer-events-none"
       />
 
       <div className="container mx-auto max-w-5xl relative z-10">
-        {/* Section header */}
         <motion.div
           ref={headerRef}
           initial={HEADER_ANIMATION.initial}
@@ -120,18 +119,15 @@ export const TestimonialsGallery = () => {
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Testimonials
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4 glow-text">
-            Loved by Teams Worldwide
+          <span className="badge badge-primary mb-4">Testimonials</span>
+          <h2 className="text-heading mb-4">
+            Loved by Teams <span className="gradient-text">Worldwide</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-subheading max-w-2xl mx-auto">
             See what industry leaders are saying about our platform.
           </p>
         </motion.div>
 
-        {/* Testimonials grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {TESTIMONIALS.map((testimonial, index) => (
             <TestimonialCard
@@ -156,7 +152,7 @@ const TestimonialCard = ({ testimonial, index }: TestimonialCardProps) => {
   const cardRef = useRef(null);
   const isInView = useInView(cardRef, { once: true, margin: "-50px" });
 
-  const animationDirection = index % 2 === 0 ? -100 : 100;
+  const animationDirection = index % 2 === 0 ? -50 : 50;
   const animationDelay = index * 0.1;
 
   const handleMouseEnter = () => setIsHovered(true);
@@ -167,13 +163,12 @@ const TestimonialCard = ({ testimonial, index }: TestimonialCardProps) => {
       ref={cardRef}
       initial={{ opacity: 0, x: animationDirection }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.6, delay: animationDelay }}
+      transition={{ duration: 0.5, delay: animationDelay }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="glass-card p-6 rounded-2xl group"
+      className="glass-card p-6 rounded-xl group"
     >
       <div className="flex items-start gap-4">
-        {/* Avatar section */}
         <div className="relative shrink-0">
           <motion.div
             animate={{ scale: isHovered ? 1.05 : 1 }}
@@ -184,25 +179,21 @@ const TestimonialCard = ({ testimonial, index }: TestimonialCardProps) => {
               src={testimonial.image}
               alt={testimonial.name}
               className="w-full h-full object-cover"
-              initial={{ filter: "blur(4px)" }}
-              animate={{ filter: isHovered ? "blur(0px)" : "blur(0px)" }}
               whileHover={{ scale: 1.1 }}
               transition={{ duration: 0.3 }}
             />
           </motion.div>
 
-          {/* Verified badge */}
           <motion.div
-            animate={{ scale: isHovered ? 1.2 : 1 }}
+            animate={{ scale: isHovered ? 1.15 : 1 }}
+            transition={AVATAR_SPRING}
             className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-background flex items-center justify-center"
           >
-            <span className="text-[8px] text-white">✓</span>
+            <span className="text-[8px] text-white font-bold">✓</span>
           </motion.div>
         </div>
 
-        {/* Content section */}
         <div className="flex-1 min-w-0">
-          {/* Rating stars */}
           <div className="flex items-center gap-1 mb-2">
             {[...Array(testimonial.rating)].map((_, starIndex) => (
               <Star
@@ -212,14 +203,12 @@ const TestimonialCard = ({ testimonial, index }: TestimonialCardProps) => {
             ))}
           </div>
 
-          {/* Testimonial content */}
-          <p className="text-foreground/90 text-sm leading-relaxed mb-3">
+          <p className="text-foreground text-sm leading-relaxed mb-3">
             &quot;{testimonial.content}&quot;
           </p>
 
-          {/* Author info */}
           <div>
-            <p className="font-semibold text-foreground font-display">
+            <p className="font-semibold text-foreground text-sm">
               {testimonial.name}
             </p>
             <p className="text-xs text-muted-foreground">

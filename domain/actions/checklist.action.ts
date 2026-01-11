@@ -1,4 +1,5 @@
 "use server";
+
 import {
   CreateChecklistInput,
   CreateChecklistSchema,
@@ -8,19 +9,19 @@ import {
   ReorderChecklistSchema,
   DeleteChecklistInput,
   DeleteChecklistSchema,
-} from "@/domain/schemas/check-list.schema";
+} from "@/domain/schemas/checklist.schema";
 import { checklistService } from "@/domain/services/checklist.service";
-import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
+import { error, success } from "@/lib/response";
 
 export const createChecklistAction = async (input: CreateChecklistInput) => {
   try {
     const user = await requireAuth();
     const parsed = CreateChecklistSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -39,9 +40,9 @@ export const updateChecklistAction = async (
     const user = await requireAuth();
     const parsed = UpdateChecklistSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -57,9 +58,9 @@ export const reorderChecklistAction = async (input: ReorderChecklistInput) => {
     const user = await requireAuth();
     const parsed = ReorderChecklistSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -75,9 +76,9 @@ export const deleteChecklistAction = async (input: DeleteChecklistInput) => {
     const user = await requireAuth();
     const parsed = DeleteChecklistSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 

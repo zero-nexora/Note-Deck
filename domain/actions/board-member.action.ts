@@ -19,9 +19,9 @@ export const addBoardMemberAction = async (input: AddBoardMemberInput) => {
     const user = await requireAuth();
     const parsed = AddBoardMemberSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -39,9 +39,9 @@ export const removeBoardMemberAction = async (
     const user = await requireAuth();
     const parsed = RemoveBoardMemberSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -59,9 +59,9 @@ export const changeBoardMemberRoleAction = async (
     const user = await requireAuth();
     const parsed = ChangeBoardMemberRoleSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 

@@ -1,17 +1,18 @@
 "use client";
+
 import {
-  archiveBoardAction,
   createBoardAction,
-  deleteBoardAction,
-  restoreBoardAction,
   updateBoardAction,
-} from "@/app/actions/board.action";
+  archiveBoardAction,
+  restoreBoardAction,
+  deleteBoardAction,
+} from "@/domain/actions/board.action";
 import {
-  ArchiveBoardInput,
   CreateBoardInput,
-  DeleteBoardInput,
-  RestoreBoardInput,
   UpdateBoardInput,
+  ArchiveBoardInput,
+  RestoreBoardInput,
+  DeleteBoardInput,
 } from "@/domain/schemas/board.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -20,74 +21,54 @@ export function useBoard() {
   const router = useRouter();
 
   const createBoard = async (input: CreateBoardInput) => {
-    try {
-      const result = await createBoardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        router.push(`/boards/${result.data!.id}`);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await createBoardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
+    router.push(`/boards/${result.data!.id}`);
   };
 
-  const updateBoard = async (id: string, input: UpdateBoardInput) => {
-    try {
-      const result = await updateBoardAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const updateBoard = async (boardId: string, input: UpdateBoardInput) => {
+    const result = await updateBoardAction(boardId, input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const archiveBoard = async (input: ArchiveBoardInput) => {
-    try {
-      const result = await archiveBoardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await archiveBoardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const restoreBoard = async (input: RestoreBoardInput) => {
-    try {
-      const result = await restoreBoardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await restoreBoardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const deleteBoard = async (input: DeleteBoardInput) => {
-    try {
-      const result = await deleteBoardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.push("/boards");
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await deleteBoardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.push("/boards");
   };
 
   return {

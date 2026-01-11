@@ -1,16 +1,22 @@
 import { STRIPE_PLANS } from "@/lib/stripe";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
-import slugify from "slugify";
 import { checkWorkspacePermission } from "@/lib/check-permissions";
 import {
   ChangePlanInput,
   CreateWorkspaceInput,
   DeleteWorkspaceInput,
+  FindWorkspaceByIdInput,
   UpdateWorkspaceNameInput,
-  UpdateWorkspaceSlugInput,
 } from "../schemas/workspace.schema";
 import { workspaceMemberRepository } from "../repositories/workspace-member.repository";
+import {
+  AUDIT_ACTION,
+  DEFAULT_PLAN,
+  DEFAULT_WORKSPACE_OWNER_ROLE,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const workspaceService = {
   create: async (userId: string, data: CreateWorkspaceInput) => {
@@ -20,36 +26,35 @@ export const workspaceService = {
       throw new Error("Workspace name cannot be empty");
     }
 
-    const slug = await generateUniqueSlug(trimmedName);
-
     const workspace = await workspaceRepository.create({
       name: trimmedName,
-      slug,
       ownerId: userId,
-      plan: "free",
-      limits: STRIPE_PLANS["free"],
+      plan: DEFAULT_PLAN,
+      limits: STRIPE_PLANS[DEFAULT_PLAN],
     });
 
     await workspaceMemberRepository.add({
       workspaceId: workspace.id,
       userId,
-      role: "admin",
+      role: DEFAULT_WORKSPACE_OWNER_ROLE,
     });
 
     await auditLogRepository.create({
       workspaceId: workspace.id,
       userId,
-      action: "workspace.created",
-      entityType: "workspace",
+      action: AUDIT_ACTION.WORKSPACE_CREATED,
+      entityType: ENTITY_TYPE.WORKSPACE,
       entityId: workspace.id,
-      metadata: { name: workspace.name, slug: workspace.slug },
+      metadata: { name: workspace.name },
     });
 
     return workspace;
   },
 
-  findById: async (userId: string, id: string) => {
-    const workspace = await workspaceRepository.findById(id);
+  findById: async (userId: string, data: FindWorkspaceByIdInput) => {
+    const workspace = await workspaceRepository.findByIdWithOwnerAndMembers(
+      data.workspaceId
+    );
 
     if (!workspace) {
       throw new Error("Workspace not found");
@@ -57,8 +62,8 @@ export const workspaceService = {
 
     const hasPermission = await checkWorkspacePermission(
       userId,
-      id,
-      "observer"
+      workspace.id,
+      ROLE.OBSERVER
     );
 
     if (!hasPermission) {
@@ -69,7 +74,8 @@ export const workspaceService = {
   },
 
   findByUserId: async (userId: string) => {
-    const workspaces = await workspaceRepository.findByUserId(userId);
+    const workspaces =
+      await workspaceRepository.findByUserIdWithOwnerAndMembers(userId);
 
     if (!workspaces || workspaces.length === 0) {
       return [];
@@ -77,10 +83,14 @@ export const workspaceService = {
 
     const result = [];
 
-    for (const ws of workspaces) {
-      const allowed = await checkWorkspacePermission(userId, ws.id, "observer");
-      if (allowed) {
-        result.push(ws);
+    for (const workspace of workspaces) {
+      const hasPermission = await checkWorkspacePermission(
+        userId,
+        workspace.id,
+        ROLE.OBSERVER
+      );
+      if (hasPermission) {
+        result.push(workspace);
       }
     }
 
@@ -89,16 +99,20 @@ export const workspaceService = {
 
   updateName: async (
     userId: string,
-    id: string,
+    workspaceId: string,
     data: UpdateWorkspaceNameInput
   ) => {
-    const workspace = await workspaceRepository.findById(id);
+    const workspace = await workspaceRepository.findById(workspaceId);
 
     if (!workspace) {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(userId, id, "admin");
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      workspace.id,
+      ROLE.ADMIN
+    );
 
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -114,77 +128,38 @@ export const workspaceService = {
       return workspace;
     }
 
-    const updated = await workspaceRepository.update(id, { name: trimmedName });
+    const updatedWorkspace = await workspaceRepository.update(workspace.id, {
+      name: trimmedName,
+    });
 
     await auditLogRepository.create({
-      workspaceId: id,
+      workspaceId: workspace.id,
       userId,
-      action: "workspace.name_updated",
-      entityType: "workspace",
-      entityId: id,
+      action: AUDIT_ACTION.WORKSPACE_NAME_UPDATED,
+      entityType: ENTITY_TYPE.WORKSPACE,
+      entityId: workspace.id,
       metadata: { oldName: workspace.name, newName: trimmedName },
     });
 
-    return updated;
+    return updatedWorkspace;
   },
 
-  updateSlug: async (
+  changePlan: async (
     userId: string,
-    id: string,
-    data: UpdateWorkspaceSlugInput
+    workspaceId: string,
+    data: ChangePlanInput
   ) => {
-    const workspace = await workspaceRepository.findById(id);
+    const workspace = await workspaceRepository.findById(workspaceId);
 
     if (!workspace) {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(userId, id, "admin");
-
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
-
-    const normalizedSlug = slugify(data.slug, { lower: true, strict: true });
-
-    if (!normalizedSlug) {
-      throw new Error("Invalid slug format");
-    }
-
-    if (workspace.slug === normalizedSlug) {
-      return workspace;
-    }
-
-    const exists = await workspaceRepository.findBySlug(normalizedSlug);
-
-    if (exists && exists.id !== id) {
-      throw new Error("Slug already taken");
-    }
-
-    const updated = await workspaceRepository.update(id, {
-      slug: normalizedSlug,
-    });
-
-    await auditLogRepository.create({
-      workspaceId: id,
+    const hasPermission = await checkWorkspacePermission(
       userId,
-      action: "workspace.slug_updated",
-      entityType: "workspace",
-      entityId: id,
-      metadata: { oldSlug: workspace.slug, newSlug: normalizedSlug },
-    });
-
-    return updated;
-  },
-
-  changePlan: async (userId: string, id: string, data: ChangePlanInput) => {
-    const workspace = await workspaceRepository.findById(id);
-
-    if (!workspace) {
-      throw new Error("Workspace not found");
-    }
-
-    const hasPermission = await checkWorkspacePermission(userId, id, "admin");
+      workspace.id,
+      ROLE.ADMIN
+    );
 
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -200,17 +175,17 @@ export const workspaceService = {
       return workspace;
     }
 
-    const updated = await workspaceRepository.update(id, {
+    const updatedWorkspace = await workspaceRepository.update(workspace.id, {
       plan: data.plan,
       limits: planLimits,
     });
 
     await auditLogRepository.create({
-      workspaceId: id,
+      workspaceId: workspace.id,
       userId,
-      action: "workspace.plan_changed",
-      entityType: "workspace",
-      entityId: id,
+      action: AUDIT_ACTION.WORKSPACE_PLAN_CHANGE,
+      entityType: ENTITY_TYPE.WORKSPACE,
+      entityId: workspace.id,
       metadata: {
         oldPlan: workspace.plan,
         newPlan: data.plan,
@@ -219,7 +194,7 @@ export const workspaceService = {
       },
     });
 
-    return updated;
+    return updatedWorkspace;
   },
 
   delete: async (userId: string, data: DeleteWorkspaceInput) => {
@@ -232,7 +207,7 @@ export const workspaceService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.id,
-      "admin"
+      ROLE.ADMIN
     );
 
     if (!hasPermission) {
@@ -246,12 +221,11 @@ export const workspaceService = {
     await auditLogRepository.create({
       workspaceId: workspace.id,
       userId,
-      action: "workspace.deleted",
-      entityType: "workspace",
+      action: AUDIT_ACTION.WORKSPACE_DELETED,
+      entityType: ENTITY_TYPE.WORKSPACE,
       entityId: workspace.id,
       metadata: {
         name: workspace.name,
-        slug: workspace.slug,
         plan: workspace.plan,
       },
     });
@@ -259,15 +233,3 @@ export const workspaceService = {
     await workspaceRepository.delete(data.id);
   },
 };
-
-async function generateUniqueSlug(name: string): Promise<string> {
-  const baseSlug = slugify(name, { lower: true, strict: true });
-  let slug = baseSlug;
-  let counter = 1;
-
-  while (await workspaceRepository.findBySlug(slug)) {
-    slug = `${baseSlug}-${counter++}`;
-  }
-
-  return slug;
-}

@@ -1,7 +1,8 @@
-import { findBoardByIdAction } from "@/app/actions/board.action";
-import { findWorkspaceByIdAction } from "@/app/actions/workspace.action";
+import { findBoardByIdAction } from "@/domain/actions/board.action";
+import { findWorkspaceByIdAction } from "@/domain/actions/workspace.action";
 import { BoardContainer } from "@/components/board/board-container";
 import { requireAuth } from "@/lib/session";
+import { unwrapActionResult } from "@/lib/response";
 
 interface BoardsPageProps {
   params: Promise<{ boardId: string }>;
@@ -11,25 +12,19 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
   const { boardId } = await params;
   const user = await requireAuth();
 
-  const result = await findBoardByIdAction(boardId);
+  const board = unwrapActionResult(await findBoardByIdAction(boardId));
+  if (!board) return null;
 
-  if (!result.success || !result.data) return null;
-
-  const board = result.data;
-
-  const resultWorkspaceMember = await findWorkspaceByIdAction(
-    board.workspaceId
+  const workspace = unwrapActionResult(
+    await findWorkspaceByIdAction({ workspaceId: board.workspaceId })
   );
-  if (!resultWorkspaceMember.success || !resultWorkspaceMember.data)
-    return null;
-
-  const workspaceMembers = resultWorkspaceMember.data.members;
+  if (!workspace) return null;
 
   return (
     <BoardContainer
       board={board}
       user={user}
-      workspaceMembers={workspaceMembers}
+      workspaceMembers={workspace.members}
     />
   );
 };

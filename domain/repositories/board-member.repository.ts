@@ -1,8 +1,8 @@
 import { db } from "@/db";
-import { Role } from "@/db/enum";
 import { boardMembers } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { NewBoardMember } from "../types/board-member.type";
+import { Role } from "@/lib/constants";
 
 export const boardMemberRepository = {
   add: async (data: NewBoardMember) => {
@@ -12,23 +12,30 @@ export const boardMemberRepository = {
   },
 
   findByBoardId: async (boardId: string) => {
-    const members = await db.query.boardMembers.findMany({
+    return db.query.boardMembers.findMany({
       where: eq(boardMembers.boardId, boardId),
       with: {
         user: true,
       },
     });
-    return members;
+  },
+
+  findByBoardIdWithUser: async (boardId: string) => {
+    return db.query.boardMembers.findMany({
+      where: eq(boardMembers.boardId, boardId),
+      with: {
+        user: true,
+      },
+    });
   },
 
   findByBoardIdAndUserId: async (boardId: string, userId: string) => {
-    const member = await db.query.boardMembers.findFirst({
+    return db.query.boardMembers.findFirst({
       where: and(
         eq(boardMembers.boardId, boardId),
         eq(boardMembers.userId, userId)
       ),
     });
-    return member;
   },
 
   remove: async (boardId: string, userId: string) => {

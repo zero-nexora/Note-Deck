@@ -1,10 +1,10 @@
 import { Workspace } from "@/domain/types/workspace.type";
-import { STRIPE_PLANS } from "@/lib/constants";
+import { STRIPE_PLANS } from "@/lib/stripe";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export function WorkspaceItem({ workspace }: { workspace: Workspace }) {
-  const planLabel = STRIPE_PLANS[workspace.plan]?.name ?? "Free";
+  const planLabel = STRIPE_PLANS[workspace.plan].name ?? "Free";
 
   return (
     <Link href={`/workspaces/${workspace.id}/overview`}>

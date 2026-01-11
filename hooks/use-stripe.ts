@@ -3,35 +3,24 @@
 import {
   createStripeCheckoutAction,
   getStripeCustomerPortalAction,
-} from "@/app/actions/stripe.action";
+} from "@/domain/actions/stripe.action";
+import { CreateSubscriptionInput } from "@/domain/schemas/stripe.schema";
 import { toast } from "sonner";
 
 export function useStripe() {
-  const checkout = async (workspaceId: string, plan: "pro" | "enterprise") => {
-    try {
-      const result = await createStripeCheckoutAction(workspaceId, plan);
-
-      if (result.success && result.data) {
-        window.location.href = result.data.url as string;
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const checkout = async (input: CreateSubscriptionInput) => {
+    const result = await createStripeCheckoutAction(input);
+    if (!result.success) return toast.error(result.message);
+    if (result.data?.url) {
+      window.location.href = result.data.url;
     }
   };
 
   const openCustomerPortal = async (workspaceId: string) => {
-    try {
-      const result = await getStripeCustomerPortalAction(workspaceId);
-
-      if (result.success && result.data) {
-        window.location.href = result.data.url as string;
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await getStripeCustomerPortalAction(workspaceId);
+    if (!result.success) return toast.error(result.message);
+    if (result.data?.url) {
+      window.location.href = result.data.url;
     }
   };
 

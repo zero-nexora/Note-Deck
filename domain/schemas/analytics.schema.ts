@@ -1,42 +1,55 @@
-import z from "zod";
+import { z } from "zod";
 
 export const GetWorkspaceAnalyticsSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export const GetActivityFeedSchema = z.object({
-  workspaceId: z.string().min(1),
-  limit: z.number().int().positive().optional().default(50),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+  limit: z
+    .number()
+    .int()
+    .positive({ message: "Limit must be positive" })
+    .optional()
+    .default(50),
 });
 
 export const GetCardsTrendSchema = z.object({
-  workspaceId: z.string().min(1),
-  days: z.number().min(1).optional(),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+  days: z
+    .number()
+    .int()
+    .positive({ message: "Days must be positive" })
+    .optional(),
 });
 
 export const GetBoardsPerformanceSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export const GetMembersProductivitySchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export const GetLabelsDistributionSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export const GetActivityTimelineSchema = z.object({
-  workspaceId: z.string().min(1),
-  days: z.number().min(1).optional(),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+  days: z
+    .number()
+    .int()
+    .positive({ message: "Days must be positive" })
+    .optional(),
 });
 
 export const GetChecklistStatsSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export const GetDueDateAnalyticsSchema = z.object({
-  workspaceId: z.string().min(1),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
 });
 
 export type GetWorkspaceAnalyticsInput = z.infer<

@@ -7,7 +7,6 @@ import {
   CreateListInput,
   DeleteListInput,
   DuplicateListInput,
-  MoveListInput,
   ReorderListsInput,
   RestoreListInput,
   UpdateListInput,
@@ -19,6 +18,12 @@ import { cardLabelRepository } from "../repositories/card-label.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
 import { checklistItemRepository } from "../repositories/checklist-item.repository";
 import { attachmentRepository } from "../repositories/attachment.repository";
+import {
+  ACTIVITY_ACTION,
+  AUDIT_ACTION,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const listService = {
   create: async (userId: string, data: CreateListInput) => {
@@ -30,7 +35,7 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -50,10 +55,10 @@ export const listService = {
     });
 
     await activityRepository.create({
-      boardId: data.boardId,
+      boardId: board.id,
       userId,
-      action: "list.created",
-      entityType: "list",
+      action: ACTIVITY_ACTION.LIST_CREATED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: list.id,
       metadata: { name: list.name },
     });
@@ -61,8 +66,8 @@ export const listService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "list.created",
-      entityType: "list",
+      action: AUDIT_ACTION.LIST_CREATED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: list.id,
       metadata: { boardId: data.boardId, name: list.name },
     });
@@ -77,8 +82,8 @@ export const listService = {
     return list;
   },
 
-  update: async (userId: string, id: string, data: UpdateListInput) => {
-    const list = await listRepository.findById(id);
+  update: async (userId: string, listId: string, data: UpdateListInput) => {
+    const list = await listRepository.findById(listId);
     if (!list) {
       throw new Error("List not found");
     }
@@ -86,7 +91,7 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -106,7 +111,7 @@ export const listService = {
       }
     }
 
-    const updated = await listRepository.update(id, updateData);
+    const updatedList = await listRepository.update(listId, updateData);
 
     const board = await boardRepository.findById(list.boardId);
 
@@ -119,9 +124,9 @@ export const listService = {
     await activityRepository.create({
       boardId: list.boardId,
       userId,
-      action: "list.updated",
-      entityType: "list",
-      entityId: id,
+      action: ACTIVITY_ACTION.LIST_UPDATED,
+      entityType: ENTITY_TYPE.LIST,
+      entityId: list.id,
       metadata,
     });
 
@@ -129,14 +134,14 @@ export const listService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "list.updated",
-        entityType: "list",
-        entityId: id,
+        action: AUDIT_ACTION.LIST_UPDATED,
+        entityType: ENTITY_TYPE.LIST,
+        entityId: list.id,
         metadata,
       });
     }
 
-    return updated;
+    return updatedList;
   },
 
   reorders: async (userId: string, data: ReorderListsInput) => {
@@ -148,14 +153,14 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
     const allLists = await listRepository.findAllByBoardId(data.boardId);
-    const boardListIds = new Set(allLists.map((l) => l.id));
+    const boardListIds = new Set(allLists.map((list) => list.id));
 
     for (const order of data.orders) {
       if (!boardListIds.has(order.id)) {
@@ -170,8 +175,8 @@ export const listService = {
     await activityRepository.create({
       boardId: data.boardId,
       userId,
-      action: "lists.reordered",
-      entityType: "board",
+      action: ACTIVITY_ACTION.LISTS_REORDERED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: data.boardId,
       metadata: {
         listCount: data.orders.length,
@@ -182,93 +187,13 @@ export const listService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "lists.reordered",
-      entityType: "board",
+      action: AUDIT_ACTION.LISTS_REORDERED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: data.boardId,
       metadata: {
         listCount: data.orders.length,
       },
     });
-  },
-
-  move: async (userId: string, data: MoveListInput) => {
-    const list = await listRepository.findById(data.id);
-    if (!list) {
-      throw new Error("List not found");
-    }
-
-    if (list.boardId === data.boardId) {
-      throw new Error("List is already on this board");
-    }
-
-    const hasPermissionOld = await checkBoardPermission(
-      userId,
-      list.boardId,
-      "normal"
-    );
-    const hasPermissionNew = await checkBoardPermission(
-      userId,
-      data.boardId,
-      "normal"
-    );
-
-    if (!hasPermissionOld || !hasPermissionNew) {
-      throw new Error("Permission denied");
-    }
-
-    const newBoard = await boardRepository.findById(data.boardId);
-    if (!newBoard) {
-      throw new Error("Target board not found");
-    }
-
-    const updated = await listRepository.update(data.id, {
-      boardId: data.boardId,
-      position: data.position,
-    });
-
-    await activityRepository.create({
-      boardId: data.boardId,
-      userId,
-      action: "list.moved",
-      entityType: "list",
-      entityId: data.id,
-      metadata: {
-        oldBoardId: list.boardId,
-        newBoardId: data.boardId,
-        listName: list.name,
-      },
-    });
-
-    const oldBoard = await boardRepository.findById(list.boardId);
-    if (oldBoard) {
-      await auditLogRepository.create({
-        workspaceId: oldBoard.workspaceId,
-        userId,
-        action: "list.moved_out",
-        entityType: "list",
-        entityId: data.id,
-        metadata: {
-          oldBoardId: list.boardId,
-          newBoardId: data.boardId,
-          listName: list.name,
-        },
-      });
-    }
-
-    await auditLogRepository.create({
-      workspaceId: newBoard.workspaceId,
-      userId,
-      action: "list.moved_in",
-      entityType: "list",
-      entityId: data.id,
-      metadata: {
-        oldBoardId: list.boardId,
-        newBoardId: data.boardId,
-        listName: list.name,
-      },
-    });
-
-    return updated;
   },
 
   archive: async (userId: string, data: ArchiveListInput) => {
@@ -284,21 +209,21 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const updated = await listRepository.update(data.id, {
+    const updatedList = await listRepository.update(data.id, {
       isArchived: true,
     });
 
     await activityRepository.create({
       boardId: list.boardId,
       userId,
-      action: "list.archived",
-      entityType: "list",
+      action: ACTIVITY_ACTION.LIST_ARCHIVED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: data.id,
       metadata: { name: list.name },
     });
@@ -308,8 +233,8 @@ export const listService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "list.archived",
-        entityType: "list",
+        action: AUDIT_ACTION.LIST_ARCHIVED,
+        entityType: ENTITY_TYPE.LIST,
         entityId: data.id,
         metadata: { boardId: list.boardId, name: list.name },
       });
@@ -322,7 +247,7 @@ export const listService = {
       userId,
     });
 
-    return updated;
+    return updatedList;
   },
 
   restore: async (userId: string, data: RestoreListInput) => {
@@ -338,21 +263,21 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const updated = await listRepository.update(data.id, {
+    const updatedList = await listRepository.update(data.id, {
       isArchived: false,
     });
 
     await activityRepository.create({
       boardId: list.boardId,
       userId,
-      action: "list.restored",
-      entityType: "list",
+      action: ACTIVITY_ACTION.LIST_RESTORED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: data.id,
       metadata: { name: list.name },
     });
@@ -362,14 +287,14 @@ export const listService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "list.restored",
-        entityType: "list",
+        action: AUDIT_ACTION.LIST_RESTORED,
+        entityType: ENTITY_TYPE.LIST,
         entityId: data.id,
         metadata: { boardId: list.boardId, name: list.name },
       });
     }
 
-    return updated;
+    return updatedList;
   },
 
   delete: async (userId: string, data: DeleteListInput) => {
@@ -381,7 +306,7 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -392,8 +317,8 @@ export const listService = {
     await activityRepository.create({
       boardId: list.boardId,
       userId,
-      action: "list.deleted",
-      entityType: "list",
+      action: ACTIVITY_ACTION.LIST_DELETED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: data.id,
       metadata: { name: list.name },
     });
@@ -402,8 +327,8 @@ export const listService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "list.deleted",
-        entityType: "list",
+        action: AUDIT_ACTION.LIST_DELETED,
+        entityType: ENTITY_TYPE.LIST,
         entityId: data.id,
         metadata: { boardId: list.boardId, name: list.name },
       });
@@ -413,7 +338,9 @@ export const listService = {
   },
 
   duplicate: async (userId: string, data: DuplicateListInput) => {
-    const originalList = await listRepository.findListDetails(data.id);
+    const originalList = await listRepository.findListWithCardsAndBoard(
+      data.id
+    );
     if (!originalList) {
       throw new Error("List not found");
     }
@@ -421,7 +348,7 @@ export const listService = {
     const hasPermission = await checkBoardPermission(
       userId,
       originalList.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -434,10 +361,8 @@ export const listService = {
     const newList = await listRepository.create({
       boardId: originalList.boardId,
       name: `${originalList.name} (Copy)`,
-      position: maxPosition + 1024,
+      position: maxPosition + 1,
     });
-
-    const cardMapping = new Map<string, string>();
 
     for (const originalCard of originalList.cards) {
       const maxCardPosition = await cardRepository.getMaxPosition(newList.id);
@@ -447,12 +372,10 @@ export const listService = {
         boardId: originalList.boardId,
         title: originalCard.title,
         description: originalCard.description,
-        position: maxCardPosition + 1024,
+        position: maxCardPosition + 1,
         dueDate: originalCard.dueDate,
         coverImage: originalCard.coverImage,
       });
-
-      cardMapping.set(originalCard.id, newCard.id);
 
       for (const cardLabel of originalCard.cardLabels) {
         await cardLabelRepository.add({
@@ -495,8 +418,8 @@ export const listService = {
     await activityRepository.create({
       boardId: originalList.boardId,
       userId,
-      action: "list.duplicated",
-      entityType: "list",
+      action: ACTIVITY_ACTION.LIST_DUPLICATED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: newList.id,
       metadata: {
         originalListId: originalList.id,
@@ -507,10 +430,10 @@ export const listService = {
     });
 
     await auditLogRepository.create({
-      workspaceId: originalList.board.workspaceId || "",
+      workspaceId: originalList.board.workspaceId,
       userId,
-      action: "list.duplicated",
-      entityType: "list",
+      action: AUDIT_ACTION.LIST_DUPLICATED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: newList.id,
       metadata: {
         originalListId: originalList.id,

@@ -1,4 +1,5 @@
 "use server";
+
 import {
   CreateInviteInput,
   CreateInviteSchema,
@@ -12,17 +13,17 @@ import {
   ExpireInviteSchema,
 } from "@/domain/schemas/workspace-invite.schema";
 import { workspaceInviteService } from "@/domain/services/workspace-invite.service";
-import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
+import { success, error } from "@/lib/response";
 
-export const createInviteAction = async (input: CreateInviteInput) => {
+export const createWorkspaceInviteAction = async (input: CreateInviteInput) => {
   try {
     const user = await requireAuth();
     const parsed = CreateInviteSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -33,14 +34,14 @@ export const createInviteAction = async (input: CreateInviteInput) => {
   }
 };
 
-export const resendInviteAction = async (input: ResendInviteInput) => {
+export const resendWorkspaceInviteAction = async (input: ResendInviteInput) => {
   try {
     const user = await requireAuth();
     const parsed = ResendInviteSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -51,14 +52,14 @@ export const resendInviteAction = async (input: ResendInviteInput) => {
   }
 };
 
-export const revokeInviteAction = async (input: RevokeInviteInput) => {
+export const revokeWorkspaceInviteAction = async (input: RevokeInviteInput) => {
   try {
     const user = await requireAuth();
     const parsed = RevokeInviteSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -69,14 +70,14 @@ export const revokeInviteAction = async (input: RevokeInviteInput) => {
   }
 };
 
-export const acceptInviteAction = async (input: AcceptInviteInput) => {
+export const acceptWorkspaceInviteAction = async (input: AcceptInviteInput) => {
   try {
     const user = await requireAuth();
     const parsed = AcceptInviteSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -87,19 +88,19 @@ export const acceptInviteAction = async (input: AcceptInviteInput) => {
   }
 };
 
-export const expireInviteAction = async (input: ExpireInviteInput) => {
+export const expireWorkspaceInviteAction = async (input: ExpireInviteInput) => {
   try {
     const user = await requireAuth();
     const parsed = ExpireInviteSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    await workspaceInviteService.expire(user.id, parsed.data);
-    return success("Invite expired successfully");
+    const invite = await workspaceInviteService.expire(user.id, parsed.data);
+    return success("Invite expired successfully", invite);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

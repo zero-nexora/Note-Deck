@@ -5,8 +5,6 @@ import {
   CreateListSchema,
   UpdateListInput,
   UpdateListSchema,
-  MoveListInput,
-  MoveListSchema,
   ArchiveListInput,
   ArchiveListSchema,
   RestoreListInput,
@@ -27,9 +25,9 @@ export const createListAction = async (input: CreateListInput) => {
     const user = await requireAuth();
     const parsed = CreateListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -40,18 +38,21 @@ export const createListAction = async (input: CreateListInput) => {
   }
 };
 
-export const updateListAction = async (id: string, input: UpdateListInput) => {
+export const updateListAction = async (
+  listId: string,
+  input: UpdateListInput
+) => {
   try {
     const user = await requireAuth();
     const parsed = UpdateListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    const list = await listService.update(user.id, id, parsed.data);
+    const list = await listService.update(user.id, listId, parsed.data);
     return success("List updated successfully", list);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -62,35 +63,15 @@ export const reorderListsAction = async (input: ReorderListsInput) => {
   try {
     const user = await requireAuth();
     const parsed = ReorderListsSchema.safeParse(input);
-
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
     await listService.reorders(user.id, parsed.data);
-
     return success("Lists reordered successfully");
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
-  }
-};
-
-export const moveListAction = async (input: MoveListInput) => {
-  try {
-    const user = await requireAuth();
-    const parsed = MoveListSchema.safeParse(input);
-    if (!parsed.success) {
-      const flattened = parsed.error.flatten();
-      const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
-      return error(message);
-    }
-
-    const list = await listService.move(user.id, parsed.data);
-    return success("List moved successfully", list);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
@@ -101,9 +82,9 @@ export const archiveListAction = async (input: ArchiveListInput) => {
     const user = await requireAuth();
     const parsed = ArchiveListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -119,9 +100,9 @@ export const restoreListAction = async (input: RestoreListInput) => {
     const user = await requireAuth();
     const parsed = RestoreListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -137,9 +118,9 @@ export const deleteListAction = async (input: DeleteListInput) => {
     const user = await requireAuth();
     const parsed = DeleteListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -150,19 +131,21 @@ export const deleteListAction = async (input: DeleteListInput) => {
   }
 };
 
-export const duplicateListAction = async (input: DuplicateListInput) => {
+export const duplicateListAction = async (
+  input: DuplicateListInput
+) => {
   try {
     const user = await requireAuth();
     const parsed = DuplicateListSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    const newList = await listService.duplicate(user.id, parsed.data);
-    return success("List duplicated successfully", newList);
+    const list = await listService.duplicate(user.id, parsed.data);
+    return success("List duplicated successfully", list);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

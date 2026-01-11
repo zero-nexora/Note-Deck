@@ -6,6 +6,12 @@ import {
   CreateAttachmentInput,
   DeleteAttachmentInput,
 } from "../schemas/attachment.schema";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  MAX_FILE_SIZE,
+  ROLE,
+} from "@/lib/constants";
 
 export const attachmentService = {
   create: async (userId: string, data: CreateAttachmentInput) => {
@@ -17,7 +23,7 @@ export const attachmentService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -32,7 +38,6 @@ export const attachmentService = {
       throw new Error("File size must be greater than 0");
     }
 
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
     if (data.fileSize > MAX_FILE_SIZE) {
       throw new Error("File size cannot exceed 50MB");
     }
@@ -49,8 +54,8 @@ export const attachmentService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "attachment.uploaded",
-      entityType: "attachment",
+      action: ACTIVITY_ACTION.ATTACHMENT_UPLOADED,
+      entityType: ENTITY_TYPE.ATTACHMENT,
       entityId: attachment.id,
       metadata: {
         fileName: attachment.fileName,
@@ -78,7 +83,7 @@ export const attachmentService = {
       const hasAdminPermission = await checkBoardPermission(
         userId,
         card.boardId,
-        "admin"
+        ROLE.ADMIN
       );
       if (!hasAdminPermission) {
         throw new Error("You can only delete your own attachments");
@@ -89,8 +94,8 @@ export const attachmentService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "attachment.deleted",
-      entityType: "attachment",
+      action: ACTIVITY_ACTION.ATTACHMENT_DELETED,
+      entityType: ENTITY_TYPE.ATTACHMENT,
       entityId: data.id,
       metadata: {
         fileName: attachment.fileName,

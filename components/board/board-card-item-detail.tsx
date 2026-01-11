@@ -1,9 +1,9 @@
 import { BoardWithListColumnLabelAndMember } from "@/domain/types/board.type";
 import { BoardCardItemMembers } from "./board-card-item-members";
-import { BoardCardItemLabels } from "./board-card-item-labels";
+// import { BoardCardItemLabels } from "./board-card-item-labels";
 import { BoardCardItemChecklists } from "./board-card-item-checklist";
-import { BoardCardItemAttachments } from "./board-card-item-attachment";
-import { BoardCardItemComments } from "./board-card-item-comment";
+// import { BoardCardItemAttachments } from "./board-card-item-attachment";
+// import { BoardCardItemComments } from "./board-card-item-comment";
 import { BoardCardItemTitleDescDueDate } from "./board-card-item-title-desc-due-date";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { BoardCardItemCoverImage } from "./board-card-item-cover-image";
@@ -45,18 +45,18 @@ export const BoardCardItemDetail = ({
           realtimeUtils={realtimeUtils}
         />
 
-        <BoardCardItemLabels
+        {/* <BoardCardItemLabels
           cardId={card.id}
           cardLabels={card.cardLabels}
           boardLabels={boardLabels}
           realtimeUtils={realtimeUtils}
-        />
+        /> */}
 
-        <BoardCardItemAttachments
+        {/* <BoardCardItemAttachments
           cardId={card.id}
           attachments={card.attachments}
           realtimeUtils={realtimeUtils}
-        />
+        /> */}
 
         <BoardCardItemChecklists
           cardId={card.id}
@@ -64,11 +64,11 @@ export const BoardCardItemDetail = ({
           realtimeUtils={realtimeUtils}
         />
 
-        <BoardCardItemComments
+        {/* <BoardCardItemComments
           cardId={card.id}
           comments={card.comments}
           realtimeUtils={realtimeUtils}
-        />
+        /> */}
       </div>
     </div>
   );

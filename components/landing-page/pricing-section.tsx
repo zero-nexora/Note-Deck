@@ -71,6 +71,7 @@ const FADE_IN_UP = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
+  transition: { duration: 0.5 },
 };
 
 const BUTTON_HOVER = {
@@ -80,31 +81,29 @@ const BUTTON_HOVER = {
 
 export const PricingSection = () => {
   return (
-    <section id="pricing" className="py-24 px-4 relative">
-      {/* Background gradient */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-radial from-primary/10 to-transparent rounded-full pointer-events-none" />
+    <section id="pricing" className="section-padding px-4 relative">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative">
-        {/* Section header */}
+      <div className="container-custom relative">
         <motion.div
           initial={FADE_IN_UP.initial}
           whileInView={FADE_IN_UP.whileInView}
           viewport={FADE_IN_UP.viewport}
+          transition={FADE_IN_UP.transition}
           className="text-center mb-16"
         >
-          <span className="text-sm font-medium text-primary uppercase tracking-wider">
+          <span className="text-sm font-semibold text-primary uppercase tracking-wider">
             Pricing
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6">
+          <h2 className="text-heading mt-4 mb-6">
             Simple, transparent <span className="gradient-text">pricing</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-subheading max-w-2xl mx-auto">
             Start free, upgrade when you&apos;re ready. No hidden fees, no
             surprises.
           </p>
         </motion.div>
 
-        {/* Pricing cards */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {PRICING_PLANS.map((plan, index) => (
             <PricingPlanCard key={plan.name} plan={plan} index={index} />
@@ -128,28 +127,25 @@ const PricingPlanCard = ({ plan, index }: PricingPlanCardProps) => {
       initial={FADE_IN_UP.initial}
       whileInView={FADE_IN_UP.whileInView}
       viewport={FADE_IN_UP.viewport}
-      transition={{ delay: animationDelay }}
-      className={`relative glass-panel p-8 card-hover ${
-        plan.popular ? "border-primary/50" : ""
+      transition={{ ...FADE_IN_UP.transition, delay: animationDelay }}
+      className={`relative glass-card p-8 ${
+        plan.popular ? "border-primary/40 shadow-glow" : ""
       }`}
     >
-      {/* Popular badge */}
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+          <div className="badge badge-primary flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
             Most Popular
           </div>
         </div>
       )}
 
-      {/* Plan header */}
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
         <p className="text-muted-foreground text-sm">{plan.description}</p>
       </div>
 
-      {/* Pricing */}
       <div className="mb-6">
         <span className="text-4xl font-bold">{plan.price}</span>
         <span className="text-muted-foreground text-sm ml-2">
@@ -157,7 +153,6 @@ const PricingPlanCard = ({ plan, index }: PricingPlanCardProps) => {
         </span>
       </div>
 
-      {/* Features list */}
       <ul className="space-y-3 mb-8">
         {plan.features.map((feature) => (
           <li key={feature} className="flex items-center gap-3 text-sm">
@@ -169,12 +164,11 @@ const PricingPlanCard = ({ plan, index }: PricingPlanCardProps) => {
         ))}
       </ul>
 
-      {/* CTA button */}
       <motion.button
         whileHover={BUTTON_HOVER.whileHover}
         whileTap={BUTTON_HOVER.whileTap}
-        className={`w-full py-3 rounded-xl font-semibold transition-all ${
-          plan.popular ? "btn-gradient" : "bg-secondary hover:bg-secondary/80"
+        className={`w-full py-3 rounded-lg font-semibold transition-all duration-200 ${
+          plan.popular ? "btn-primary" : "btn-secondary"
         }`}
       >
         {plan.cta}

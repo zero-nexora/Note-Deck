@@ -7,9 +7,10 @@ import {
   RemoveGroupMemberInput,
 } from "../schemas/user-group-member.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { AUDIT_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
 
 export const userGroupMemberService = {
-  addMember: async (userId: string, data: AddGroupMemberInput) => {
+  add: async (userId: string, data: AddGroupMemberInput) => {
     const group = await userGroupRepository.findById(data.groupId);
     if (!group) {
       throw new Error("Group not found");
@@ -18,7 +19,7 @@ export const userGroupMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -29,11 +30,12 @@ export const userGroupMemberService = {
       throw new Error("User not found");
     }
 
-    const exists = await userGroupMemberRepository.findByGroupIdAndUserId(
-      data.groupId,
-      data.userId
-    );
-    if (exists) {
+    const existingMember =
+      await userGroupMemberRepository.findByGroupIdAndUserId(
+        data.groupId,
+        data.userId
+      );
+    if (existingMember) {
       throw new Error("User is already in this group");
     }
 
@@ -42,8 +44,8 @@ export const userGroupMemberService = {
     await auditLogRepository.create({
       workspaceId: group.workspaceId,
       userId,
-      action: "user_group.member_added",
-      entityType: "user_group",
+      action: AUDIT_ACTION.USER_GROUP_MEMBER_ADDED,
+      entityType: ENTITY_TYPE.USER_GROUP,
       entityId: data.groupId,
       metadata: {
         addedUserId: data.userId,
@@ -55,7 +57,7 @@ export const userGroupMemberService = {
     return member;
   },
 
-  removeMember: async (userId: string, data: RemoveGroupMemberInput) => {
+  remove: async (userId: string, data: RemoveGroupMemberInput) => {
     const group = await userGroupRepository.findById(data.groupId);
     if (!group) {
       throw new Error("Group not found");
@@ -64,7 +66,7 @@ export const userGroupMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -81,8 +83,8 @@ export const userGroupMemberService = {
     await auditLogRepository.create({
       workspaceId: group.workspaceId,
       userId,
-      action: "user_group.member_removed",
-      entityType: "user_group",
+      action: AUDIT_ACTION.USER_GROUP_MEMBER_REMOVED,
+      entityType: ENTITY_TYPE.USER_GROUP,
       entityId: data.groupId,
       metadata: {
         removedUserId: data.userId,
@@ -93,7 +95,7 @@ export const userGroupMemberService = {
     await userGroupMemberRepository.remove(data.groupId, data.userId);
   },
 
-  listMembers: async (userId: string, groupId: string) => {
+  list: async (userId: string, groupId: string) => {
     const group = await userGroupRepository.findById(groupId);
     if (!group) {
       throw new Error("Group not found");
@@ -102,7 +104,7 @@ export const userGroupMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "observer"
+      ROLE.OBSERVER
     );
     if (!hasPermission) {
       throw new Error("Permission denied");

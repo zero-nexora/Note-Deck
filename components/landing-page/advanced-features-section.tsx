@@ -1,8 +1,7 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
+import { easeInOut, easeOut, motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Shield, Layers, Sparkles, LucideIcon } from "lucide-react";
 
 interface Feature {
@@ -10,6 +9,7 @@ interface Feature {
   title: string;
   description: string;
   gradient: string;
+  iconColor: string;
 }
 
 const FEATURES: Feature[] = [
@@ -18,83 +18,87 @@ const FEATURES: Feature[] = [
     title: "Lightning Fast",
     description:
       "Experience sub-millisecond response times with our optimized infrastructure.",
-    gradient: "from-yellow-500/20 to-orange-500/20",
+    gradient: "from-yellow-500/10 to-orange-500/10",
+    iconColor: "text-yellow-500",
   },
   {
     icon: Shield,
     title: "Enterprise Security",
     description:
       "Bank-grade encryption and compliance certifications protect your data.",
-    gradient: "from-green-500/20 to-emerald-500/20",
+    gradient: "from-green-500/10 to-emerald-500/10",
+    iconColor: "text-green-500",
   },
   {
     icon: Layers,
     title: "Scalable Architecture",
     description:
       "From startup to enterprise, our platform grows with your team.",
-    gradient: "from-blue-500/20 to-cyan-500/20",
+    gradient: "from-blue-500/10 to-cyan-500/10",
+    iconColor: "text-blue-500",
   },
   {
     icon: Sparkles,
     title: "AI-Powered Insights",
     description:
       "Smart suggestions and automations powered by machine learning.",
-    gradient: "from-purple-500/20 to-pink-500/20",
+    gradient: "from-purple-500/10 to-pink-500/10",
+    iconColor: "text-purple-500",
   },
 ];
 
 const HEADER_ANIMATION = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.6, ease: easeOut },
 };
 
 const CARD_ANIMATION = {
-  initial: { opacity: 0, y: 50 },
+  initial: { opacity: 0, y: 40 },
   hover: {
-    rotateX: -5,
-    rotateY: 5,
-    scale: 1.02,
+    scale: [1, 1.2, 1],
+    transition: {
+      duration: 0.35,
+      ease: [0.4, 0, 0.2, 1],
+    },
   },
-  spring: { type: "spring" as const, stiffness: 300, damping: 20 },
 };
 
-const ICON_SHAKE_ANIMATION = {
-  rotate: [0, -10, 10, -10, 0],
-  transition: { duration: 0.5 },
+const ICON_ANIMATION = {
+  scale: [1, 1.2, 1],
+  rotate: [0, -10, 10, -5, 0],
+  transition: { duration: 0.6, ease: easeInOut },
 };
 
-export const AdvancedFeaturesSection = () => {
+export function AdvancedFeaturesSection() {
   const headerRef = useRef(null);
   const isHeaderInView = useInView(headerRef, { once: true });
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
-      {/* Background gradient blur */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+    <section className="landing-showcase relative">
+      <div className="absolute inset-0 grid-pattern opacity-30" />
 
-      <div className="container mx-auto max-w-6xl relative z-10">
-        {/* Section header */}
+      <div className="landing-orb landing-orb-1" />
+      <div className="landing-orb landing-orb-2" />
+
+      <div className="landing-showcase-content">
         <motion.div
           ref={headerRef}
           initial={HEADER_ANIMATION.initial}
           animate={isHeaderInView ? HEADER_ANIMATION.animate : {}}
           transition={HEADER_ANIMATION.transition}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+          <span className="badge badge-primary mb-6 text-sm">
             Advanced Features
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4 glow-text">
-            Built for the Future
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <h2 className="landing-showcase-title mb-6">Built for the Future</h2>
+          <p className="landing-showcase-subtitle">
             Cutting-edge technology that empowers teams to achieve more.
           </p>
         </motion.div>
 
-        {/* Features grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {FEATURES.map((feature, index) => (
             <FeatureCard key={feature.title} feature={feature} index={index} />
           ))}
@@ -102,7 +106,7 @@ export const AdvancedFeaturesSection = () => {
       </div>
     </section>
   );
-};
+}
 
 interface FeatureCardProps {
   feature: Feature;
@@ -112,10 +116,10 @@ interface FeatureCardProps {
 const FeatureCard = ({ feature, index }: FeatureCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef(null);
-  const isInView = useInView(cardRef, { once: true, margin: "-100px" });
+  const isInView = useInView(cardRef, { once: true, margin: "-120px" });
 
   const FeatureIcon = feature.icon;
-  const cardDelay = index * 0.15;
+  const cardDelay = index * 0.18;
 
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
@@ -125,43 +129,39 @@ const FeatureCard = ({ feature, index }: FeatureCardProps) => {
       ref={cardRef}
       initial={CARD_ANIMATION.initial}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: cardDelay }}
+      whileHover={{
+        transition: {
+          duration: 0.35,
+          ease: [0.4, 0, 0.2, 1],
+        },
+      }}
+      transition={{ duration: 0.7, delay: cardDelay, ease: [0.4, 0, 0.2, 1] }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="perspective-1000"
+      className="h-full"
     >
-      <motion.div
-        animate={
-          isHovered
-            ? CARD_ANIMATION.hover
-            : { rotateX: 0, rotateY: 0, scale: 1 }
-        }
-        transition={CARD_ANIMATION.spring}
-        className="transform-style-3d h-full"
-      >
-        <Card className="glass-card h-full border-border/30 overflow-hidden group">
-          <div
-            className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-          />
+      <div className="landing-feature-card h-full group">
+        <div
+          className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-inherit`}
+        />
 
-          <CardHeader className="relative z-10">
-            <motion.div
-              animate={isHovered ? ICON_SHAKE_ANIMATION : {}}
-              transition={ICON_SHAKE_ANIMATION.transition}
-              className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4 glow-border"
-            >
-              <FeatureIcon className="w-7 h-7 text-primary" />
-            </motion.div>
-            <CardTitle className="text-xl font-display text-foreground">
-              {feature.title}
-            </CardTitle>
-          </CardHeader>
+        <div className="relative z-10">
+          <motion.div
+            animate={isHovered ? ICON_ANIMATION : {}}
+            transition={ICON_ANIMATION.transition}
+            className="w-16 h-16 rounded-xl gradient-primary flex items-center justify-center mb-6 shadow-button group-hover:shadow-glow transition-all duration-500"
+          >
+            <FeatureIcon className={`w-8 h-8 ${feature.iconColor}`} />
+          </motion.div>
 
-          <CardContent className="relative z-10">
-            <p className="text-muted-foreground">{feature.description}</p>
-          </CardContent>
-        </Card>
-      </motion.div>
+          <h3 className="landing-feature-title mb-4">{feature.title}</h3>
+          <p className="landing-feature-description text-base">
+            {feature.description}
+          </p>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-b-inherit" />
+      </div>
     </motion.div>
   );
 };

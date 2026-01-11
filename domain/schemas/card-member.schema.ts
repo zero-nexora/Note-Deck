@@ -1,13 +1,13 @@
-import { z } from "zod";
+import z from "zod";
 
 export const AddCardMemberSchema = z.object({
-  cardId: z.string().min(1),
-  userId: z.string().min(1),
+  cardId: z.string().uuid({ message: "Invalid UUID for cardId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 export const RemoveCardMemberSchema = z.object({
-  cardId: z.string().min(1),
-  userId: z.string().min(1),
+  cardId: z.string().uuid({ message: "Invalid UUID for cardId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 export type AddCardMemberInput = z.infer<typeof AddCardMemberSchema>;

@@ -16,30 +16,36 @@ export const checklistRepository = {
     });
   },
 
-  findByCardId: async (cardId: string) => {
-    return await db.query.checklists.findMany({
-      where: eq(checklists.cardId, cardId),
-      with: {
-        items: {
-          orderBy: (items, { asc }) => [asc(items.position)],
-        },
-      },
-      orderBy: (checklists, { asc }) => [asc(checklists.position)],
-    });
-  },
+  // findByCardId: async (cardId: string) => {
+  //   return db.query.checklists.findMany({
+  //     where: eq(checklists.cardId, cardId),
+  //   });
+  // },
 
-  update: async (id: string, data: UpdateChecklist) => {
+  // findByCardIdWithItems: async (cardId: string) => {
+  //   return db.query.checklists.findMany({
+  //     where: eq(checklists.cardId, cardId),
+  //     with: {
+  //       items: {
+  //         orderBy: (items, { asc }) => [asc(items.position)],
+  //       },
+  //     },
+  //     orderBy: (checklists, { asc }) => [asc(checklists.position)],
+  //   });
+  // },
+
+  update: async (checklistId: string, data: UpdateChecklist) => {
     const [updated] = await db
       .update(checklists)
       .set(data)
-      .where(eq(checklists.id, id))
+      .where(eq(checklists.id, checklistId))
       .returning();
 
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(checklists).where(eq(checklists.id, id));
+  delete: async (checklistId: string) => {
+    await db.delete(checklists).where(eq(checklists.id, checklistId));
   },
 
   getMaxPosition: async (cardId: string) => {

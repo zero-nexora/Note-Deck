@@ -9,13 +9,18 @@ export const userGroupMemberRepository = {
   },
 
   findByGroupId: async (groupId: string) => {
-    const members = await db.query.userGroupMembers.findMany({
+    return db.query.userGroupMembers.findMany({
+      where: eq(userGroupMembers.groupId, groupId),
+    });
+  },
+
+  findByGroupIdWithUser: async (groupId: string) => {
+    return db.query.userGroupMembers.findMany({
       where: eq(userGroupMembers.groupId, groupId),
       with: {
         user: true,
       },
     });
-    return members;
   },
 
   findByGroupIdAndUserId: async (groupId: string, userId: string) => {

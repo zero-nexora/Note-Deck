@@ -5,14 +5,12 @@ import {
   createWorkspaceAction,
   deleteWorkspaceAction,
   updateWorkspaceNameAction,
-  updateWorkspaceSlugAction,
-} from "@/app/actions/workspace.action";
+} from "@/domain/actions/workspace.action";
 import {
   ChangePlanInput,
   CreateWorkspaceInput,
   DeleteWorkspaceInput,
   UpdateWorkspaceNameInput,
-  UpdateWorkspaceSlugInput,
 } from "@/domain/schemas/workspace.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -21,89 +19,45 @@ export function useWorkspace() {
   const router = useRouter();
 
   const createWorkspace = async (input: CreateWorkspaceInput) => {
-    try {
-      const result = await createWorkspaceAction(input);
-
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        router.push(`/workspaces/${result.data!.id}`);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await createWorkspaceAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.push(`/workspaces/${result.data!.id}`);
+    router.refresh();
   };
 
-  const updateNameWorkspace = async (
-    id: string,
+  const updateWorkspaceName = async (
+    workspaceId: string,
     input: UpdateWorkspaceNameInput
   ) => {
-    try {
-      const result = await updateWorkspaceNameAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await updateWorkspaceNameAction(workspaceId, input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const updateSlugWorkspace = async (
-    id: string,
-    input: UpdateWorkspaceSlugInput
+  const changeWorkspacePlan = async (
+    workspaceId: string,
+    input: ChangePlanInput
   ) => {
-    try {
-      const result = await updateWorkspaceSlugAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const changePlan = async (id: string, input: ChangePlanInput) => {
-    try {
-      const result = await changeWorkspacePlanAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await changeWorkspacePlanAction(workspaceId, input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
   const deleteWorkspace = async (input: DeleteWorkspaceInput) => {
-    try {
-      const result = await deleteWorkspaceAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.push("/workspaces");
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await deleteWorkspaceAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.push("/workspaces");
+    router.refresh();
   };
 
   return {
     createWorkspace,
-    updateNameWorkspace,
-    updateSlugWorkspace,
-    changePlan,
+    updateWorkspaceName,
+    changeWorkspacePlan,
     deleteWorkspace,
   };
 }

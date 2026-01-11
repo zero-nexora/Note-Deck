@@ -23,7 +23,7 @@ export const BoardCardItemMembers = ({
 }: BoardCardItemMembersProps) => {
   const [cardMembers, setCardMembers] = useState(initialCardMembers);
   const [isAdding, setIsAdding] = useState(false);
-  const { addMember, removeMember } = useCardMember();
+  const { addCardMember, removeCardMember } = useCardMember();
 
   useEffect(() => {
     setCardMembers(initialCardMembers);
@@ -35,7 +35,7 @@ export const BoardCardItemMembers = ({
     const isAssigned = assignedUserIds.has(userId);
 
     if (isAssigned) {
-      await removeMember({ cardId, userId });
+      await removeCardMember({ cardId, userId });
       setCardMembers((prev) => prev.filter((m) => m.user.id !== userId));
 
       realtimeUtils.broadcastMemberUnassigned({
@@ -43,7 +43,7 @@ export const BoardCardItemMembers = ({
         memberId: userId,
       });
     } else {
-      const newMembership = await addMember({ cardId, userId });
+      const newMembership = await addCardMember({ cardId, userId });
       if (newMembership) {
         const boardMember = boardMembers.find((m) => m.user.id === userId);
         if (boardMember) {

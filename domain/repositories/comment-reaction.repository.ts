@@ -13,29 +13,34 @@ export const commentReactionRepository = {
     return reaction;
   },
 
-  findByCommentId: async (commentId: string) => {
-    const reactions = await db.query.commentReactions.findMany({
-      where: eq(commentReactions.commentId, commentId),
-      with: {
-        user: true,
-      },
-    });
-    return reactions;
-  },
+  // findByCommentId: async (commentId: string) => {
+  //   return db.query.commentReactions.findMany({
+  //     where: eq(commentReactions.commentId, commentId),
+  //   });
+  // },
 
-  findByCommentUserEmoji: async (
+  // findByCommentIdWithUser: async (commentId: string) => {
+  //   const reactions = await db.query.commentReactions.findMany({
+  //     where: eq(commentReactions.commentId, commentId),
+  //     with: {
+  //       user: true,
+  //     },
+  //   });
+  //   return reactions;
+  // },
+
+  findByCommentIdUserEmoji: async (
     commentId: string,
     userId: string,
     emoji: string
   ) => {
-    const reaction = await db.query.commentReactions.findFirst({
+    return db.query.commentReactions.findFirst({
       where: and(
         eq(commentReactions.commentId, commentId),
         eq(commentReactions.userId, userId),
         eq(commentReactions.emoji, emoji)
       ),
     });
-    return reaction;
   },
 
   remove: async (commentId: string, userId: string, emoji: string) => {

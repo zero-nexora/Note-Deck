@@ -8,7 +8,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useSheet } from "@/stores/sheet-store";
-import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
 
 export const CustomSheet = () => {
@@ -22,8 +21,6 @@ export const CustomSheet = () => {
         </SheetHeader>
         <Separator />
         <div className="p-4 overflow-auto">{data?.children}</div>
-        {/* <ScrollArea className="h-[calc(100vh-100px)] p-4 w-full">
-          </ScrollArea> */}
       </SheetContent>
     </Sheet>
   );

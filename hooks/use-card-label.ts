@@ -1,8 +1,9 @@
 "use client";
+
 import {
   addCardLabelAction,
   removeCardLabelAction,
-} from "@/app/actions/card-label.action";
+} from "@/domain/actions/card-label.action";
 import {
   AddCardLabelInput,
   RemoveCardLabelInput,
@@ -13,39 +14,29 @@ import { toast } from "sonner";
 export function useCardLabel() {
   const router = useRouter();
 
-  const addLabel = async (input: AddCardLabelInput) => {
-    try {
-      const result = await addCardLabelAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const addCardLabel = async (input: AddCardLabelInput) => {
+    const result = await addCardLabelAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
-  const removeLabel = async (input: RemoveCardLabelInput) => {
-    try {
-      const result = await removeCardLabelAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const removeCardLabel = async (input: RemoveCardLabelInput) => {
+    const result = await removeCardLabelAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {
-    addLabel,
-    removeLabel,
+    addCardLabel,
+    removeCardLabel,
   };
 }

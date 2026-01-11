@@ -1,8 +1,9 @@
 "use client";
+
 import {
   addCommentReactionAction,
   removeCommentReactionAction,
-} from "@/app/actions/comment-reaction.action";
+} from "@/domain/actions/comment-reaction.action";
 import {
   AddCommentReactionInput,
   RemoveCommentReactionInput,
@@ -14,34 +15,24 @@ export function useCommentReaction() {
   const router = useRouter();
 
   const addReaction = async (input: AddCommentReactionInput) => {
-    try {
-      const result = await addCommentReactionAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await addCommentReactionAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const removeReaction = async (input: RemoveCommentReactionInput) => {
-    try {
-      const result = await removeCommentReactionAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await removeCommentReactionAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {

@@ -1,17 +1,18 @@
 "use client";
+
 import {
-  addMemberAction,
-  removeMemberAction,
-  changeMemberRoleAction,
-  listMembersAction,
+  addWorkspaceMemberAction,
+  removeWorkspaceMemberAction,
+  changeWorkspaceMemberRoleAction,
   leaveWorkspaceAction,
-} from "@/app/actions/workspace-member.action";
+  transferWorkspaceOwnershipAction,
+} from "@/domain/actions/workspace-member.action";
 import {
   AddMemberInput,
   RemoveMemberInput,
   ChangeMemberRoleInput,
-  ListMembersInput,
   LeaveWorkspaceInput,
+  TransferOwnershipInput,
 } from "@/domain/schemas/workspace-member.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -19,82 +20,47 @@ import { toast } from "sonner";
 export function useWorkspaceMember() {
   const router = useRouter();
 
-  const addMember = async (input: AddMemberInput) => {
-    try {
-      const result = await addMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const addWorkspaceMember = async (input: AddMemberInput) => {
+    const result = await addWorkspaceMemberAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const removeMember = async (input: RemoveMemberInput) => {
-    try {
-      const result = await removeMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const removeWorkspaceMember = async (input: RemoveMemberInput) => {
+    const result = await removeWorkspaceMemberAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const changeRole = async (input: ChangeMemberRoleInput) => {
-    try {
-      const result = await changeMemberRoleAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const listMembers = async (input: ListMembersInput) => {
-    try {
-      const result = await listMembersAction(input);
-      if (result.success) {
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-      return null;
-    }
+  const changeWorkspaceMemberRole = async (input: ChangeMemberRoleInput) => {
+    const result = await changeWorkspaceMemberRoleAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
   const leaveWorkspace = async (input: LeaveWorkspaceInput) => {
-    try {
-      const result = await leaveWorkspaceAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.push("/workspaces");
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    const result = await leaveWorkspaceAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.push("/workspaces");
+    router.refresh();
+  };
+
+  const transferWorkspaceOwnership = async (input: TransferOwnershipInput) => {
+    const result = await transferWorkspaceOwnershipAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {
-    addMember,
-    removeMember,
-    changeRole,
-    listMembers,
+    addWorkspaceMember,
+    removeWorkspaceMember,
+    changeWorkspaceMemberRole,
     leaveWorkspace,
+    transferWorkspaceOwnership,
   };
 }

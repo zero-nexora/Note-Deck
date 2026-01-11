@@ -116,57 +116,56 @@ const FADE_IN_UP = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
+  transition: { duration: 0.5 },
 };
 
 const FADE_IN_UP_DELAYED = {
-  initial: { opacity: 0, y: 40 },
+  initial: { opacity: 0, y: 30 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
+  transition: { duration: 0.6, delay: 0.2 },
 };
 
 export const BoardShowcase = () => {
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-        {/* Section header */}
+    <section className="section-padding px-4 relative overflow-hidden">
+      <div className="container-custom">
         <motion.div
           initial={FADE_IN_UP.initial}
           whileInView={FADE_IN_UP.whileInView}
           viewport={FADE_IN_UP.viewport}
+          transition={FADE_IN_UP.transition}
           className="text-center mb-16"
         >
-          <span className="text-sm font-medium text-primary uppercase tracking-wider">
+          <span className="text-sm font-semibold text-primary uppercase tracking-wider">
             Powerful UI
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6">
+          <h2 className="text-heading mt-4 mb-6">
             Intuitive boards designed for{" "}
             <span className="gradient-text">productivity</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-subheading max-w-2xl mx-auto">
             Everything your team needs, organized beautifully. Labels,
             checklists, due dates, and attachments—all at your fingertips.
           </p>
         </motion.div>
 
-        {/* Board container */}
         <motion.div
           initial={FADE_IN_UP_DELAYED.initial}
           whileInView={FADE_IN_UP_DELAYED.whileInView}
           viewport={FADE_IN_UP_DELAYED.viewport}
-          className="glass-panel p-6 overflow-x-auto glow-effect"
+          transition={FADE_IN_UP_DELAYED.transition}
+          className="glass-card p-6 overflow-x-auto shadow-glow custom-scrollbar"
         >
-          {/* Board header */}
           <BoardHeader />
 
-          {/* Board lists */}
           <div className="flex gap-4 min-w-[800px]">
             {BOARD_LISTS.map((list, index) => (
               <BoardListColumn key={list.title} list={list} index={index} />
             ))}
 
-            {/* Add list button */}
             <div className="w-72 shrink-0">
-              <button className="w-full h-12 border-2 border-dashed border-border/50 rounded-xl text-muted-foreground hover:border-primary/30 hover:text-foreground transition-colors">
+              <button className="w-full h-12 border-2 border-dashed border-border/40 rounded-lg text-sm text-muted-foreground hover:border-primary/30 hover:text-foreground hover:bg-accent/50 transition-all duration-200">
                 + Add list
               </button>
             </div>
@@ -185,23 +184,23 @@ const BoardHeader = () => {
           <span className="text-primary font-bold text-sm">P</span>
         </div>
         <h3 className="font-semibold text-lg">Product Launch 2024</h3>
-        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-          Team Board
-        </span>
+        <span className="badge badge-primary text-xs">Team Board</span>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <div className="flex -space-x-2">
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member}
-              className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent border-2 border-background"
+              className="avatar avatar-sm"
+              style={{
+                background:
+                  "linear-gradient(135deg, hsl(262 83% 58%), hsl(262 90% 70%))",
+              }}
             />
           ))}
         </div>
-        <button className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg bg-secondary/50">
-          + Invite
-        </button>
+        <button className="btn-secondary text-sm px-3 py-1.5">+ Invite</button>
       </div>
     </div>
   );
@@ -220,27 +219,24 @@ const BoardListColumn = ({ list, index }: BoardListColumnProps) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ delay: animationDelay }}
+      transition={{ delay: animationDelay, duration: 0.4 }}
       className="w-72 shrink-0"
     >
-      <div className="bg-secondary/30 rounded-xl p-3">
-        {/* List header */}
-        <div className="flex items-center justify-between mb-3 px-1">
+      <div className="board-column">
+        <div className="board-column-header">
           <h4 className="font-medium text-sm">{list.title}</h4>
           <span className="text-xs text-muted-foreground">
             {list.cards.length}
           </span>
         </div>
 
-        {/* Cards */}
         <div className="space-y-2">
           {list.cards.map((card) => (
             <BoardCard key={card.title} card={card} />
           ))}
         </div>
 
-        {/* Add card button */}
-        <button className="w-full mt-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors">
+        <button className="w-full mt-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-colors duration-200">
           + Add card
         </button>
       </div>
@@ -256,9 +252,9 @@ const BoardCard = ({ card }: BoardCardProps) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="bg-card border border-border/50 rounded-lg p-3 cursor-pointer hover:border-primary/30 transition-all"
+      transition={{ duration: 0.2 }}
+      className="task-card"
     >
-      {/* Labels */}
       <div className="flex gap-1.5 mb-2 flex-wrap">
         {card.labels.map((label, index) => (
           <span
@@ -270,10 +266,8 @@ const BoardCard = ({ card }: BoardCardProps) => {
         ))}
       </div>
 
-      {/* Card title */}
-      <p className="text-sm font-medium mb-3">{card.title}</p>
+      <p className="text-xs font-medium mb-3">{card.title}</p>
 
-      {/* Card metadata */}
       <div className="flex items-center justify-between text-muted-foreground">
         <CardMetadata card={card} />
         {card.members && <CardMembers count={card.members} />}
@@ -288,7 +282,7 @@ interface CardMetadataProps {
 
 const CardMetadata = ({ card }: CardMetadataProps) => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       {card.dueDate && (
         <div className="flex items-center gap-1 text-xs">
           <Calendar className="w-3 h-3" />
@@ -332,7 +326,11 @@ const CardMembers = ({ count }: CardMembersProps) => {
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className="w-5 h-5 rounded-full bg-linear-to-br from-primary/60 to-accent/60 border border-card"
+          className="w-5 h-5 rounded-full border border-card"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(262 83% 58% / 0.6), hsl(262 90% 70% / 0.6))",
+          }}
         />
       ))}
     </div>

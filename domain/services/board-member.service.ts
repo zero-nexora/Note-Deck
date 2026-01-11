@@ -13,6 +13,13 @@ import {
 import { boardRepository } from "../repositories/board.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { activityRepository } from "../repositories/activity.repository";
+import {
+  ACTIVITY_ACTION,
+  AUDIT_ACTION,
+  DEFAULT_BOARD_MEMBER_ROLE,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const boardMemberService = {
   add: async (userId: string, data: AddBoardMemberInput) => {
@@ -24,7 +31,7 @@ export const boardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -38,21 +45,21 @@ export const boardMemberService = {
     const isWorkspaceMember = await checkWorkspacePermission(
       data.userId,
       board.workspaceId,
-      "observer"
+      ROLE.OBSERVER
     );
     if (!isWorkspaceMember) {
       throw new Error("User must be a workspace member first");
     }
 
-    const exists = await boardMemberRepository.findByBoardIdAndUserId(
+    const existingMember = await boardMemberRepository.findByBoardIdAndUserId(
       data.boardId,
       data.userId
     );
-    if (exists) {
+    if (existingMember) {
       throw new Error("User is already a board member");
     }
 
-    const role = data.role || "normal";
+    const role = data.role || DEFAULT_BOARD_MEMBER_ROLE;
 
     const member = await boardMemberRepository.add({
       boardId: data.boardId,
@@ -63,8 +70,8 @@ export const boardMemberService = {
     await activityRepository.create({
       boardId: data.boardId,
       userId,
-      action: "board.member_added",
-      entityType: "board",
+      action: ACTIVITY_ACTION.BOARD_MEMBER_ADDED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: data.boardId,
       metadata: {
         addedUserId: data.userId,
@@ -76,8 +83,8 @@ export const boardMemberService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "board.member_added",
-      entityType: "board_member",
+      action: AUDIT_ACTION.BOARD_MEMBER_ADDED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: member.id,
       metadata: {
         boardId: data.boardId,
@@ -100,7 +107,7 @@ export const boardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -117,8 +124,8 @@ export const boardMemberService = {
     await activityRepository.create({
       boardId: data.boardId,
       userId,
-      action: "board.member_removed",
-      entityType: "board",
+      action: ACTIVITY_ACTION.BOARD_MEMBER_REMOVED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: data.boardId,
       metadata: {
         removedUserId: data.userId,
@@ -129,8 +136,8 @@ export const boardMemberService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "board.member_removed",
-      entityType: "board_member",
+      action: AUDIT_ACTION.BOARD_MEMBER_REMOVED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: member.id,
       metadata: {
         boardId: data.boardId,
@@ -152,7 +159,7 @@ export const boardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -170,7 +177,7 @@ export const boardMemberService = {
       return member;
     }
 
-    const updated = await boardMemberRepository.updateRole(
+    const updatedMember = await boardMemberRepository.updateRole(
       data.boardId,
       data.userId,
       data.role
@@ -179,8 +186,8 @@ export const boardMemberService = {
     await activityRepository.create({
       boardId: data.boardId,
       userId,
-      action: "board.member_role_changed",
-      entityType: "board",
+      action: ACTIVITY_ACTION.BOARD_MEMBER_ROLE_CHANGED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: data.boardId,
       metadata: {
         changedUserId: data.userId,
@@ -192,8 +199,8 @@ export const boardMemberService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "board.member_role_changed",
-      entityType: "board_member",
+      action: AUDIT_ACTION.BOARD_MEMBER_ROLE_CHANGED,
+      entityType: ENTITY_TYPE.BOARD,
       entityId: member.id,
       metadata: {
         boardId: data.boardId,
@@ -204,7 +211,7 @@ export const boardMemberService = {
       },
     });
 
-    return updated;
+    return updatedMember;
   },
 
   list: async (userId: string, data: ListBoardMembersInput) => {
@@ -216,7 +223,7 @@ export const boardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "observer"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");

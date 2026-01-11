@@ -10,25 +10,20 @@ export const attachmentRepository = {
   },
 
   findById: async (id: string) => {
-    const attachment = await db.query.attachments.findFirst({
+    return db.query.attachments.findFirst({
       where: eq(attachments.id, id),
-      with: {
-        user: true,
-      },
     });
-    return attachment;
   },
 
-  findByCardId: async (cardId: string) => {
-    const cardAttachments = await db.query.attachments.findMany({
-      where: eq(attachments.cardId, cardId),
-      with: {
-        user: true,
-      },
-      orderBy: (attachments, { desc }) => [desc(attachments.createdAt)],
-    });
-    return cardAttachments;
-  },
+  // findByCardId: async (cardId: string) => {
+  //   return db.query.attachments.findMany({
+  //     where: eq(attachments.cardId, cardId),
+  //     with: {
+  //       user: true,
+  //     },
+  //     orderBy: (attachments, { desc }) => [desc(attachments.createdAt)],
+  //   });
+  // },
 
   delete: async (id: string) => {
     await db.delete(attachments).where(eq(attachments.id, id));

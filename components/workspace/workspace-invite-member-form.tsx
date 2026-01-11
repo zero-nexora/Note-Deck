@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Mail, Shield, CheckCircle2 } from "lucide-react";
+import { DEFAULT_WORKSPACE_MEMBER_ROLE } from "@/lib/constants";
 
 interface WorkspaceInviteMemberFormProps {
   workspaceId: string;
@@ -34,7 +35,7 @@ interface WorkspaceInviteMemberFormProps {
 export const WorkspaceInviteMemberForm = ({
   workspaceId,
 }: WorkspaceInviteMemberFormProps) => {
-  const { createInvite } = useWorkspaceInvite();
+  const { createWorkspaceInvite } = useWorkspaceInvite();
   const { close } = useModal();
 
   const form = useForm({
@@ -42,12 +43,12 @@ export const WorkspaceInviteMemberForm = ({
     defaultValues: {
       workspaceId: workspaceId,
       email: "",
-      role: "normal",
+      role: DEFAULT_WORKSPACE_MEMBER_ROLE,
     },
   });
 
   const handleSubmit = async (values: CreateInviteInput) => {
-    await createInvite(values);
+    await createWorkspaceInvite(values);
     close();
     form.reset();
   };

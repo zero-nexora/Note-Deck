@@ -31,7 +31,7 @@ export const BoardInviteMemberForm = ({
   boardMembers,
   workspaceMembers,
 }: BoardInviteMemberFormProps) => {
-  const { addMember } = useBoardMember();
+  const { addBoardMember } = useBoardMember();
   const { close } = useModal();
 
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -66,7 +66,7 @@ export const BoardInviteMemberForm = ({
 
     await Promise.all(
       selectedUserIds.map((userId) =>
-        addMember({
+        addBoardMember({
           boardId,
           userId,
           role,

@@ -21,41 +21,41 @@ export const automationRepository = {
     return boardAutomations;
   },
 
-  findById: async (id: string) => {
+  findById: async (automationId: string) => {
     const automation = await db.query.automations.findFirst({
-      where: eq(automations.id, id),
+      where: eq(automations.id, automationId),
     });
     return automation;
   },
 
-  update: async (id: string, data: UpdateAutomation) => {
+  update: async (automationId: string, data: UpdateAutomation) => {
     const [updated] = await db
       .update(automations)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(automations.id, id))
+      .where(eq(automations.id, automationId))
       .returning();
     return updated;
   },
 
-  enable: async (id: string) => {
+  enable: async (automationId: string) => {
     const [updated] = await db
       .update(automations)
       .set({ isActive: true, updatedAt: new Date() })
-      .where(eq(automations.id, id))
+      .where(eq(automations.id, automationId))
       .returning();
     return updated;
   },
 
-  disable: async (id: string) => {
+  disable: async (automationId: string) => {
     const [updated] = await db
       .update(automations)
       .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(automations.id, id))
+      .where(eq(automations.id, automationId))
       .returning();
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(automations).where(eq(automations.id, id));
+  delete: async (automationId: string) => {
+    await db.delete(automations).where(eq(automations.id, automationId));
   },
 };

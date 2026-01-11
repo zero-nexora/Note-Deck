@@ -40,7 +40,7 @@ export const notificationService = {
   },
 
   list: async (userId: string, unreadOnly = false) => {
-    const notifications = await notificationRepository.findByUserId(
+    const notifications = await notificationRepository.findByUserIdWithUser(
       userId,
       unreadOnly
     );

@@ -3,6 +3,10 @@
 import {
   CreateUserGroupInput,
   CreateUserGroupSchema,
+  FindUserGroupInput,
+  FindUserGroupSchema,
+  FindUserGroupsByWorkspaceInput,
+  FindUserGroupsByWorkspaceSchema,
   UpdateUserGroupInput,
   UpdateUserGroupSchema,
   DeleteUserGroupInput,
@@ -10,17 +14,16 @@ import {
 } from "@/domain/schemas/user-group.schema";
 import { userGroupService } from "@/domain/services/user-group.service";
 import { requireAuth } from "@/lib/session";
-import { error, success } from "@/lib/response";
+import { success, error } from "@/lib/response";
 
 export const createUserGroupAction = async (input: CreateUserGroupInput) => {
   try {
     const user = await requireAuth();
-
     const parsed = CreateUserGroupSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -31,22 +34,41 @@ export const createUserGroupAction = async (input: CreateUserGroupInput) => {
   }
 };
 
-export const findUserGroupByIdAction = async (id: string) => {
+export const findUserGroupByIdAction = async (input: FindUserGroupInput) => {
   try {
     const user = await requireAuth();
+    const parsed = FindUserGroupSchema.safeParse(input);
+    if (!parsed.success) {
+      const message =
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
+      return error(message);
+    }
 
-    const group = await userGroupService.findById(user.id, id);
+    const group = await userGroupService.findById(user.id, parsed.data);
     return success("", group);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
-export const findUserGroupsByWorkspaceAction = async (workspaceId: string) => {
+export const findUserGroupsByWorkspaceIdAction = async (
+  input: FindUserGroupsByWorkspaceInput
+) => {
   try {
     const user = await requireAuth();
+    const parsed = FindUserGroupsByWorkspaceSchema.safeParse(input);
+    if (!parsed.success) {
+      const message =
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
+      return error(message);
+    }
 
-    const groups = await userGroupService.findByWorkspaceId(user.id, workspaceId);
+    const groups = await userGroupService.findByWorkspaceId(
+      user.id,
+      parsed.data
+    );
     return success("", groups);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -54,21 +76,20 @@ export const findUserGroupsByWorkspaceAction = async (workspaceId: string) => {
 };
 
 export const updateUserGroupAction = async (
-  id: string,
+  groupId: string,
   input: UpdateUserGroupInput
 ) => {
   try {
     const user = await requireAuth();
-
     const parsed = UpdateUserGroupSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    const group = await userGroupService.update(user.id, id, parsed.data);
+    const group = await userGroupService.update(user.id, groupId, parsed.data);
     return success("User group updated successfully", group);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -78,12 +99,11 @@ export const updateUserGroupAction = async (
 export const deleteUserGroupAction = async (input: DeleteUserGroupInput) => {
   try {
     const user = await requireAuth();
-
     const parsed = DeleteUserGroupSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 

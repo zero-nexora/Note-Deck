@@ -1,53 +1,44 @@
-import { z } from "zod";
+import z from "zod";
 
 export const CreateListSchema = z.object({
-  boardId: z.string().min(1),
-  name: z.string().min(1),
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  name: z.string().min(1, { message: "Name is required" }),
 });
 
 export const UpdateListSchema = z.object({
-  name: z.string().min(1).optional(),
-});
-
-export const MoveListSchema = z.object({
-  id: z.string().min(1),
-  boardId: z.string().min(1),
-  position: z.number().int().min(0),
-});
-
-export const ArchiveListSchema = z.object({
-  id: z.string().min(1),
-});
-
-export const RestoreListSchema = z.object({
-  id: z.string().min(1),
+  name: z.string().min(1, { message: "Name is required" }).optional(),
 });
 
 export const DeleteListSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
-export const ReorderListsSchema = z.object({
-  boardId: z.string().min(1),
-  orders: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        position: z.number().int().min(0),
-      })
-    )
-    .min(1),
+export const ArchiveListSchema = z.object({
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
+});
+
+export const RestoreListSchema = z.object({
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export const DuplicateListSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
+});
+
+export const ReorderListsSchema = z.object({
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  orders: z.array(
+    z.object({
+      id: z.string().uuid({ message: "Invalid UUID for id" }),
+      position: z.number().int(),
+    })
+  ),
 });
 
 export type CreateListInput = z.infer<typeof CreateListSchema>;
 export type UpdateListInput = z.infer<typeof UpdateListSchema>;
-export type MoveListInput = z.infer<typeof MoveListSchema>;
+export type DeleteListInput = z.infer<typeof DeleteListSchema>;
 export type ArchiveListInput = z.infer<typeof ArchiveListSchema>;
 export type RestoreListInput = z.infer<typeof RestoreListSchema>;
-export type DeleteListInput = z.infer<typeof DeleteListSchema>;
-export type ReorderListsInput = z.infer<typeof ReorderListsSchema>;
 export type DuplicateListInput = z.infer<typeof DuplicateListSchema>;
+export type ReorderListsInput = z.infer<typeof ReorderListsSchema>;

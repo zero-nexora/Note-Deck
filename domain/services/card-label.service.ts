@@ -7,7 +7,7 @@ import {
 } from "../schemas/card-label.schema";
 import { cardLabelRepository } from "../repositories/card-label.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { executeAutomations } from "./automation.service";
+import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
 
 export const cardLabelService = {
   add: async (userId: string, data: AddCardLabelInput) => {
@@ -28,17 +28,17 @@ export const cardLabelService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const exists = await cardLabelRepository.findByCardIdAndLabelId(
+    const existingCardLabel = await cardLabelRepository.findByCardIdAndLabelId(
       data.cardId,
       data.labelId
     );
-    if (exists) {
+    if (existingCardLabel) {
       throw new Error("Label is already added to this card");
     }
 
@@ -48,8 +48,8 @@ export const cardLabelService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "card.label_added",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_LABEL_ADDED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: card.id,
       metadata: {
         labelId: data.labelId,
@@ -57,14 +57,6 @@ export const cardLabelService = {
         labelColor: label.color,
         cardTitle: card.title,
       },
-    });
-
-    await executeAutomations({
-      type: "LABEL_ADDED_TO_CARD",
-      boardId: card.boardId,
-      cardId: card.id,
-      labelId: data.labelId,
-      userId,
     });
 
     return cardLabel;
@@ -84,17 +76,17 @@ export const cardLabelService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const exists = await cardLabelRepository.findByCardIdAndLabelId(
+    const existingCardLabel = await cardLabelRepository.findByCardIdAndLabelId(
       data.cardId,
       data.labelId
     );
-    if (!exists) {
+    if (!existingCardLabel) {
       throw new Error("Label is not attached to this card");
     }
 
@@ -102,8 +94,8 @@ export const cardLabelService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "card.label_removed",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_LABEL_REMOVED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: card.id,
       metadata: {
         labelId: data.labelId,
@@ -114,13 +106,5 @@ export const cardLabelService = {
     });
 
     await cardLabelRepository.remove(data.cardId, data.labelId);
-
-    await executeAutomations({
-      type: "LABEL_REMOVED_FROM_CARD",
-      boardId: card.boardId,
-      cardId: card.id,
-      labelId: label.id,
-      userId,
-    });
   },
 };

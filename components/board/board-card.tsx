@@ -3,14 +3,7 @@
 import { BoardWithMember } from "@/domain/types/board.type";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import {
-  Archive,
-  Users,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Clock,
-} from "lucide-react";
+import { Archive, Users, Clock } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { useModal } from "@/stores/modal-store";
@@ -18,15 +11,8 @@ import { UpdateBoardForm } from "./update-board-form";
 import { useConfirm } from "@/stores/confirm-store";
 import { useBoard } from "@/hooks/use-board";
 import Link from "next/link";
-import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
+import { ActionsMenu } from "../common/actions-menu";
 
 interface BoardCardProps {
   board: BoardWithMember;
@@ -44,9 +30,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
   );
   const visibleMembers = board.members.slice(0, maxVisibleAvatars);
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleEdit = () => {
     openModal({
       title: "Edit Board",
       description: "Update your board details",
@@ -54,9 +38,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
     });
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = () => {
     openConfirm({
       title: "Delete Board",
       description:
@@ -83,37 +65,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
               )}
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-popover text-popover-foreground border-border"
-              >
-                <DropdownMenuItem
-                  onClick={handleEdit}
-                  className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Board
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer text-destructive"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Board
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ActionsMenu onEdit={handleEdit} onDelete={handleDelete} />
           </div>
 
           {board.isArchived && (

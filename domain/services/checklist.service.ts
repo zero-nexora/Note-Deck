@@ -7,7 +7,8 @@ import {
   DeleteChecklistInput,
   ReorderChecklistInput,
   UpdateChecklistInput,
-} from "../schemas/check-list.schema";
+} from "../schemas/checklist.schema";
+import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
 
 export const checklistService = {
   create: async (userId: string, data: CreateChecklistInput) => {
@@ -19,7 +20,7 @@ export const checklistService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -42,8 +43,8 @@ export const checklistService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "checklist.created",
-      entityType: "checklist",
+      action: ACTIVITY_ACTION.CHECKLIST_CREATED,
+      entityType: ENTITY_TYPE.CHECKLIST,
       entityId: checklist.id,
       metadata: { title: checklist.title },
     });
@@ -51,8 +52,12 @@ export const checklistService = {
     return checklist;
   },
 
-  update: async (userId: string, id: string, data: UpdateChecklistInput) => {
-    const checklist = await checklistRepository.findById(id);
+  update: async (
+    userId: string,
+    checklistId: string,
+    data: UpdateChecklistInput
+  ) => {
+    const checklist = await checklistRepository.findById(checklistId);
     if (!checklist) {
       throw new Error("Checklist not found");
     }
@@ -65,7 +70,7 @@ export const checklistService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -85,7 +90,10 @@ export const checklistService = {
       }
     }
 
-    const updated = await checklistRepository.update(id, updateData);
+    const updatedChecklist = await checklistRepository.update(
+      checklistId,
+      updateData
+    );
 
     const metadata: Record<string, any> = {};
     if (data.title !== undefined) {
@@ -97,13 +105,13 @@ export const checklistService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "checklist.updated",
-      entityType: "checklist",
-      entityId: id,
+      action: ACTIVITY_ACTION.CHECKLIST_UPDATED,
+      entityType: ENTITY_TYPE.CHECKLIST,
+      entityId: checklistId,
       metadata,
     });
 
-    return updated;
+    return updatedChecklist;
   },
 
   reorder: async (userId: string, data: ReorderChecklistInput) => {
@@ -120,7 +128,7 @@ export const checklistService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -130,7 +138,7 @@ export const checklistService = {
       return checklist;
     }
 
-    const updated = await checklistRepository.update(data.id, {
+    const updatedChecklist = await checklistRepository.update(data.id, {
       position: data.position,
     });
 
@@ -138,8 +146,8 @@ export const checklistService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "checklist.reordered",
-      entityType: "checklist",
+      action: ACTIVITY_ACTION.CHECKLISTS_REORDERED,
+      entityType: ENTITY_TYPE.CHECKLIST,
       entityId: data.id,
       metadata: {
         oldPosition: checklist.position,
@@ -147,7 +155,7 @@ export const checklistService = {
       },
     });
 
-    return updated;
+    return updatedChecklist;
   },
 
   delete: async (userId: string, data: DeleteChecklistInput) => {
@@ -164,7 +172,7 @@ export const checklistService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -174,8 +182,8 @@ export const checklistService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "checklist.deleted",
-      entityType: "checklist",
+      action: ACTIVITY_ACTION.CHECKLIST_DELETED,
+      entityType: ENTITY_TYPE.CHECKLIST,
       entityId: data.id,
       metadata: { title: checklist.title },
     });

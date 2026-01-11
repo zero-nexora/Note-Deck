@@ -10,18 +10,26 @@ export const cardLabelRepository = {
     return label;
   },
 
-  findByCardId: async (cardId: string) => {
-    const labels = await db.query.cardLabels.findMany({
-      where: eq(cardLabels.cardId, cardId),
-      with: {
-        label: true,
-      },
-    });
-    return labels;
-  },
+  // findByCardId: async (cardId: string) => {
+  //   return db.query.cardLabels.findMany({
+  //     where: eq(cardLabels.cardId, cardId),
+  //     with: {
+  //       label: true,
+  //     },
+  //   });
+  // },
+
+  // findByCardIdWithLabel: async (cardId: string) => {
+  //   return db.query.cardLabels.findMany({
+  //     where: eq(cardLabels.cardId, cardId),
+  //     with: {
+  //       label: true,
+  //     },
+  //   });
+  // },
 
   findByCardIdAndLabelId: async (cardId: string, labelId: string) => {
-    return await db.query.cardLabels.findFirst({
+    return db.query.cardLabels.findFirst({
       where: and(
         eq(cardLabels.cardId, cardId),
         eq(cardLabels.labelId, labelId)

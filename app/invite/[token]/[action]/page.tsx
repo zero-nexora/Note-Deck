@@ -1,7 +1,7 @@
 import {
-  acceptInviteAction,
-  revokeInviteAction,
-} from "@/app/actions/workspace-invite.action";
+  acceptWorkspaceInviteAction,
+  revokeWorkspaceInviteAction,
+} from "@/domain/actions/workspace-invite.action";
 import { notFound, redirect } from "next/navigation";
 
 interface InvitePageProps {
@@ -12,7 +12,7 @@ const InvitePage = async ({ params }: InvitePageProps) => {
   const { token, action } = await params;
 
   if (action === "accept") {
-    const result = await acceptInviteAction({ token });
+    const result = await acceptWorkspaceInviteAction({ token });
     if (!result.success) {
       redirect("/");
     }
@@ -22,7 +22,7 @@ const InvitePage = async ({ params }: InvitePageProps) => {
   }
 
   if (action === "revoke") {
-    const result = await revokeInviteAction({ token });
+    const result = await revokeWorkspaceInviteAction({ token });
     if (result.success) {
       redirect("/");
     }

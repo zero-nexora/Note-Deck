@@ -1,21 +1,24 @@
+import { NOTIFICATION_TYPE } from "@/lib/constants";
 import { z } from "zod";
-import { NotificationTypeEnum } from "@/db/enum";
 
 export const CreateNotificationSchema = z.object({
-  userId: z.string().min(1),
-  type: NotificationTypeEnum,
-  title: z.string().min(1),
-  message: z.string().min(1),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
+  type: z.nativeEnum(NOTIFICATION_TYPE, { message: "Type is required" }),
+  title: z.string().min(1, { message: "Title is required" }),
+  message: z.string().min(1, { message: "Message is required" }),
   entityType: z.string().optional(),
-  entityId: z.string().optional(),
+  entityId: z
+    .string()
+    .uuid({ message: "Invalid UUID for entityId" })
+    .optional(),
 });
 
 export const MarkAsReadSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export const DeleteNotificationSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export type CreateNotificationInput = z.infer<typeof CreateNotificationSchema>;

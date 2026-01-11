@@ -5,72 +5,72 @@ import { and, count, eq, isNull } from "drizzle-orm";
 
 export const commentRepository = {
   create: async (data: NewComment) => {
-    const [inserted] = await db
-      .insert(comments)
-      .values(data)
-      .returning({ id: comments.id });
-
-    const comment = await commentRepository.findById(inserted.id);
-
+    const [comment] = await db.insert(comments).values(data).returning();
     return comment;
   },
 
-  findById: async (id: string) => {
-    return await db.query.comments.findFirst({
-      where: eq(comments.id, id),
-      with: {
-        user: true,
-        replies: {
-          with: {
-            user: true,
-            reactions: true,
-          },
-          orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-        },
-        reactions: true,
-      },
+  findById: async (commentId: string) => {
+    return db.query.comments.findFirst({
+      where: eq(comments.id, commentId),
     });
   },
 
-  findByCardId: async (cardId: string) => {
-    return await db.query.comments.findMany({
-      where: and(eq(comments.cardId, cardId), isNull(comments.parentId)),
-      with: {
-        user: true,
-        replies: {
-          with: {
-            user: true,
-            reactions: {
-              with: { user: true },
-            },
-          },
-          orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-        },
-        reactions: {
-          with: {
-            user: true,
-          },
-        },
-      },
-      orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-    });
-  },
+  // findByIdWithUserRepliesAndReactions: async (commentId: string) => {
+  //   return db.query.comments.findFirst({
+  //     where: eq(comments.id, commentId),
+  //     with: {
+  //       user: true,
+  //       replies: {
+  //         with: {
+  //           user: true,
+  //           reactions: true,
+  //         },
+  //         orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+  //       },
+  //       reactions: true,
+  //     },
+  //   });
+  // },
 
-  update: async (id: string, data: UpdateComment) => {
+  // findByCardId: async (cardId: string) => {
+  //   return db.query.comments.findMany({
+  //     where: and(eq(comments.cardId, cardId), isNull(comments.parentId)),
+  //     with: {
+  //       user: true,
+  //       replies: {
+  //         with: {
+  //           user: true,
+  //           reactions: {
+  //             with: { user: true },
+  //           },
+  //         },
+  //         orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+  //       },
+  //       reactions: {
+  //         with: {
+  //           user: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+  //   });
+  // },
+
+  update: async (commentId: string, data: UpdateComment) => {
     const [updated] = await db
       .update(comments)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(comments.id, id))
+      .where(eq(comments.id, commentId))
       .returning();
 
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(comments).where(eq(comments.id, id));
+  delete: async (commentId: string) => {
+    await db.delete(comments).where(eq(comments.id, commentId));
   },
 
   getCommentsCountByUserId: async (userId: string, workspaceId: string) => {

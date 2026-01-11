@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 const BaseTriggerSchema = z.object({
   type: z.string(),
@@ -6,18 +6,24 @@ const BaseTriggerSchema = z.object({
 
 const CardMovedTriggerSchema = BaseTriggerSchema.extend({
   type: z.literal("CARD_MOVED"),
-  fromListId: z.string().optional(),
-  toListId: z.string().optional(),
+  fromListId: z
+    .string()
+    .uuid({ message: "Invalid UUID for fromListId" })
+    .optional(),
+  toListId: z
+    .string()
+    .uuid({ message: "Invalid UUID for toListId" })
+    .optional(),
 });
 
 const CardCreatedTriggerSchema = BaseTriggerSchema.extend({
   type: z.literal("CARD_CREATED"),
-  listId: z.string().optional(),
+  listId: z.string().uuid({ message: "Invalid UUID for listId" }).optional(),
 });
 
 const LabelAddedTriggerSchema = BaseTriggerSchema.extend({
   type: z.literal("LABEL_ADDED_TO_CARD"),
-  labelId: z.string().optional(),
+  labelId: z.string().uuid({ message: "Invalid UUID for labelId" }).optional(),
 });
 
 const OnScheduleTriggerSchema = BaseTriggerSchema.extend({
@@ -27,13 +33,13 @@ const OnScheduleTriggerSchema = BaseTriggerSchema.extend({
 
 const AfterXHoursTriggerSchema = BaseTriggerSchema.extend({
   type: z.literal("AFTER_X_HOURS"),
-  hours: z.number().int().positive(),
+  hours: z.number().int().positive({ message: "Hours must be positive" }),
   fromEvent: z.string(),
 });
 
 const AfterXDaysTriggerSchema = BaseTriggerSchema.extend({
   type: z.literal("AFTER_X_DAYS"),
-  days: z.number().int().positive(),
+  days: z.number().int().positive({ message: "Days must be positive" }),
   fromEvent: z.string(),
 });
 
@@ -54,24 +60,24 @@ const BaseActionSchema = z.object({
 
 const AssignMemberActionSchema = BaseActionSchema.extend({
   type: z.literal("ASSIGN_MEMBER"),
-  userId: z.string(),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }),
 });
 
 const AddLabelActionSchema = BaseActionSchema.extend({
   type: z.literal("ADD_LABEL"),
-  labelId: z.string(),
+  labelId: z.string().uuid({ message: "Invalid UUID for labelId" }),
 });
 
 const AddCommentActionSchema = BaseActionSchema.extend({
   type: z.literal("ADD_COMMENT"),
-  content: z.string(),
+  content: z.string().min(1, { message: "Content is required" }),
 });
 
 const SendNotificationActionSchema = BaseActionSchema.extend({
   type: z.literal("SEND_NOTIFICATION"),
-  userId: z.string().optional(),
-  title: z.string(),
-  message: z.string(),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }).optional(),
+  title: z.string().min(1, { message: "Title is required" }),
+  message: z.string().min(1, { message: "Message is required" }),
   notificationType: z.enum([
     "mention",
     "due_date",
@@ -83,7 +89,7 @@ const SendNotificationActionSchema = BaseActionSchema.extend({
 
 const MoveCardActionSchema = BaseActionSchema.extend({
   type: z.literal("MOVE_CARD"),
-  toListId: z.string(),
+  toListId: z.string().uuid({ message: "Invalid UUID for toListId" }),
 });
 
 const ArchiveCardActionSchema = BaseActionSchema.extend({
@@ -92,7 +98,7 @@ const ArchiveCardActionSchema = BaseActionSchema.extend({
 
 const AddListActionSchema = BaseActionSchema.extend({
   type: z.literal("ADD_LIST"),
-  name: z.string(),
+  name: z.string().min(1, { message: "Name is required" }),
 });
 
 const ActionSchema = z.union([
@@ -107,28 +113,33 @@ const ActionSchema = z.union([
 ]);
 
 export const CreateAutomationSchema = z.object({
-  boardId: z.string().min(1),
-  name: z.string().min(1),
+  boardId: z.string().uuid({ message: "Invalid UUID for boardId" }),
+  name: z.string().min(1, { message: "Name is required" }),
   trigger: TriggerSchema,
-  actions: z.array(ActionSchema).min(1),
+  actions: z
+    .array(ActionSchema)
+    .min(1, { message: "At least one action is required" }),
 });
 
 export const UpdateAutomationSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().min(1, { message: "Name cannot be empty" }).optional(),
   trigger: TriggerSchema.optional(),
-  actions: z.array(ActionSchema).min(1).optional(),
+  actions: z
+    .array(ActionSchema)
+    .min(1, { message: "At least one action is required" })
+    .optional(),
 });
 
 export const EnableAutomationSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export const DisableAutomationSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export const DeleteAutomationSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
 export type CreateAutomationInput = z.infer<typeof CreateAutomationSchema>;

@@ -3,7 +3,7 @@
 import {
   addUserGroupMemberAction,
   removeUserGroupMemberAction,
-} from "@/app/actions/user-group-member.action";
+} from "@/domain/actions/user-group-member.action";
 import {
   AddGroupMemberInput,
   RemoveGroupMemberInput,
@@ -14,41 +14,31 @@ import { toast } from "sonner";
 export function useUserGroupMember() {
   const router = useRouter();
 
-  const addMember = async (input: AddGroupMemberInput) => {
-    try {
-      const result = await addUserGroupMemberAction(input);
-
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const addUserGroupMember = async (input: AddGroupMemberInput) => {
+    const result = await addUserGroupMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
-  const removeMember = async (input: RemoveGroupMemberInput) => {
-    try {
-      const result = await removeUserGroupMemberAction(input);
-
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const removeUserGroupMember = async (
+    input: RemoveGroupMemberInput
+  ) => {
+    const result = await removeUserGroupMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {
-    addMember,
-    removeMember,
+    addUserGroupMember,
+    removeUserGroupMember,
   };
 }

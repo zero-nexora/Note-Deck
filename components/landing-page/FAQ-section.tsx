@@ -80,35 +80,36 @@ const FADE_IN_UP = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
+  transition: { duration: 0.5 },
 };
 
 export const FAQSection = () => {
   return (
-    <section id="faq" className="py-24 px-4 relative">
+    <section id="faq" className="section-padding px-4 relative">
       <div className="max-w-3xl mx-auto">
-        {/* Section header */}
         <motion.div
           initial={FADE_IN_UP.initial}
           whileInView={FADE_IN_UP.whileInView}
           viewport={FADE_IN_UP.viewport}
+          transition={FADE_IN_UP.transition}
           className="text-center mb-16"
         >
-          <span className="text-sm font-medium text-primary uppercase tracking-wider">
+          <span className="text-sm font-semibold text-primary uppercase tracking-wider">
             FAQ
           </span>
-          <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6">
+          <h2 className="text-heading mt-4 mb-6">
             Frequently asked <span className="gradient-text">questions</span>
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-subheading">
             Everything you need to know about Flowboard.
           </p>
         </motion.div>
 
-        {/* FAQ accordion */}
         <motion.div
           initial={FADE_IN_UP.initial}
           whileInView={FADE_IN_UP.whileInView}
           viewport={FADE_IN_UP.viewport}
+          transition={FADE_IN_UP.transition}
         >
           <Accordion type="single" collapsible className="space-y-4">
             {FAQS.map((faq, index) => (
@@ -132,17 +133,17 @@ const FAQItem = ({ faq, index }: FAQItemProps) => {
   return (
     <AccordionItem
       value={`item-${index}`}
-      className="glass-panel border-none px-6 overflow-hidden"
+      className="glass-card border-none px-6 overflow-hidden"
     >
       <AccordionTrigger className="hover:no-underline py-5">
         <div className="flex items-center gap-4 text-left">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <FAQIcon className="w-5 h-5 text-primary" />
           </div>
-          <span className="font-semibold">{faq.question}</span>
+          <span className="font-semibold text-sm">{faq.question}</span>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="text-muted-foreground pb-5 pl-14">
+      <AccordionContent className="text-muted-foreground text-sm leading-relaxed pb-5 pl-14">
         {faq.answer}
       </AccordionContent>
     </AccordionItem>

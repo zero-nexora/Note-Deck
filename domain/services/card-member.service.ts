@@ -7,8 +7,13 @@ import {
   AddCardMemberInput,
   RemoveCardMemberInput,
 } from "../schemas/card-member.schema";
-import { executeAutomations } from "./automation.service";
 import { notificationRepository } from "../repositories/notification.repository";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  NOTIFICATION_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const cardMemberService = {
   add: async (userId: string, data: AddCardMemberInput) => {
@@ -20,7 +25,7 @@ export const cardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -31,11 +36,11 @@ export const cardMemberService = {
       throw new Error("User not found");
     }
 
-    const exists = await cardMemberRepository.findByCardIdAndUserId(
+    const existingMember = await cardMemberRepository.findByCardIdAndUserId(
       data.cardId,
       data.userId
     );
-    if (exists) {
+    if (existingMember) {
       throw new Error("User is already assigned to this card");
     }
 
@@ -45,8 +50,8 @@ export const cardMemberService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "card.member_added",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_MEMBER_ADDED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: card.id,
       metadata: {
         assignedUserId: data.userId,
@@ -58,20 +63,13 @@ export const cardMemberService = {
     if (data.userId !== userId) {
       await notificationRepository.create({
         userId: data.userId,
-        type: "assignment",
+        type: NOTIFICATION_TYPE.ASSIGNMENT,
         title: "You were assigned to a card",
         message: `You were assigned to "${card.title}"`,
-        entityType: "card",
+        entityType: ENTITY_TYPE.CARD,
         entityId: card.id,
       });
     }
-
-    await executeAutomations({
-      type: "CARD_ASSIGNED",
-      boardId: card.boardId,
-      cardId: card.id,
-      userId: data.userId,
-    });
 
     return member;
   },
@@ -85,7 +83,7 @@ export const cardMemberService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -103,8 +101,8 @@ export const cardMemberService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "card.member_removed",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_MEMBER_REMOVED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: card.id,
       metadata: {
         removedUserId: data.userId,
@@ -113,12 +111,5 @@ export const cardMemberService = {
     });
 
     await cardMemberRepository.remove(data.cardId, data.userId);
-
-    await executeAutomations({
-      type: "CARD_UNASSIGNED",
-      boardId: card.boardId,
-      cardId: card.id,
-      userId: data.userId,
-    });
   },
 };

@@ -17,9 +17,15 @@ export const workspaceRepository = {
     return workspace;
   },
 
-  findById: async (id: string) => {
-    const workspace = await db.query.workspaces.findFirst({
-      where: eq(workspaces.id, id),
+  findById: async (workspaceId: string) => {
+    return db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
+    });
+  },
+
+  findByIdWithOwnerAndMembers: async (workspaceId: string) => {
+    return db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
       with: {
         owner: true,
         members: {
@@ -29,10 +35,9 @@ export const workspaceRepository = {
         },
       },
     });
-    return workspace;
   },
 
-  findByUserId: async (userId: string) => {
+  findByUserIdWithOwnerAndMembers: async (userId: string) => {
     const memberships = await db.query.workspaceMembers.findMany({
       where: eq(workspaceMembers.userId, userId),
       with: {
@@ -44,26 +49,30 @@ export const workspaceRepository = {
         },
       },
     });
+
     return memberships.map((membership) => membership.workspace);
   },
 
-  findBySlug: async (slug: string) => {
-    const workspace = await db.query.workspaces.findFirst({
-      where: eq(workspaces.slug, slug),
-    });
-    return workspace;
-  },
-
-  update: async (id: string, data: UpdateWorkspace) => {
+  update: async (workspaceId: string, data: UpdateWorkspace) => {
     const [updated] = await db
       .update(workspaces)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(workspaces.id, id))
+      .where(eq(workspaces.id, workspaceId))
       .returning();
     return updated;
+  },
+
+  updateOwner: async (workspaceId: string, newOwnerId: string) => {
+    const [workspace] = await db
+      .update(workspaces)
+      .set({ ownerId: newOwnerId })
+      .where(eq(workspaces.id, workspaceId))
+      .returning();
+
+    return workspace;
   },
 
   updateByStripeSubscriptionId: async (data: UpdateWorkspace) => {
@@ -78,8 +87,8 @@ export const workspaceRepository = {
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(workspaces).where(eq(workspaces.id, id));
+  delete: async (workspaceId: string) => {
+    await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
   },
 
   getTotalBoards: async (workspaceId: string) => {

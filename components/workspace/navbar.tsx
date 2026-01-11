@@ -62,7 +62,7 @@ interface NavbarProps {
 
 export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const { updateNameWorkspace } = useWorkspace();
+  const { updateWorkspaceName } = useWorkspace();
   const { markAsRead, markAllAsRead } = useNotification();
   const { open } = useConfirm();
   const { openCustomerPortal } = useStripe();
@@ -73,7 +73,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   });
 
   const handleSubmit = async (values: UpdateWorkspaceNameInput) => {
-    await updateNameWorkspace(workspace.id, values);
+    await updateWorkspaceName(workspace.id, values);
     setIsEditing(false);
     form.reset();
   };
@@ -94,7 +94,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
   const isLoading = form.formState.isSubmitting;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/80">
+    <header className="w-full border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/80">
       <div className="container flex h-16 items-center justify-between px-6">
         {isEditing ? (
           <Form {...form}>
@@ -149,7 +149,7 @@ export const Navbar = ({ notifications, workspace, user }: NavbarProps) => {
               variant="ghost"
               onDoubleClick={() => setIsEditing(true)}
               title="Double-click to edit"
-              className="h-9 px-3 font-semibold text-foreground hover:bg-accent hover:text-accent-foreground"
+              className="h-9 px-3 font-semibold text-foreground hover:bg-accent hover:text-accent-foreground text-lg"
             >
               {workspace.name}
             </Button>

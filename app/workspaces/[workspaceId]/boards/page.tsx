@@ -1,6 +1,7 @@
-import { findBoardsByWorkspaceIdAction } from "@/app/actions/board.action";
+import { findBoardsByWorkspaceIdAction } from "@/domain/actions/board.action";
 import { BoardList } from "@/components/board/board-list";
 import { BoardWithMember } from "@/domain/types/board.type";
+import { unwrapActionResult } from "@/lib/response";
 
 interface BoardsPageProps {
   params: Promise<{ workspaceId: string }>;
@@ -9,10 +10,11 @@ interface BoardsPageProps {
 const BoardsPage = async ({ params }: BoardsPageProps) => {
   const { workspaceId } = await params;
 
-  const result = await findBoardsByWorkspaceIdAction(workspaceId);
-  if (!result.success) return null;
+  const boards = unwrapActionResult<BoardWithMember[]>(
+    await findBoardsByWorkspaceIdAction(workspaceId)
+  );
 
-  const boards = result.data as BoardWithMember[];
+  if (!boards) return null;
 
   return <BoardList boards={boards} workspaceId={workspaceId} />;
 };

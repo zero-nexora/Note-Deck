@@ -18,11 +18,10 @@ import { RealtimeShowcase } from "@/components/landing-page/realtime-showcase";
 import { SocialProof } from "@/components/landing-page/social-proof";
 import { TestimonialsGallery } from "@/components/landing-page/testimonials-gallery";
 import { TestimonialsSection } from "@/components/landing-page/testimonials-section";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const LandingPage = () => {
   return (
-    <ScrollArea className="h-screen bg-background relative overflow-auto">
+    <div className="h-screen bg-background relative overflow-y-auto">
       <InteractiveCursorBackground />
 
       <div className="absolute inset-0 h-screen overflow-hidden pointer-events-none">
@@ -72,7 +71,7 @@ const LandingPage = () => {
       </main>
 
       <Footer />
-    </ScrollArea>
+    </div>
   );
 };
 

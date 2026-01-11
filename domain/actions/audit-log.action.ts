@@ -1,18 +1,19 @@
 "use server";
+
 import {
-  AddCardMemberInput,
-  AddCardMemberSchema,
-  RemoveCardMemberInput,
-  RemoveCardMemberSchema,
-} from "@/domain/schemas/card-member.schema";
-import { cardMemberService } from "@/domain/services/card-member.service";
+  LogWorkspaceActionInput,
+  LogWorkspaceActionSchema,
+  ReadAuditLogsInput,
+  ReadAuditLogsSchema,
+} from "@/domain/schemas/audit-log.schema";
+import { auditLogService } from "@/domain/services/audit-log.service";
 import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
 
-export const addCardMemberAction = async (input: AddCardMemberInput) => {
+export const logActionAction = async (input: LogWorkspaceActionInput) => {
   try {
     const user = await requireAuth();
-    const parsed = AddCardMemberSchema.safeParse(input);
+    const parsed = LogWorkspaceActionSchema.safeParse(input);
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -20,17 +21,17 @@ export const addCardMemberAction = async (input: AddCardMemberInput) => {
       return error(message);
     }
 
-    const member = await cardMemberService.add(user.id, parsed.data);
-    return success("Member added successfully", member);
+    const log = await auditLogService.log(user.id, parsed.data);
+    return success("Action logged successfully", log);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
-export const removeCardMemberAction = async (input: RemoveCardMemberInput) => {
+export const readAuditLogsAction = async (input: ReadAuditLogsInput) => {
   try {
     const user = await requireAuth();
-    const parsed = RemoveCardMemberSchema.safeParse(input);
+    const parsed = ReadAuditLogsSchema.safeParse(input);
     if (!parsed.success) {
       const flattened = parsed.error.flatten();
       const message =
@@ -38,8 +39,8 @@ export const removeCardMemberAction = async (input: RemoveCardMemberInput) => {
       return error(message);
     }
 
-    await cardMemberService.remove(user.id, parsed.data);
-    return success("Member removed successfully");
+    const logs = await auditLogService.read(user.id, parsed.data);
+    return success("", logs);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

@@ -3,10 +3,10 @@
 import {
   CreateCommentInput,
   CreateCommentSchema,
-  DeleteCommentInput,
-  DeleteCommentSchema,
   UpdateCommentInput,
   UpdateCommentSchema,
+  DeleteCommentInput,
+  DeleteCommentSchema,
 } from "@/domain/schemas/comment.schema";
 import { commentService } from "@/domain/services/comment.service";
 import { requireAuth } from "@/lib/session";
@@ -17,9 +17,9 @@ export const createCommentAction = async (input: CreateCommentInput) => {
     const user = await requireAuth();
     const parsed = CreateCommentSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -38,9 +38,9 @@ export const updateCommentAction = async (
     const user = await requireAuth();
     const parsed = UpdateCommentSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -56,9 +56,9 @@ export const deleteCommentAction = async (input: DeleteCommentInput) => {
     const user = await requireAuth();
     const parsed = DeleteCommentSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 

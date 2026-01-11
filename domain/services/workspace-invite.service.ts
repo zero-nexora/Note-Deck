@@ -13,6 +13,12 @@ import {
 import crypto from "crypto";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { sendWorkspaceInviteEmail } from "@/lib/email";
+import {
+  AUDIT_ACTION,
+  DEFAULT_WORKSPACE_MEMBER_ROLE,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const workspaceInviteService = {
   create: async (userId: string, data: CreateInviteInput) => {
@@ -24,7 +30,7 @@ export const workspaceInviteService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -60,7 +66,7 @@ export const workspaceInviteService = {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + (data.expiresInDays || 7));
 
-    const role = data.role || "normal";
+    const role = data.role || DEFAULT_WORKSPACE_MEMBER_ROLE;
 
     const invite = await workspaceInviteRepository.create({
       workspaceId: data.workspaceId,
@@ -73,10 +79,10 @@ export const workspaceInviteService = {
     await sendWorkspaceInviteEmail(normalizedEmail, workspace.name, token);
 
     await auditLogRepository.create({
-      workspaceId: data.workspaceId,
+      workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.created",
-      entityType: "workspace_invite",
+      action: AUDIT_ACTION.WORKSPACE_INVITE_CREATED,
+      entityType: ENTITY_TYPE.WORKSPACE_INVITE,
       entityId: invite.id,
       metadata: {
         email: normalizedEmail,
@@ -97,7 +103,7 @@ export const workspaceInviteService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       invite.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -115,7 +121,7 @@ export const workspaceInviteService = {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    const updated = await workspaceInviteRepository.updateExpiry(
+    const updatedInvite = await workspaceInviteRepository.updateExpiry(
       data.id,
       expiresAt
     );
@@ -125,8 +131,8 @@ export const workspaceInviteService = {
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.resent",
-      entityType: "workspace_invite",
+      action: AUDIT_ACTION.WORKSPACE_INVITE_RESENT,
+      entityType: ENTITY_TYPE.WORKSPACE_INVITE,
       entityId: data.id,
       metadata: {
         email: invite.email,
@@ -134,7 +140,7 @@ export const workspaceInviteService = {
       },
     });
 
-    return updated;
+    return updatedInvite;
   },
 
   revoke: async (userId: string, data: RevokeInviteInput) => {
@@ -146,7 +152,7 @@ export const workspaceInviteService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       invite.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -159,8 +165,8 @@ export const workspaceInviteService = {
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.revoked",
-      entityType: "workspace_invite",
+      action: AUDIT_ACTION.WORKSPACE_INVITE_REVOKED,
+      entityType: ENTITY_TYPE.WORKSPACE_INVITE,
       entityId: invite.id,
       metadata: {
         email: invite.email,
@@ -218,8 +224,8 @@ export const workspaceInviteService = {
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.accepted",
-      entityType: "workspace_invite",
+      action: AUDIT_ACTION.WORKSPACE_INVITE_ACCEPTED,
+      entityType: ENTITY_TYPE.WORKSPACE_INVITE,
       entityId: invite.id,
       metadata: {
         email: invite.email,
@@ -239,7 +245,7 @@ export const workspaceInviteService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       invite.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -260,8 +266,8 @@ export const workspaceInviteService = {
     await auditLogRepository.create({
       workspaceId: invite.workspaceId,
       userId,
-      action: "workspace_invite.expired",
-      entityType: "workspace_invite",
+      action: AUDIT_ACTION.WORKSPACE_INVITE_EXPIRED,
+      entityType: ENTITY_TYPE.WORKSPACE_INVITE,
       entityId: data.id,
       metadata: {
         email: invite.email,

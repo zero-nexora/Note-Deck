@@ -10,23 +10,13 @@ export const cardMemberRepository = {
     return member;
   },
 
-  findByCardId: async (cardId: string, userId: string) => {
-    return await db.query.cardMembers.findFirst({
-      where: and(
-        eq(cardMembers.cardId, cardId),
-        eq(cardMembers.userId, userId)
-      ),
-    });
-  },
-
   findByCardIdAndUserId: async (cardId: string, userId: string) => {
-    const member = await db.query.cardMembers.findFirst({
+    return db.query.cardMembers.findFirst({
       where: and(
         eq(cardMembers.cardId, cardId),
         eq(cardMembers.userId, userId)
       ),
     });
-    return member;
   },
 
   remove: async (cardId: string, userId: string) => {

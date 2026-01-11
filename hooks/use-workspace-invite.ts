@@ -1,11 +1,12 @@
 "use client";
+
 import {
-  createInviteAction,
-  resendInviteAction,
-  revokeInviteAction,
-  acceptInviteAction,
-  expireInviteAction,
-} from "@/app/actions/workspace-invite.action";
+  createWorkspaceInviteAction,
+  resendWorkspaceInviteAction,
+  revokeWorkspaceInviteAction,
+  acceptWorkspaceInviteAction,
+  expireWorkspaceInviteAction,
+} from "@/domain/actions/workspace-invite.action";
 import {
   CreateInviteInput,
   ResendInviteInput,
@@ -19,81 +20,46 @@ import { toast } from "sonner";
 export function useWorkspaceInvite() {
   const router = useRouter();
 
-  const createInvite = async (input: CreateInviteInput) => {
-    try {
-      const result = await createInviteAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const createWorkspaceInvite = async (input: CreateInviteInput) => {
+    const result = await createWorkspaceInviteAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const resendInvite = async (input: ResendInviteInput) => {
-    try {
-      const result = await resendInviteAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const resendWorkspaceInvite = async (input: ResendInviteInput) => {
+    const result = await resendWorkspaceInviteAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const revokeInvite = async (input: RevokeInviteInput) => {
-    try {
-      const result = await revokeInviteAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const revokeWorkspaceInvite = async (input: RevokeInviteInput) => {
+    const result = await revokeWorkspaceInviteAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const acceptInvite = async (input: AcceptInviteInput) => {
-    try {
-      const result = await acceptInviteAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const acceptWorkspaceInvite = async (input: AcceptInviteInput) => {
+    const result = await acceptWorkspaceInviteAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
-  const expireInvite = async (input: ExpireInviteInput) => {
-    try {
-      const result = await expireInviteAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+  const expireWorkspaceInvite = async (input: ExpireInviteInput) => {
+    const result = await expireWorkspaceInviteAction(input);
+    if (!result.success) return toast.error(result.message);
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {
-    createInvite,
-    resendInvite,
-    revokeInvite,
-    acceptInvite,
-    expireInvite,
+    createWorkspaceInvite,
+    resendWorkspaceInvite,
+    revokeWorkspaceInvite,
+    acceptWorkspaceInvite,
+    expireWorkspaceInvite,
   };
 }

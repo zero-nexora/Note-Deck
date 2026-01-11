@@ -1,7 +1,6 @@
 import { UserGroupWithMembers } from "@/domain/types/user-group.type";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { useUserGroup } from "@/hooks/use-user-group";
-import { useUserGroupMember } from "@/hooks/use-user-group-member";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,6 +43,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useUserGroupMember } from "@/hooks/use-user-group-member";
 
 interface UserGroupDetailsProps {
   userGroup: UserGroupWithMembers;
@@ -56,7 +56,7 @@ export const UserGroupDetails = ({
 }: UserGroupDetailsProps) => {
   const { close } = useModal();
   const { updateUserGroup, deleteUserGroup } = useUserGroup();
-  const { addMember, removeMember } = useUserGroupMember();
+  const { addUserGroupMember, removeUserGroupMember } = useUserGroupMember();
 
   const [userGroup, setUserGroup] = useState(initialUserGroup);
   const [isEditing, setIsEditing] = useState(false);
@@ -112,7 +112,7 @@ export const UserGroupDetails = ({
     if (!selectedUserId) return;
 
     setIsAddingMember(true);
-    const result = await addMember({
+    const result = await addUserGroupMember({
       groupId: userGroup.id,
       userId: selectedUserId,
     });
@@ -141,7 +141,7 @@ export const UserGroupDetails = ({
   };
 
   const handleRemoveMember = async (userId: string) => {
-    await removeMember({
+    await removeUserGroupMember({
       groupId: userGroup.id,
       userId,
     });

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { useState } from "react";
-import { signUpAction } from "@/app/actions/auth.action";
+import { signUpAction } from "@/domain/actions/auth.action";
 import { SignInInput, SignUpInput } from "@/domain/schemas/auth.schema";
 
 export function useAuth() {

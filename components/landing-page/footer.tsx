@@ -42,20 +42,18 @@ const SOCIAL_LINKS: SocialLink[] = [
 ];
 
 const SOCIAL_ICON_HOVER = {
-  whileHover: { scale: 1.1 },
+  whileHover: { scale: 1.05, y: -2 },
   whileTap: { scale: 0.95 },
 };
 
 export const Footer = () => {
   return (
-    <footer className="pt-16 pb-8 px-4 border-t border-border/50">
-      <div className="max-w-7xl mx-auto">
-        {/* Main footer content */}
+    <footer className="pt-16 pb-8 px-4 border-t border-border/30">
+      <div className="container-custom">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
-          {/* Brand section */}
           <div className="col-span-2">
-            <Link href="#" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Link href="/" className="flex items-center gap-2 mb-4 group">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors duration-200">
                 <Layers className="w-5 h-5 text-primary" />
               </div>
               <span className="text-xl font-bold">Flowboard</span>
@@ -64,14 +62,13 @@ export const Footer = () => {
               The modern project management platform built for real-time
               collaboration.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               {SOCIAL_LINKS.map((social) => (
                 <SocialIcon key={social.label} social={social} />
               ))}
             </div>
           </div>
 
-          {/* Footer link columns */}
           {Object.entries(FOOTER_LINKS).map(([category, links]) => (
             <FooterLinkColumn
               key={category}
@@ -81,14 +78,13 @@ export const Footer = () => {
           ))}
         </div>
 
-        {/* Footer bottom */}
-        <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
             © 2024 Flowboard. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               All systems operational
             </span>
           </div>
@@ -110,7 +106,7 @@ const SocialIcon = ({ social }: SocialIconProps) => {
       href={social.href}
       whileHover={SOCIAL_ICON_HOVER.whileHover}
       whileTap={SOCIAL_ICON_HOVER.whileTap}
-      className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+      className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors duration-200"
       aria-label={social.label}
     >
       <SocialIconComponent className="w-4 h-4" />
@@ -126,13 +122,13 @@ interface FooterLinkColumnProps {
 const FooterLinkColumn = ({ category, links }: FooterLinkColumnProps) => {
   return (
     <div>
-      <h4 className="font-semibold mb-4">{category}</h4>
+      <h4 className="font-semibold mb-4 text-sm">{category}</h4>
       <ul className="space-y-2">
         {links.map((link) => (
           <li key={link}>
             <Link
               href="#"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
             >
               {link}
             </Link>

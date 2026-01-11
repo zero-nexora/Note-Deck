@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { workspaceMembers } from "@/db/schema";
 import { and, count, eq, sql } from "drizzle-orm";
 import { NewWorkspaceMember } from "../types/workspace-member.type";
-import { Role } from "@/db/enum";
+import { Role } from "@/lib/constants";
 
 export const workspaceMemberRepository = {
   add: async (data: NewWorkspaceMember) => {
@@ -11,32 +11,21 @@ export const workspaceMemberRepository = {
   },
 
   findByWorkspaceIdAndUserId: async (workspaceId: string, userId: string) => {
-    const member = await db.query.workspaceMembers.findFirst({
+    return db.query.workspaceMembers.findFirst({
       where: and(
         eq(workspaceMembers.workspaceId, workspaceId),
         eq(workspaceMembers.userId, userId)
       ),
     });
-    return member;
   },
 
-  findByWorkspaceId: async (workspaceId: string) => {
-    const members = await db.query.workspaceMembers.findMany({
-      where: eq(workspaceMembers.workspaceId, workspaceId),
-      with: {
-        user: true,
-      },
-      orderBy: (workspaceMembers, { asc }) => [asc(workspaceMembers.createdAt)],
-    });
-    return members;
-  },
-
-  findMembersByWorkspaceId: async (workspaceId: string) => {
+  findByWorkspaceIdWithUser: async (workspaceId: string) => {
     return db.query.workspaceMembers.findMany({
       where: eq(workspaceMembers.workspaceId, workspaceId),
       with: {
         user: true,
       },
+      orderBy: (workspaceMembers, { asc }) => [asc(workspaceMembers.createdAt)],
     });
   },
 
@@ -92,7 +81,7 @@ export const workspaceMemberRepository = {
   },
 
   getMembersByWorkspaceId: async (workspaceId: string) => {
-    return await db
+    return db
       .select({
         userId: workspaceMembers.userId,
         userName: sql<string>`users.name`,

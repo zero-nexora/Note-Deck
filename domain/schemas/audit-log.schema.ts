@@ -1,21 +1,18 @@
-import { z } from "zod";
-import { JsonValue } from "./common.schem";
+import z from "zod";
 
 export const LogWorkspaceActionSchema = z.object({
-  workspaceId: z.string().min(1),
-  action: z.string().min(1),
-  entityType: z.string().min(1),
-  entityId: z.string().min(1),
-  metadata: JsonValue.optional().default({}),
-  ipAddress: z.string().optional(),
-  userAgent: z.string().optional(),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+  action: z.string().min(1, { message: "Action is required" }),
+  entityType: z.string().min(1, { message: "Entity type is required" }),
+  entityId: z.string().min(1, { message: "Entity ID is required" }),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export const ReadAuditLogsSchema = z.object({
-  workspaceId: z.string().min(1),
-  limit: z.number().int().positive().optional().default(100),
-  page: z.number().int().positive().optional().default(1),
-  userId: z.string().optional(),
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+  userId: z.string().uuid({ message: "Invalid UUID for userId" }).optional(),
+  limit: z.number().int().positive().optional(),
+  page: z.number().int().positive().optional(),
 });
 
 export type LogWorkspaceActionInput = z.infer<typeof LogWorkspaceActionSchema>;

@@ -10,35 +10,33 @@ export const labelRepository = {
   },
 
   findByBoardId: async (boardId: string) => {
-    const boardLabels = await db.query.labels.findMany({
+    return db.query.labels.findMany({
       where: eq(labels.boardId, boardId),
       orderBy: (labels, { asc }) => [asc(labels.name)],
     });
-    return boardLabels;
   },
 
-  findById: async (id: string) => {
-    const label = await db.query.labels.findFirst({
-      where: eq(labels.id, id),
+  findById: async (labelId: string) => {
+    return db.query.labels.findFirst({
+      where: eq(labels.id, labelId),
     });
-    return label;
   },
 
-  update: async (id: string, data: UpdateLabel) => {
+  update: async (labelId: string, data: UpdateLabel) => {
     const [updated] = await db
       .update(labels)
       .set(data)
-      .where(eq(labels.id, id))
+      .where(eq(labels.id, labelId))
       .returning();
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(labels).where(eq(labels.id, id));
+  delete: async (labelId: string) => {
+    await db.delete(labels).where(eq(labels.id, labelId));
   },
 
   getLabelDataByWorkspaceId: async (workspaceId: string) => {
-    return await db
+    return db
       .select({
         labelId: labels.id,
         labelName: labels.name,

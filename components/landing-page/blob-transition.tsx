@@ -19,40 +19,44 @@ const BLOB_PATH_FRAMES = {
 
 const BLOB_ANIMATION_CONFIG = {
   first: {
-    duration: 20,
+    duration: 22,
     repeat: Infinity,
     ease: "easeInOut" as const,
     repeatType: "loop" as const,
   },
   second: {
-    duration: 24,
+    duration: 26,
     repeat: Infinity,
     ease: "easeInOut" as const,
     repeatType: "loop" as const,
-    delay: 1,
+    delay: 2,
   },
 };
 
 export const BlobTransition = () => {
   return (
-    <div className="relative h-32 md:h-48 overflow-hidden">
+    <div className="relative h-32 md:h-40 overflow-hidden">
       <svg
         className="absolute w-full h-full"
         viewBox="0 0 1440 320"
         preserveAspectRatio="none"
       >
-        {/* First animated blob layer */}
         <motion.path
-          fill="hsl(270 60% 50% / 0.1)"
+          fill="hsl(262 83% 58% / 0.12)"
           animate={{ d: BLOB_PATH_FRAMES.first }}
           transition={BLOB_ANIMATION_CONFIG.first}
+          style={{
+            filter: "drop-shadow(0 4px 12px hsl(262 83% 58% / 0.15))",
+          }}
         />
 
-        {/* Second animated blob layer */}
         <motion.path
-          fill="hsl(280 50% 45% / 0.08)"
+          fill="hsl(262 80% 55% / 0.08)"
           animate={{ d: BLOB_PATH_FRAMES.second }}
           transition={BLOB_ANIMATION_CONFIG.second}
+          style={{
+            filter: "drop-shadow(0 2px 8px hsl(262 80% 55% / 0.1))",
+          }}
         />
       </svg>
     </div>

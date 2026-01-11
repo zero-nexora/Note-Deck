@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { Role } from "@/db/enum";
 import { boardMembers, workspaceMembers } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { Role } from "./constants";
 
 export const checkWorkspacePermission = async (
   userId: string,
@@ -28,7 +28,10 @@ export const checkBoardPermission = async (
   requiredRole: Role
 ): Promise<boolean> => {
   const member = await db.query.boardMembers.findFirst({
-    where: and(eq(boardMembers.boardId, boardId), eq(boardMembers.userId, userId)),
+    where: and(
+      eq(boardMembers.boardId, boardId),
+      eq(boardMembers.userId, userId)
+    ),
   });
 
   if (!member) return false;

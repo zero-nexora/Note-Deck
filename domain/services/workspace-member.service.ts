@@ -8,8 +8,15 @@ import {
   LeaveWorkspaceInput,
   ListMembersInput,
   RemoveMemberInput,
+  TransferOwnershipInput,
 } from "../schemas/workspace-member.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import {
+  AUDIT_ACTION,
+  DEFAULT_WORKSPACE_MEMBER_ROLE,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const workspaceMemberService = {
   add: async (userId: string, data: AddMemberInput) => {
@@ -21,7 +28,7 @@ export const workspaceMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -32,15 +39,16 @@ export const workspaceMemberService = {
       throw new Error("User not found");
     }
 
-    const exists = await workspaceMemberRepository.findByWorkspaceIdAndUserId(
-      data.workspaceId,
-      data.userId
-    );
-    if (exists) {
+    const existingMember =
+      await workspaceMemberRepository.findByWorkspaceIdAndUserId(
+        data.workspaceId,
+        data.userId
+      );
+    if (existingMember) {
       throw new Error("User is already a member");
     }
 
-    const role = data.role || "normal";
+    const role = data.role || DEFAULT_WORKSPACE_MEMBER_ROLE;
 
     const member = await workspaceMemberRepository.add({
       workspaceId: data.workspaceId,
@@ -49,10 +57,10 @@ export const workspaceMemberService = {
     });
 
     await auditLogRepository.create({
-      workspaceId: data.workspaceId,
+      workspaceId: workspace.id,
       userId,
-      action: "workspace.member_added",
-      entityType: "workspace_member",
+      action: AUDIT_ACTION.WORKSPACE_MEMBER_ADDED,
+      entityType: ENTITY_TYPE.WORKSPACE_MEMBER,
       entityId: member.id,
       metadata: {
         addedUserId: data.userId,
@@ -77,7 +85,7 @@ export const workspaceMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -92,10 +100,10 @@ export const workspaceMemberService = {
     }
 
     await auditLogRepository.create({
-      workspaceId: data.workspaceId,
+      workspaceId: workspace.id,
       userId,
-      action: "workspace.member_removed",
-      entityType: "workspace_member",
+      action: AUDIT_ACTION.WORKSPACE_MEMBER_REMOVED,
+      entityType: ENTITY_TYPE.WORKSPACE,
       entityId: member.id,
       metadata: {
         removedUserId: data.userId,
@@ -119,7 +127,7 @@ export const workspaceMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -137,17 +145,17 @@ export const workspaceMemberService = {
       return member;
     }
 
-    const updated = await workspaceMemberRepository.updateRole(
+    const updatedMember = await workspaceMemberRepository.updateRole(
       data.workspaceId,
       data.userId,
       data.role
     );
 
     await auditLogRepository.create({
-      workspaceId: data.workspaceId,
+      workspaceId: workspace.id,
       userId,
-      action: "workspace.member_role_changed",
-      entityType: "workspace_member",
+      action: AUDIT_ACTION.WORKSPACE_MEMBER_ROLE_CHANGED,
+      entityType: ENTITY_TYPE.WORKSPACE,
       entityId: member.id,
       metadata: {
         targetUserId: data.userId,
@@ -156,7 +164,7 @@ export const workspaceMemberService = {
       },
     });
 
-    return updated;
+    return updatedMember;
   },
 
   list: async (userId: string, data: ListMembersInput) => {
@@ -168,13 +176,13 @@ export const workspaceMemberService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "observer"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const members = await workspaceMemberRepository.findByWorkspaceId(
+    const members = await workspaceMemberRepository.findByWorkspaceIdWithUser(
       data.workspaceId
     );
 
@@ -204,8 +212,8 @@ export const workspaceMemberService = {
     await auditLogRepository.create({
       workspaceId: data.workspaceId,
       userId,
-      action: "workspace.member_left",
-      entityType: "workspace_member",
+      action: AUDIT_ACTION.WORKSPACE_MEMBER_LEFT,
+      entityType: ENTITY_TYPE.WORKSPACE,
       entityId: member.id,
       metadata: {
         role: member.role,
@@ -213,5 +221,50 @@ export const workspaceMemberService = {
     });
 
     await workspaceMemberRepository.remove(data.workspaceId, userId);
+  },
+
+  transferOwnership: async (userId: string, data: TransferOwnershipInput) => {
+    const workspace = await workspaceRepository.findById(data.workspaceId);
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
+
+    if (workspace.ownerId !== userId) {
+      throw new Error("Only owner can transfer ownership");
+    }
+
+    if (workspace.ownerId === data.newOwnerId) {
+      throw new Error("User is already workspace owner");
+    }
+
+    const newOwnerMember =
+      await workspaceMemberRepository.findByWorkspaceIdAndUserId(
+        data.workspaceId,
+        data.newOwnerId
+      );
+
+    if (!newOwnerMember) {
+      throw new Error("New owner must be a workspace member");
+    }
+
+    await workspaceMemberRepository.updateRole(
+      data.workspaceId,
+      data.newOwnerId,
+      ROLE.ADMIN
+    );
+
+    await workspaceRepository.updateOwner(data.workspaceId, data.newOwnerId);
+
+    await auditLogRepository.create({
+      workspaceId: data.workspaceId,
+      userId,
+      action: AUDIT_ACTION.WORKSPACE_OWNERSHIP_TRANSFERRED,
+      entityType: ENTITY_TYPE.WORKSPACE,
+      entityId: data.workspaceId,
+      metadata: {
+        oldOwnerId: userId,
+        newOwnerId: data.newOwnerId,
+      },
+    });
   },
 };

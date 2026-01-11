@@ -7,10 +7,10 @@ import {
   CreateWorkspaceSchema,
   DeleteWorkspaceInput,
   DeleteWorkspaceSchema,
+  FindWorkspaceByIdInput,
+  FindWorkspaceByIdSchema,
   UpdateWorkspaceNameInput,
   UpdateWorkspaceNameSchema,
-  UpdateWorkspaceSlugInput,
-  UpdateWorkspaceSlugSchema,
 } from "@/domain/schemas/workspace.schema";
 import { workspaceService } from "@/domain/services/workspace.service";
 import { error, success } from "@/lib/response";
@@ -24,12 +24,11 @@ export const createWorkspaceAction = async (input: CreateWorkspaceInput) => {
       ownerId: user.id,
     });
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const workspace = await workspaceService.create(user.id, parsed.data);
     return success("Workspace created successfully", workspace);
   } catch (err: any) {
@@ -37,12 +36,14 @@ export const createWorkspaceAction = async (input: CreateWorkspaceInput) => {
   }
 };
 
-export const findWorkspaceByIdAction = async (id: string) => {
+export const findWorkspaceByIdAction = async (
+  input: FindWorkspaceByIdInput
+) => {
   try {
     const user = await requireAuth();
-
-    const workspace = await workspaceService.findById(user.id, id);
-
+    const parsed = FindWorkspaceByIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid workspace id");
+    const workspace = await workspaceService.findById(user.id, parsed.data);
     return success("", workspace);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -52,9 +53,7 @@ export const findWorkspaceByIdAction = async (id: string) => {
 export const findWorkspacesByUserAction = async () => {
   try {
     const user = await requireAuth();
-
     const workspaces = await workspaceService.findByUserId(user.id);
-
     return success("", workspaces);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -62,22 +61,21 @@ export const findWorkspacesByUserAction = async () => {
 };
 
 export const updateWorkspaceNameAction = async (
-  id: string,
+  workspaceId: string,
   input: UpdateWorkspaceNameInput
 ) => {
   try {
     const user = await requireAuth();
     const parsed = UpdateWorkspaceNameSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const workspace = await workspaceService.updateName(
       user.id,
-      id,
+      workspaceId,
       parsed.data
     );
     return success("Workspace name updated successfully", workspace);
@@ -86,48 +84,17 @@ export const updateWorkspaceNameAction = async (
   }
 };
 
-export const updateWorkspaceSlugAction = async (
-  id: string,
-  input: UpdateWorkspaceSlugInput
-) => {
-  try {
-    const user = await requireAuth();
-    const parsed = UpdateWorkspaceSlugSchema.safeParse(input);
-    if (!parsed.success) {
-      const flattened = parsed.error.flatten();
-      const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
-      return error(message);
-    }
-
-    const workspace = await workspaceService.updateSlug(
-      user.id,
-      id,
-      parsed.data
-    );
-    return success("Workspace slug updated successfully", workspace);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
-  }
-};
-
 export const changeWorkspacePlanAction = async (
-  id: string,
+  workspaceId: string,
   input: ChangePlanInput
 ) => {
   try {
     const user = await requireAuth();
     const parsed = ChangePlanSchema.safeParse(input);
-    if (!parsed.success) {
-      const flattened = parsed.error.flatten();
-      const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
-      return error(message);
-    }
-
+    if (!parsed.success) return error("Invalid plan");
     const workspace = await workspaceService.changePlan(
       user.id,
-      id,
+      workspaceId,
       parsed.data
     );
     return success("Workspace plan changed successfully", workspace);
@@ -140,13 +107,7 @@ export const deleteWorkspaceAction = async (input: DeleteWorkspaceInput) => {
   try {
     const user = await requireAuth();
     const parsed = DeleteWorkspaceSchema.safeParse(input);
-    if (!parsed.success) {
-      const flattened = parsed.error.flatten();
-      const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
-      return error(message);
-    }
-
+    if (!parsed.success) return error("Invalid workspace id");
     await workspaceService.delete(user.id, parsed.data);
     return success("Workspace deleted successfully");
   } catch (err: any) {

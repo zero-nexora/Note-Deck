@@ -2,17 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  LayoutGrid,
-  Users,
-  Settings,
-  FileText,
-  ChevronLeft,
-  ChevronRight,
-  Clipboard,
-  ChevronDown,
-  Plus,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -25,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "../ui/dropdown-menu";
+import { sidebarLinks } from "@/lib/constants";
 
 interface SidebarProps {
   workspaces: WorkspaceWithMember[];
@@ -37,14 +28,6 @@ export const Sidebar = ({ workspaces, workspaceId }: SidebarProps) => {
   const router = useRouter();
 
   const currentWorkspace = workspaces.find((ws) => ws.id === workspaceId);
-
-  const sidebarLinks = [
-    { icon: LayoutGrid, label: "Overview", path: "overview" },
-    { icon: FileText, label: "Audit Logs", path: "audit-logs" },
-    { icon: Users, label: "User Groups", path: "user-groups" },
-    { icon: Clipboard, label: "Boards", path: "boards" },
-    { icon: Settings, label: "Settings", path: "settings" },
-  ];
 
   const isActive = (path: string) => {
     const fullPath = `/workspaces/${workspaceId}/${path}`;

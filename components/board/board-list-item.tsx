@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { BoardListCards } from "./board-list-cards";
 import { BoardListHeader } from "./board-list-header";
 import { BoardListFooter } from "./board-list-footer";
-import { ScrollArea } from "../ui/scroll-area";
 import { useConfirm } from "@/stores/confirm-store";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { User } from "lucide-react";
@@ -114,14 +113,14 @@ export const BoardListItem = ({
         onDuplicate={handleDuplicateList}
       />
 
-      <ScrollArea className="h-[calc(100vh-270px)]">
+      <div className="flex-1 overflow-y-auto p-1 space-y-3">
         <BoardListCards
           boardMembers={boardMembers}
           boardLabels={boardLabels}
           list={list}
           realtimeUtils={realtimeUtils}
         />
-      </ScrollArea>
+      </div>
 
       <BoardListFooter list={list} realtimeUtils={realtimeUtils} />
     </div>

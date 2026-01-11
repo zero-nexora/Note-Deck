@@ -1,9 +1,10 @@
 "use client";
+
 import {
   addBoardMemberAction,
   removeBoardMemberAction,
   changeBoardMemberRoleAction,
-} from "@/app/actions/board-member.action";
+} from "@/domain/actions/board-member.action";
 import {
   AddBoardMemberInput,
   RemoveBoardMemberInput,
@@ -15,57 +16,42 @@ import { toast } from "sonner";
 export function useBoardMember() {
   const router = useRouter();
 
-  const addMember = async (input: AddBoardMemberInput) => {
-    try {
-      const result = await addBoardMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const removeMember = async (input: RemoveBoardMemberInput) => {
-    try {
-      const result = await removeBoardMemberAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const addBoardMember = async (input: AddBoardMemberInput) => {
+    const result = await addBoardMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
-  const changeRole = async (input: ChangeBoardMemberRoleInput) => {
-    try {
-      const result = await changeBoardMemberRoleAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+  const removeBoardMember = async (input: RemoveBoardMemberInput) => {
+    const result = await removeBoardMemberAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return true;
+  };
+
+  const changeBoardMemberRole = async (input: ChangeBoardMemberRoleInput) => {
+    const result = await changeBoardMemberRoleAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   return {
-    addMember,
-    removeMember,
-    changeRole,
+    addBoardMember,
+    removeBoardMember,
+    changeBoardMemberRole,
   };
 }

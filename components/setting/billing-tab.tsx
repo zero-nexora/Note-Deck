@@ -7,11 +7,11 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { STRIPE_PLANS } from "@/lib/constants";
 import { useConfirm } from "@/stores/confirm-store";
 import { useStripe } from "@/hooks/use-stripe";
 import { Check, Crown, Zap, Rocket, CreditCard } from "lucide-react";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
+import { CLIENT_STRIPE_PLANS, Plan, UpgradePlan } from "@/lib/constants";
 
 interface BillingTabProps {
   workspace: WorkspaceWithOwnerMembers;
@@ -28,18 +28,18 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
   const currentPlan = workspace.plan;
   const { openCustomerPortal } = useStripe();
 
-  const handleUpgrade = (plan: "pro" | "enterprise") => {
-    const planData = STRIPE_PLANS[plan];
+  const handleUpgrade = (plan: UpgradePlan) => {
+    const planData = CLIENT_STRIPE_PLANS[plan];
     open({
       title: `Upgrade to ${planData.name}`,
       description: `You will be charged $${planData.price}/month. Do you want to continue?`,
       onConfirm: async () => {
-        await checkout(workspace.id, plan);
+        await checkout({ workspaceId: workspace.id, plan });
       },
     });
   };
 
-  const renderActionButton = (plan: "free" | "pro" | "enterprise") => {
+  const renderActionButton = (plan: Plan) => {
     if (plan === currentPlan) {
       return (
         <Button
@@ -67,7 +67,7 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
     );
   };
 
-  const getPlanIcon = (plan: "free" | "pro" | "enterprise") => {
+  const getPlanIcon = (plan: Plan) => {
     switch (plan) {
       case "free":
         return <Zap className="h-5 w-5 text-primary" />;
@@ -78,11 +78,8 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
     }
   };
 
-  const renderPlanCard = (
-    plan: "free" | "pro" | "enterprise",
-    features: React.ReactNode
-  ) => {
-    const planData = STRIPE_PLANS[plan];
+  const renderPlanCard = (plan: Plan, features: React.ReactNode) => {
+    const planData = CLIENT_STRIPE_PLANS[plan];
     const isCurrent = plan === currentPlan;
 
     return (
@@ -136,12 +133,12 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
         {renderPlanCard(
           "free",
           <>
-            <Feature>{STRIPE_PLANS.free.limits.boards} boards</Feature>
+            <Feature>{CLIENT_STRIPE_PLANS.free.limits.boards} boards</Feature>
             <Feature>
-              {STRIPE_PLANS.free.limits.cardsPerBoard} cards per board
+              {CLIENT_STRIPE_PLANS.free.limits.cardsPerBoard} cards per board
             </Feature>
             <Feature>
-              {STRIPE_PLANS.free.limits.membersPerWorkspace} members
+              {CLIENT_STRIPE_PLANS.free.limits.membersPerWorkspace} members
             </Feature>
           </>
         )}
@@ -149,12 +146,12 @@ export const BillingTab = ({ workspace }: BillingTabProps) => {
         {renderPlanCard(
           "pro",
           <>
-            <Feature>{STRIPE_PLANS.pro.limits.boards} boards</Feature>
+            <Feature>{CLIENT_STRIPE_PLANS.pro.limits.boards} boards</Feature>
             <Feature>
-              {STRIPE_PLANS.pro.limits.cardsPerBoard} cards per board
+              {CLIENT_STRIPE_PLANS.pro.limits.cardsPerBoard} cards per board
             </Feature>
             <Feature>
-              {STRIPE_PLANS.pro.limits.membersPerWorkspace} members
+              {CLIENT_STRIPE_PLANS.pro.limits.membersPerWorkspace} members
             </Feature>
           </>
         )}

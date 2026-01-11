@@ -1,29 +1,32 @@
-import { findAutomationsByBoardIdAction } from "@/app/actions/automation.action";
-import { listBoardMembersAction } from "@/app/actions/board-member.action";
-import { findLabelsByBoardIdAction } from "@/app/actions/label.action";
+import { findAutomationsByBoardIdAction } from "@/domain/actions/automation.action";
+import { listBoardMembersAction } from "@/domain/actions/board-member.action";
+import { findLabelsByBoardIdAction } from "@/domain/actions/label.action";
 import { AutomationList } from "@/components/automation/automation-list";
 import { AutomaitonStats } from "@/components/automation/automation-stats";
 import { CreateAutomation } from "@/components/automation/create-automation";
 import { AutomationDetails } from "@/domain/types/automation.type";
 import { Zap } from "lucide-react";
+import { unwrapActionResult } from "@/lib/response";
 
 interface AutomationsPageProps {
   params: Promise<{ boardId: string; workspaceId: string }>;
 }
 
 const AutomationsPage = async ({ params }: AutomationsPageProps) => {
-  const { boardId, workspaceId } = await params;
-  const result = await findAutomationsByBoardIdAction(boardId);
-  if (!result.success || !result.data) return null;
-  const automation = result.data as AutomationDetails[];
+  const { boardId } = await params;
 
-  const resultBoardMember = await listBoardMembersAction({ boardId });
-  const resultLabel = await findLabelsByBoardIdAction(boardId);
-  if (!resultBoardMember.success || !resultBoardMember.data) return null;
-  if (!resultLabel.success || !resultLabel.data) return null;
+  const automations = unwrapActionResult<AutomationDetails[]>(
+    await findAutomationsByBoardIdAction(boardId)
+  );
+  if (!automations) return null;
 
-  const boardMembers = resultBoardMember.data;
-  const labels = resultLabel.data;
+  const boardMembers = unwrapActionResult(
+    await listBoardMembersAction({ boardId })
+  );
+  if (!boardMembers) return null;
+
+  const labels = unwrapActionResult(await findLabelsByBoardIdAction(boardId));
+  if (!labels) return null;
 
   return (
     <div className="space-y-6">
@@ -44,11 +47,11 @@ const AutomationsPage = async ({ params }: AutomationsPageProps) => {
         />
       </div>
 
-      <AutomaitonStats automation={automation} />
+      <AutomaitonStats automation={automations} />
       <AutomationList
         boardMembers={boardMembers}
         labels={labels}
-        automations={automation}
+        automations={automations}
       />
     </div>
   );

@@ -12,10 +12,10 @@ interface Particle {
   delay: number;
 }
 
-const PARTICLE_COUNT = 30;
-const MIN_PARTICLE_SIZE = 1;
-const MAX_PARTICLE_SIZE = 5;
-const MIN_DURATION = 10;
+const PARTICLE_COUNT = 25;
+const MIN_PARTICLE_SIZE = 2;
+const MAX_PARTICLE_SIZE = 4;
+const MIN_DURATION = 12;
 const MAX_DURATION = 20;
 const MAX_DELAY = 5;
 
@@ -23,7 +23,7 @@ const PARTICLE_ANIMATION = {
   initial: { y: "100vh", opacity: 0 },
   animate: {
     y: "-10vh",
-    opacity: [0, 1, 1, 0],
+    opacity: [0, 0.6, 0.6, 0],
   },
   transition: {
     repeat: Infinity,
@@ -58,11 +58,14 @@ export const ParticleBackground = () => {
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full bg-primary/30"
+          className="absolute rounded-full blur-sm"
           style={{
             left: `${particle.x}%`,
             width: particle.size,
             height: particle.size,
+            background:
+              "radial-gradient(circle, hsl(262 83% 58% / 0.3) 0%, hsl(262 75% 60% / 0.15) 50%, transparent 100%)",
+            boxShadow: "0 0 8px hsl(262 83% 58% / 0.2)",
           }}
           initial={PARTICLE_ANIMATION.initial}
           animate={PARTICLE_ANIMATION.animate}

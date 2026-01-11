@@ -7,7 +7,7 @@ import {
   getActivityTimelineAction,
   getChecklistStatsAction,
   getDueDateAnalyticsAction,
-} from "@/app/actions/analytics.action";
+} from "@/domain/actions/analytics.action";
 import { ActivityTimelineChart } from "@/components/analytics/activity-timeline-chart";
 import { BoardPerformanceChart } from "@/components/analytics/board-performance-chart";
 import { CardsTrendChart } from "@/components/analytics/cards-trend-chart";
@@ -27,6 +27,7 @@ import {
   ChecklistStats,
   DueDateAnalytics,
 } from "@/domain/types/analytics.type";
+import { unwrapActionResult } from "@/lib/response";
 
 interface OverviewPageProps {
   params: Promise<{ workspaceId: string }>;
@@ -55,40 +56,22 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
     getDueDateAnalyticsAction({ workspaceId }),
   ]);
 
-  const workspaceStats: WorkspaceStats | null = workspaceStatsResult.success
-    ? (workspaceStatsResult.data as WorkspaceStats)
-    : null;
-
-  const cardsTrend: CardsTrend[] = cardsTrendResult.success
-    ? (cardsTrendResult.data as CardsTrend[])
-    : [];
-
-  const boardsPerformance: BoardPerformance[] = boardsPerformanceResult.success
-    ? (boardsPerformanceResult.data as BoardPerformance[])
-    : [];
-
-  const membersProductivity: MemberProductivity[] =
-    membersProductivityResult.success
-      ? (membersProductivityResult.data as MemberProductivity[])
-      : [];
-
-  const labelsDistribution: LabelDistribution[] =
-    labelsDistributionResult.success
-      ? (labelsDistributionResult.data as LabelDistribution[])
-      : [];
-
-  const activityTimeline: ActivityTimeline[] = activityTimelineResult.success
-    ? (activityTimelineResult.data as ActivityTimeline[])
-    : [];
-
-  const checklistStats: ChecklistStats | null = checklistStatsResult.success
-    ? (checklistStatsResult.data as ChecklistStats)
-    : null;
-
-  const dueDateAnalytics: DueDateAnalytics | null =
-    dueDateAnalyticsResult.success
-      ? (dueDateAnalyticsResult.data as DueDateAnalytics)
-      : null;
+  const workspaceStats =
+    unwrapActionResult<WorkspaceStats>(workspaceStatsResult);
+  const cardsTrend = unwrapActionResult<CardsTrend[]>(cardsTrendResult) || [];
+  const boardsPerformance =
+    unwrapActionResult<BoardPerformance[]>(boardsPerformanceResult) || [];
+  const membersProductivity =
+    unwrapActionResult<MemberProductivity[]>(membersProductivityResult) || [];
+  const labelsDistribution =
+    unwrapActionResult<LabelDistribution[]>(labelsDistributionResult) || [];
+  const activityTimeline =
+    unwrapActionResult<ActivityTimeline[]>(activityTimelineResult) || [];
+  const checklistStats =
+    unwrapActionResult<ChecklistStats>(checklistStatsResult);
+  const dueDateAnalytics = unwrapActionResult<DueDateAnalytics>(
+    dueDateAnalyticsResult
+  );
 
   return (
     <div className="space-y-6">

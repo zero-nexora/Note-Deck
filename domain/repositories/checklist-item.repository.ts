@@ -20,8 +20,7 @@ export const checklistItemRepository = {
 
   findByChecklistId: async (checklistId: string) => {
     return db.query.checklistItems.findMany({
-      where: eq(checklistItems.checklistId, checklistId),
-      orderBy: (items, { asc }) => [asc(items.position)],
+      where: eq(checklistItems.checklistId, checklistId)
     });
   },
 

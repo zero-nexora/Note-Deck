@@ -8,21 +8,20 @@ import {
 } from "@/domain/schemas/user-group-member.schema";
 import { userGroupMemberService } from "@/domain/services/user-group-member.service";
 import { requireAuth } from "@/lib/session";
-import { error, success } from "@/lib/response";
+import { success, error } from "@/lib/response";
 
 export const addUserGroupMemberAction = async (input: AddGroupMemberInput) => {
   try {
     const user = await requireAuth();
-
     const parsed = AddGroupMemberSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    const member = await userGroupMemberService.addMember(user.id, parsed.data);
+    const member = await userGroupMemberService.add(user.id, parsed.data);
     return success("Member added to group successfully", member);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -34,16 +33,15 @@ export const removeUserGroupMemberAction = async (
 ) => {
   try {
     const user = await requireAuth();
-
     const parsed = RemoveGroupMemberSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
-    await userGroupMemberService.removeMember(user.id, parsed.data);
+    await userGroupMemberService.remove(user.id, parsed.data);
     return success("Member removed from group successfully");
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");

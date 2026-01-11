@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { NewAuditLog } from "../types/audit-log.type";
 import { auditLogs } from "@/db/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { DEFAULT_LIMIT_AUDIT_LOG } from "@/lib/constants";
 
 export const auditLogRepository = {
   create: async (data: NewAuditLog) => {
@@ -12,8 +13,11 @@ export const auditLogRepository = {
     return log;
   },
 
-  findByWorkspaceId: async (workspaceId: string, limit = 100, offset = 0) => {
-    // Get total count
+  findByWorkspaceId: async (
+    workspaceId: string,
+    limit = DEFAULT_LIMIT_AUDIT_LOG,
+    offset = 0
+  ) => {
     const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(auditLogs)
@@ -21,7 +25,6 @@ export const auditLogRepository = {
 
     const total = Number(totalResult[0]?.count || 0);
 
-    // Get paginated logs
     const logs = await db.query.auditLogs.findMany({
       where: eq(auditLogs.workspaceId, workspaceId),
       with: {
@@ -39,7 +42,7 @@ export const auditLogRepository = {
   findByUserId: async (
     workspaceId: string,
     userId: string,
-    limit = 50,
+    limit = DEFAULT_LIMIT_AUDIT_LOG,
     offset = 0
   ) => {
     const totalResult = await db

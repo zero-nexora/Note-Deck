@@ -1,6 +1,8 @@
 import {
   CreateUserGroupInput,
   DeleteUserGroupInput,
+  FindUserGroupInput,
+  FindUserGroupsByWorkspaceInput,
   UpdateUserGroupInput,
 } from "../schemas/user-group.schema";
 import { checkWorkspacePermission } from "@/lib/check-permissions";
@@ -8,6 +10,7 @@ import { userGroupRepository } from "../repositories/user-group.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { userGroupMemberRepository } from "../repositories/user-group-member.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
+import { AUDIT_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
 
 export const userGroupService = {
   create: async (userId: string, data: CreateUserGroupInput) => {
@@ -19,7 +22,7 @@ export const userGroupService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -40,10 +43,10 @@ export const userGroupService = {
     await userGroupMemberRepository.add({ groupId: group.id, userId });
 
     await auditLogRepository.create({
-      workspaceId: data.workspaceId,
+      workspaceId: workspace.id,
       userId,
-      action: "user_group.created",
-      entityType: "user_group",
+      action: AUDIT_ACTION.USER_GROUP_CREATED,
+      entityType: ENTITY_TYPE.USER_GROUP,
       entityId: group.id,
       metadata: {
         name: group.name,
@@ -54,8 +57,8 @@ export const userGroupService = {
     return group;
   },
 
-  findById: async (userId: string, id: string) => {
-    const group = await userGroupRepository.findById(id);
+  findById: async (userId: string, data: FindUserGroupInput) => {
+    const group = await userGroupRepository.findById(data.groupId);
     if (!group) {
       throw new Error("Group not found");
     }
@@ -63,7 +66,7 @@ export const userGroupService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "observer"
+      ROLE.OBSERVER
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -72,27 +75,36 @@ export const userGroupService = {
     return group;
   },
 
-  findByWorkspaceId: async (userId: string, workspaceId: string) => {
-    const workspace = await workspaceRepository.findById(workspaceId);
+  findByWorkspaceId: async (
+    userId: string,
+    data: FindUserGroupsByWorkspaceInput
+  ) => {
+    const workspace = await workspaceRepository.findById(data.workspaceId);
     if (!workspace) {
       throw new Error("Workspace not found");
     }
 
     const hasPermission = await checkWorkspacePermission(
       userId,
-      workspaceId,
-      "observer"
+      workspace.id,
+      ROLE.OBSERVER
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const userGroups = await userGroupRepository.findByWorkspaceId(workspaceId);
+    const userGroups = await userGroupRepository.findByWorkspaceIdWithMembers(
+      data.workspaceId
+    );
     return userGroups;
   },
 
-  update: async (userId: string, id: string, data: UpdateUserGroupInput) => {
-    const group = await userGroupRepository.findById(id);
+  update: async (
+    userId: string,
+    groupId: string,
+    data: UpdateUserGroupInput
+  ) => {
+    const group = await userGroupRepository.findById(groupId);
     if (!group) {
       throw new Error("Group not found");
     }
@@ -100,7 +112,7 @@ export const userGroupService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -128,7 +140,7 @@ export const userGroupService = {
       return group;
     }
 
-    const updated = await userGroupRepository.update(id, updateData);
+    const updatedGroup = await userGroupRepository.update(groupId, updateData);
 
     const metadata: Record<string, any> = {};
     if (data.name !== undefined) {
@@ -143,13 +155,13 @@ export const userGroupService = {
     await auditLogRepository.create({
       workspaceId: group.workspaceId,
       userId,
-      action: "user_group.updated",
-      entityType: "user_group",
-      entityId: id,
+      action: AUDIT_ACTION.USER_GROUP_UPDATED,
+      entityType: ENTITY_TYPE.USER_GROUP,
+      entityId: group.id,
       metadata,
     });
 
-    return updated;
+    return updatedGroup;
   },
 
   delete: async (userId: string, data: DeleteUserGroupInput) => {
@@ -161,7 +173,7 @@ export const userGroupService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       group.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -170,9 +182,9 @@ export const userGroupService = {
     await auditLogRepository.create({
       workspaceId: group.workspaceId,
       userId,
-      action: "user_group.deleted",
-      entityType: "user_group",
-      entityId: data.id,
+      action: AUDIT_ACTION.USER_GROUP_DELETED,
+      entityType: ENTITY_TYPE.USER_GROUP,
+      entityId: group.id,
       metadata: {
         name: group.name,
         permissions: group.permissions,

@@ -8,6 +8,7 @@ import {
   ReadActivityInput,
 } from "../schemas/activity.schema";
 import { cardRepository } from "../repositories/card.repository";
+import { DEFAULT_LIMIT_ACTIVITY, ROLE } from "@/lib/constants";
 
 export const activityService = {
   logBoard: async (userId: string, data: LogBoardActionInput) => {
@@ -19,21 +20,24 @@ export const activityService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    if (!data.action || data.action.trim() === "") {
+    const trimmedAction = data.action.trim();
+    if (!trimmedAction) {
       throw new Error("Action cannot be empty");
     }
 
-    if (!data.entityType || data.entityType.trim() === "") {
+    const trimmedEntityType = data.entityType.trim();
+    if (!trimmedEntityType) {
       throw new Error("Entity type cannot be empty");
     }
 
-    if (!data.entityId || data.entityId.trim() === "") {
+    const trimmedEntityId = data.entityId.trim();
+    if (!trimmedEntityId) {
       throw new Error("Entity ID cannot be empty");
     }
 
@@ -54,21 +58,24 @@ export const activityService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    if (!data.action || data.action.trim() === "") {
+    const trimmedAction = data.action.trim();
+    if (!trimmedAction) {
       throw new Error("Action cannot be empty");
     }
 
-    if (!data.entityType || data.entityType.trim() === "") {
+    const trimmedEntityType = data.entityType.trim();
+    if (!trimmedEntityType) {
       throw new Error("Entity type cannot be empty");
     }
 
-    if (!data.entityId || data.entityId.trim() === "") {
+    const trimmedEntityId = data.entityId.trim();
+    if (!trimmedEntityId) {
       throw new Error("Entity ID cannot be empty");
     }
 
@@ -93,25 +100,29 @@ export const activityService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    if (!data.cardId || data.cardId.trim() === "") {
+    const trimmedCardId = data.cardId.trim();
+    if (!trimmedCardId) {
       throw new Error("Card ID cannot be empty");
     }
 
-    if (!data.action || data.action.trim() === "") {
+    const trimmedAction = data.action.trim();
+    if (!trimmedAction) {
       throw new Error("Action cannot be empty");
     }
 
-    if (!data.entityType || data.entityType.trim() === "") {
+    const trimmedEntityType = data.entityType.trim();
+    if (!trimmedEntityType) {
       throw new Error("Entity type cannot be empty");
     }
 
-    if (!data.entityId || data.entityId.trim() === "") {
+    const trimmedEntityId = data.entityId.trim();
+    if (!trimmedEntityId) {
       throw new Error("Entity ID cannot be empty");
     }
 
@@ -151,7 +162,7 @@ export const activityService = {
       const hasPermission = await checkBoardPermission(
         userId,
         data.boardId,
-        "observer"
+        ROLE.OBSERVER
       );
       if (!hasPermission) {
         throw new Error("Permission denied");
@@ -167,7 +178,7 @@ export const activityService = {
       const hasPermission = await checkBoardPermission(
         userId,
         card.boardId,
-        "observer"
+        ROLE.OBSERVER
       );
       if (!hasPermission) {
         throw new Error("Permission denied");
@@ -175,7 +186,7 @@ export const activityService = {
 
       const activities = await activityRepository.findByCardId(
         data.cardId,
-        data.limit || 50
+        data.limit || DEFAULT_LIMIT_ACTIVITY
       );
       return activities;
     }
@@ -183,7 +194,7 @@ export const activityService = {
     if (data.boardId) {
       const activities = await activityRepository.findByBoardId(
         data.boardId,
-        data.limit || 50
+        data.limit || DEFAULT_LIMIT_ACTIVITY
       );
       return activities;
     }

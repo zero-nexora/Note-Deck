@@ -8,6 +8,12 @@ import {
   DeleteLabelInput,
   UpdateLabelInput,
 } from "../schemas/label.schema";
+import {
+  ACTIVITY_ACTION,
+  AUDIT_ACTION,
+  ENTITY_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const labelService = {
   create: async (userId: string, data: CreateLabelInput) => {
@@ -19,7 +25,7 @@ export const labelService = {
     const hasPermission = await checkBoardPermission(
       userId,
       data.boardId,
-      "normal"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -38,10 +44,10 @@ export const labelService = {
     const label = await labelRepository.create(labelData);
 
     await activityRepository.create({
-      boardId: data.boardId,
+      boardId: board.id,
       userId,
-      action: "label.created",
-      entityType: "label",
+      action: ACTIVITY_ACTION.LABEL_CREATED,
+      entityType: ENTITY_TYPE.LABEL,
       entityId: label.id,
       metadata: { name: label.name, color: label.color },
     });
@@ -49,8 +55,8 @@ export const labelService = {
     await auditLogRepository.create({
       workspaceId: board.workspaceId,
       userId,
-      action: "label.created",
-      entityType: "label",
+      action: AUDIT_ACTION.LABEL_CREATED,
+      entityType: ENTITY_TYPE.LABEL,
       entityId: label.id,
       metadata: { boardId: data.boardId, name: label.name, color: label.color },
     });
@@ -58,8 +64,8 @@ export const labelService = {
     return label;
   },
 
-  update: async (userId: string, id: string, data: UpdateLabelInput) => {
-    const label = await labelRepository.findById(id);
+  update: async (userId: string, labelId: string, data: UpdateLabelInput) => {
+    const label = await labelRepository.findById(labelId);
     if (!label) {
       throw new Error("Label not found");
     }
@@ -67,7 +73,7 @@ export const labelService = {
     const hasPermission = await checkBoardPermission(
       userId,
       label.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -95,7 +101,7 @@ export const labelService = {
       return label;
     }
 
-    const updated = await labelRepository.update(id, updateData);
+    const updatedLabel = await labelRepository.update(labelId, updateData);
 
     const metadata: Record<string, any> = {};
     if (data.name !== undefined) {
@@ -110,9 +116,9 @@ export const labelService = {
     await activityRepository.create({
       boardId: label.boardId,
       userId,
-      action: "label.updated",
-      entityType: "label",
-      entityId: id,
+      action: ACTIVITY_ACTION.LABEL_UPDATED,
+      entityType: ENTITY_TYPE.LABEL,
+      entityId: label.id,
       metadata,
     });
 
@@ -121,14 +127,14 @@ export const labelService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "label.updated",
-        entityType: "label",
-        entityId: id,
+        action: AUDIT_ACTION.LABEL_UPDATED,
+        entityType: ENTITY_TYPE.LABEL,
+        entityId: label.id,
         metadata,
       });
     }
 
-    return updated;
+    return updatedLabel;
   },
 
   delete: async (userId: string, data: DeleteLabelInput) => {
@@ -140,7 +146,7 @@ export const labelService = {
     const hasPermission = await checkBoardPermission(
       userId,
       label.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -151,8 +157,8 @@ export const labelService = {
     await activityRepository.create({
       boardId: label.boardId,
       userId,
-      action: "label.deleted",
-      entityType: "label",
+      action: ACTIVITY_ACTION.LABEL_DELETED,
+      entityType: ENTITY_TYPE.LABEL,
       entityId: data.id,
       metadata: { name: label.name, color: label.color },
     });
@@ -161,8 +167,8 @@ export const labelService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "label.deleted",
-        entityType: "label",
+        action: AUDIT_ACTION.LABEL_DELETED,
+        entityType: ENTITY_TYPE.LABEL,
         entityId: data.id,
         metadata: {
           boardId: label.boardId,
@@ -175,13 +181,17 @@ export const labelService = {
     await labelRepository.delete(data.id);
   },
 
-  findLabelByBoardId: async (userId: string, boardId: string) => {
+  findByBoardId: async (userId: string, boardId: string) => {
     const board = await boardRepository.findById(boardId);
     if (!board) {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(userId, boardId, "normal");
+    const hasPermission = await checkBoardPermission(
+      userId,
+      boardId,
+      ROLE.ADMIN
+    );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }

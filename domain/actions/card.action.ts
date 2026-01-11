@@ -1,4 +1,5 @@
 "use server";
+
 import {
   CreateCardInput,
   CreateCardSchema,
@@ -26,16 +27,25 @@ export const createCardAction = async (input: CreateCardInput) => {
     const user = await requireAuth();
     const parsed = CreateCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const card = await cardService.create(user.id, parsed.data);
     return success("Card created successfully", card);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
+  }
+};
+
+export const findCardByIdAction = async (cardId: string) => {
+  try {
+    const user = await requireAuth();
+    const card = await cardService.findById(user.id, cardId);
+    return success("", card);
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -44,16 +54,15 @@ export const updateCardAction = async (id: string, input: UpdateCardInput) => {
     const user = await requireAuth();
     const parsed = UpdateCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const card = await cardService.update(user.id, id, parsed.data);
     return success("Card updated successfully", card);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -61,19 +70,16 @@ export const moveCardAction = async (input: MoveCardInput) => {
   try {
     const user = await requireAuth();
     const parsed = MoveCardSchema.safeParse(input);
-
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const card = await cardService.move(user.id, parsed.data);
-
     return success("Card moved successfully", card);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -81,19 +87,16 @@ export const reorderCardsAction = async (input: ReorderCardsInput) => {
   try {
     const user = await requireAuth();
     const parsed = ReorderCardsSchema.safeParse(input);
-
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
-    const cards = await cardService.reorders(user.id, parsed.data);
-
-    return success("Cards reordered successfully", cards);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+    await cardService.reorders(user.id, parsed.data);
+    return success("Cards reordered successfully");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -102,16 +105,15 @@ export const archiveCardAction = async (input: ArchiveCardInput) => {
     const user = await requireAuth();
     const parsed = ArchiveCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const card = await cardService.archive(user.id, parsed.data);
     return success("Card archived successfully", card);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -120,16 +122,15 @@ export const restoreCardAction = async (input: RestoreCardInput) => {
     const user = await requireAuth();
     const parsed = RestoreCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const card = await cardService.restore(user.id, parsed.data);
     return success("Card restored successfully", card);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -138,16 +139,15 @@ export const deleteCardAction = async (input: DeleteCardInput) => {
     const user = await requireAuth();
     const parsed = DeleteCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     await cardService.delete(user.id, parsed.data);
     return success("Card deleted successfully");
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };
 
@@ -156,15 +156,14 @@ export const duplicateCardAction = async (input: DuplicateCardInput) => {
     const user = await requireAuth();
     const parsed = DuplicateCardSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
-    const newCard = await cardService.duplicate(user.id, parsed.data);
-    return success("Card duplicated successfully", newCard);
-  } catch (err: any) {
-    return error(err.message ?? "Something went wrong");
+    const card = await cardService.duplicate(user.id, parsed.data);
+    return success("Card duplicated successfully", card);
+  } catch (e: any) {
+    return error(e.message ?? "Something went wrong");
   }
 };

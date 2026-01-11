@@ -1,4 +1,5 @@
 "use server";
+
 import {
   CreateNotificationInput,
   CreateNotificationSchema,
@@ -8,8 +9,8 @@ import {
   DeleteNotificationSchema,
 } from "@/domain/schemas/notification.schema";
 import { notificationService } from "@/domain/services/notification.service";
-import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
+import { success, error } from "@/lib/response";
 
 export const createNotificationAction = async (
   input: CreateNotificationInput
@@ -17,12 +18,11 @@ export const createNotificationAction = async (
   try {
     const parsed = CreateNotificationSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const notification = await notificationService.create(parsed.data);
     return success("Notification created successfully", notification);
   } catch (err: any) {
@@ -35,12 +35,11 @@ export const markAsReadAction = async (input: MarkAsReadInput) => {
     const user = await requireAuth();
     const parsed = MarkAsReadSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     const notification = await notificationService.markAsRead(
       user.id,
       parsed.data
@@ -68,12 +67,11 @@ export const deleteNotificationAction = async (
     const user = await requireAuth();
     const parsed = DeleteNotificationSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
-
     await notificationService.delete(user.id, parsed.data);
     return success("Notification deleted successfully");
   } catch (err: any) {

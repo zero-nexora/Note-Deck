@@ -1,24 +1,22 @@
 "use client";
 
 import {
-  archiveListAction,
   createListAction,
+  updateListAction,
+  reorderListsAction,
+  archiveListAction,
+  restoreListAction,
   deleteListAction,
   duplicateListAction,
-  moveListAction,
-  reorderListsAction,
-  restoreListAction,
-  updateListAction,
-} from "@/app/actions/list.action";
+} from "@/domain/actions/list.action";
 import {
-  ArchiveListInput,
   CreateListInput,
+  UpdateListInput,
+  ReorderListsInput,
+  ArchiveListInput,
+  RestoreListInput,
   DeleteListInput,
   DuplicateListInput,
-  MoveListInput,
-  ReorderListsInput,
-  RestoreListInput,
-  UpdateListInput,
 } from "@/domain/schemas/list.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,125 +25,86 @@ export function useList() {
   const router = useRouter();
 
   const createList = async (input: CreateListInput) => {
-    try {
-      const result = await createListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await createListAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const updateList = async (id: string, input: UpdateListInput) => {
-    try {
-      const result = await updateListAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await updateListAction(id, input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const reorderLists = async (input: ReorderListsInput) => {
-    try {
-      const result = await reorderListsAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await reorderListsAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return false;
     }
-  };
-
-  const moveList = async (input: MoveListInput) => {
-    try {
-      const result = await moveListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    toast.success(result.message);
+    router.refresh();
+    return true;
   };
 
   const archiveList = async (input: ArchiveListInput) => {
-    try {
-      const result = await archiveListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await archiveListAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const restoreList = async (input: RestoreListInput) => {
-    try {
-      const result = await restoreListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await restoreListAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const deleteList = async (input: DeleteListInput) => {
-    try {
-      const result = await deleteListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await deleteListAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return false;
     }
+    toast.success(result.message);
+    router.refresh();
+    return true;
   };
 
   const duplicateList = async (input: DuplicateListInput) => {
-    try {
-      const result = await duplicateListAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await duplicateListAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   return {
     createList,
     updateList,
     reorderLists,
-    moveList,
     archiveList,
     restoreList,
     deleteList,

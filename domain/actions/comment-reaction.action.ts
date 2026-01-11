@@ -1,4 +1,5 @@
 "use server";
+
 import {
   AddCommentReactionInput,
   AddCommentReactionSchema,
@@ -6,8 +7,8 @@ import {
   RemoveCommentReactionSchema,
 } from "@/domain/schemas/comment-reaction.schema";
 import { commentReactionService } from "@/domain/services/comment-reaction.service";
-import { error, success } from "@/lib/response";
 import { requireAuth } from "@/lib/session";
+import { error, success } from "@/lib/response";
 
 export const addCommentReactionAction = async (
   input: AddCommentReactionInput
@@ -16,9 +17,9 @@ export const addCommentReactionAction = async (
     const user = await requireAuth();
     const parsed = AddCommentReactionSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 
@@ -36,9 +37,9 @@ export const removeCommentReactionAction = async (
     const user = await requireAuth();
     const parsed = RemoveCommentReactionSchema.safeParse(input);
     if (!parsed.success) {
-      const flattened = parsed.error.flatten();
       const message =
-        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
       return error(message);
     }
 

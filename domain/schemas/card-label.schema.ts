@@ -1,13 +1,13 @@
-import { z } from "zod";
+import z from "zod";
 
 export const AddCardLabelSchema = z.object({
-  cardId: z.string().min(1),
-  labelId: z.string().min(1),
+  cardId: z.string().uuid({ message: "Invalid UUID for cardId" }),
+  labelId: z.string().uuid({ message: "Invalid UUID for labelId" }),
 });
 
 export const RemoveCardLabelSchema = z.object({
-  cardId: z.string().min(1),
-  labelId: z.string().min(1),
+  cardId: z.string().uuid({ message: "Invalid UUID for cardId" }),
+  labelId: z.string().uuid({ message: "Invalid UUID for labelId" }),
 });
 
 export type AddCardLabelInput = z.infer<typeof AddCardLabelSchema>;

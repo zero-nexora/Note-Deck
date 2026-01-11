@@ -5,6 +5,10 @@ import {
 } from "../schemas/audit-log.schema";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
+import { ROLE } from "@/lib/constants";
+
+const DEFAULT_AUDIT_LOG_LIMIT = 100;
+const DEFAULT_PAGE = 1;
 
 export const auditLogService = {
   log: async (userId: string, data: LogWorkspaceActionInput) => {
@@ -16,18 +20,18 @@ export const auditLogService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const log = await auditLogRepository.create({
+    const auditLog = await auditLogRepository.create({
       ...data,
       userId,
     });
 
-    return log;
+    return auditLog;
   },
 
   read: async (userId: string, data: ReadAuditLogsInput) => {
@@ -39,14 +43,14 @@ export const auditLogService = {
     const hasPermission = await checkWorkspacePermission(
       userId,
       data.workspaceId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const limit = data.limit || 100;
-    const page = data.page || 1;
+    const limit = data.limit || DEFAULT_AUDIT_LOG_LIMIT;
+    const page = data.page || DEFAULT_PAGE;
     const offset = (page - 1) * limit;
 
     if (data.userId) {

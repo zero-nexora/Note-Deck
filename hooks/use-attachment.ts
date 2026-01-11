@@ -3,7 +3,7 @@
 import {
   createAttachmentAction,
   deleteAttachmentAction,
-} from "@/app/actions/attachment.action";
+} from "@/domain/actions/attachment.action";
 import {
   CreateAttachmentInput,
   DeleteAttachmentInput,
@@ -15,34 +15,24 @@ export function useAttachment() {
   const router = useRouter();
 
   const uploadAttachment = async (input: CreateAttachmentInput) => {
-    try {
-      const result = await createAttachmentAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await createAttachmentAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const deleteAttachment = async (input: DeleteAttachmentInput) => {
-    try {
-      const result = await deleteAttachmentAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await deleteAttachmentAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {

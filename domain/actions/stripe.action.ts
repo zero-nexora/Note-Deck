@@ -3,23 +3,28 @@
 import { stripeService } from "@/domain/services/stripe.service";
 import { requireAuth } from "@/lib/session";
 import { error, success } from "@/lib/response";
+import {
+  CreateSubscriptionSchema,
+  CreateSubscriptionInput,
+} from "@/domain/schemas/stripe.schema";
 
 export const createStripeCheckoutAction = async (
-  workspaceId: string,
-  plan: "pro" | "enterprise"
+  input: CreateSubscriptionInput
 ) => {
   try {
     await requireAuth();
 
-    if (!workspaceId || !plan) {
-      return error("Invalid input");
+    const parsed = CreateSubscriptionSchema.safeParse(input);
+    if (!parsed.success) {
+      const flattened = parsed.error.flatten();
+      const message =
+        Object.values(flattened.fieldErrors)[0]?.[0] ?? "Invalid input";
+      return error(message);
     }
 
-    const session = await stripeService.create(workspaceId, plan);
+    const session = await stripeService.create(parsed.data);
 
-    return success("Checkout session created", {
-      url: session.url,
-    });
+    return success("Checkout session created", { url: session.url });
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

@@ -46,23 +46,23 @@ const WINDOW_CONTROLS_COLORS = [
 ];
 
 const HEADER_ANIMATION = {
-  initial: { opacity: 0, y: 30 },
-  transition: { duration: 0.6 },
+  initial: { opacity: 0, y: 20 },
+  transition: { duration: 0.5 },
 };
 
 const CARD_FLOAT_ANIMATION = {
-  animate: { y: [0, -10, 0] },
+  animate: { y: [0, -8, 0] },
   transition: { duration: 4, repeat: Infinity, ease: easeInOut },
 };
 
 const LIVE_BADGE_ANIMATION = {
-  animate: { y: [-5, 5, -5], x: [-3, 3, -3] },
-  transition: { duration: 5, repeat: Infinity, ease: easeInOut },
+  animate: { y: [-3, 3, -3], x: [-2, 2, -2] },
+  transition: { duration: 4, repeat: Infinity, ease: easeInOut },
 };
 
 export const HowItWorkSection = () => {
   const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+  const isInView = useInView(containerRef, { once: true, margin: "-80px" });
   const [mousePosition, setMousePosition] = useState<MousePosition>({
     x: 0,
     y: 0,
@@ -84,28 +84,27 @@ export const HowItWorkSection = () => {
   };
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden" ref={containerRef}>
-      <div className="container mx-auto max-w-6xl">
-        {/* Section header */}
+    <section
+      className="section-padding px-4 relative overflow-hidden"
+      ref={containerRef}
+    >
+      <div className="container-custom">
         <motion.div
           initial={HEADER_ANIMATION.initial}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            How It Works
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4 glow-text">
-            Get Started in Minutes
+          <span className="badge badge-primary mb-4">How It Works</span>
+          <h2 className="text-heading mb-6">
+            Get Started in <span className="gradient-text">Minutes</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-subheading max-w-2xl mx-auto">
             Four simple steps to transform how your team works together.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Interactive demo board */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <DemoBoard
             imageRef={imageRef}
             mousePosition={mousePosition}
@@ -114,7 +113,6 @@ export const HowItWorkSection = () => {
             onMouseLeave={handleMouseLeave}
           />
 
-          {/* Steps list */}
           <div className="space-y-6 order-1 lg:order-2">
             {STEPS.map((step, index) => (
               <StepItem
@@ -155,29 +153,30 @@ const DemoBoard = ({
     >
       <motion.div
         animate={{
-          rotateX: mousePosition.y * -15,
-          rotateY: mousePosition.x * 15,
+          rotateX: mousePosition.y * -10,
+          rotateY: mousePosition.x * 10,
         }}
-        transition={{ type: "spring", stiffness: 150, damping: 15 }}
+        transition={{ type: "spring", stiffness: 120, damping: 15 }}
         className="relative transform-style-3d"
       >
         <motion.div
           animate={CARD_FLOAT_ANIMATION.animate}
           transition={CARD_FLOAT_ANIMATION.transition}
-          className="glass-card p-6 rounded-2xl"
+          className="glass-card p-6 rounded-xl"
         >
-          <div className="bg-background-elevated rounded-xl p-4 space-y-4">
-            {/* Window controls */}
-            <div className="flex items-center gap-3 mb-4">
+          <div className="bg-card/50 rounded-lg p-4 space-y-4">
+            <div className="flex items-center gap-2 mb-4">
               {WINDOW_CONTROLS_COLORS.map((color, index) => (
-                <div key={index} className={`w-3 h-3 rounded-full ${color}`} />
+                <div
+                  key={index}
+                  className={`w-2.5 h-2.5 rounded-full ${color}`}
+                />
               ))}
-              <span className="text-sm text-muted-foreground ml-2">
+              <span className="text-xs text-muted-foreground ml-2">
                 Project Dashboard
               </span>
             </div>
 
-            {/* Board columns */}
             <div className="grid grid-cols-3 gap-3">
               {BOARD_COLUMNS.map((columnName, columnIndex) => (
                 <BoardColumn
@@ -191,13 +190,13 @@ const DemoBoard = ({
           </div>
         </motion.div>
 
-        {/* Live indicator badge */}
         <motion.div
           animate={LIVE_BADGE_ANIMATION.animate}
           transition={LIVE_BADGE_ANIMATION.transition}
-          className="absolute -top-4 -right-4 px-3 py-1.5 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30"
+          className="absolute -top-3 -right-3 badge badge-success px-3 py-1 text-xs shadow-card"
         >
-          ● Live
+          <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse mr-1.5" />
+          Live
         </motion.div>
       </motion.div>
     </div>
@@ -219,7 +218,7 @@ const BoardColumn = ({
 
   return (
     <div className="space-y-2">
-      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
         {columnName}
       </div>
       {[...Array(cardCount)].map((_, cardIndex) => (
@@ -245,17 +244,17 @@ const BoardColumnCard = ({
   cardIndex,
   isInView,
 }: BoardColumnCardProps) => {
-  const animationDelay = 0.5 + (columnIndex * 3 + cardIndex) * 0.1;
+  const animationDelay = 0.4 + (columnIndex * 3 + cardIndex) * 0.08;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={isInView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ delay: animationDelay }}
-      className="bg-card/50 rounded-lg p-2 border border-border/30"
+      transition={{ delay: animationDelay, duration: 0.3 }}
+      className="bg-card/60 rounded-md p-2 border border-border/30"
     >
-      <div className="h-2 w-3/4 bg-muted rounded mb-1" />
-      <div className="h-1.5 w-1/2 bg-muted/50 rounded" />
+      <div className="h-1.5 w-3/4 bg-muted/60 rounded mb-1" />
+      <div className="h-1 w-1/2 bg-muted/40 rounded" />
     </motion.div>
   );
 };
@@ -268,31 +267,35 @@ interface StepItemProps {
 
 const StepItem = ({ step, index, isInView }: StepItemProps) => {
   const StepIcon = step.icon;
-  const animationDelay = index * 0.15;
+  const animationDelay = index * 0.12;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 50 }}
+      initial={{ opacity: 0, x: 30 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.5, delay: animationDelay }}
+      transition={{ duration: 0.4, delay: animationDelay }}
       className="flex gap-4 group"
     >
       <div className="shrink-0">
         <motion.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center glow-border group-hover:bg-primary/20 transition-colors"
+          whileHover={{ scale: 1.05 }}
+          className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 group-hover:shadow-glow transition-all duration-200"
         >
           <StepIcon className="w-6 h-6 text-primary" />
         </motion.div>
       </div>
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-mono text-primary">0{index + 1}</span>
-          <h3 className="text-lg font-semibold font-display text-foreground">
+          <span className="text-xs font-mono text-primary font-semibold">
+            0{index + 1}
+          </span>
+          <h3 className="text-lg font-semibold text-foreground">
             {step.title}
           </h3>
         </div>
-        <p className="text-muted-foreground">{step.description}</p>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {step.description}
+        </p>
       </div>
     </motion.div>
   );

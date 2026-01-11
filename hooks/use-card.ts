@@ -1,24 +1,25 @@
 "use client";
 
 import {
-  archiveCardAction,
   createCardAction,
-  deleteCardAction,
-  duplicateCardAction,
+  updateCardAction,
   moveCardAction,
   reorderCardsAction,
+  archiveCardAction,
   restoreCardAction,
-  updateCardAction,
-} from "@/app/actions/card.action";
+  deleteCardAction,
+  duplicateCardAction,
+  findCardByIdAction,
+} from "@/domain/actions/card.action";
 import {
-  ArchiveCardInput,
   CreateCardInput,
-  DeleteCardInput,
-  DuplicateCardInput,
+  UpdateCardInput,
   MoveCardInput,
   ReorderCardsInput,
+  ArchiveCardInput,
   RestoreCardInput,
-  UpdateCardInput,
+  DeleteCardInput,
+  DuplicateCardInput,
 } from "@/domain/schemas/card.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,124 +28,97 @@ export function useCard() {
   const router = useRouter();
 
   const createCard = async (input: CreateCardInput) => {
-    try {
-      const result = await createCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await createCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
+  };
+
+  const findCardById = async (cardId: string) => {
+    const result = await findCardByIdAction(cardId);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
+    return result.data;
   };
 
   const updateCard = async (id: string, input: UpdateCardInput) => {
-    try {
-      const result = await updateCardAction(id, input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await updateCardAction(id, input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const moveCard = async (input: MoveCardInput) => {
-    try {
-      const result = await moveCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await moveCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const reorderCards = async (input: ReorderCardsInput) => {
-    try {
-      const result = await reorderCardsAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await reorderCardsAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const archiveCard = async (input: ArchiveCardInput) => {
-    try {
-      const result = await archiveCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await archiveCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const restoreCard = async (input: RestoreCardInput) => {
-    try {
-      const result = await restoreCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await restoreCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const deleteCard = async (input: DeleteCardInput) => {
-    try {
-      const result = await deleteCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await deleteCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   const duplicateCard = async (input: DuplicateCardInput) => {
-    try {
-      const result = await duplicateCardAction(input);
-      if (result.success) {
-        toast.success(result.message);
-        router.refresh();
-        return result.data;
-      } else {
-        toast.error(result.message);
-        return null;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
+    const result = await duplicateCardAction(input);
+    if (!result.success) {
+      toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   return {
@@ -156,5 +130,6 @@ export function useCard() {
     restoreCard,
     deleteCard,
     duplicateCard,
+    findCardById,
   };
 }

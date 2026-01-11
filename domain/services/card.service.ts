@@ -15,11 +15,17 @@ import {
   UpdateCardInput,
 } from "../schemas/card.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
-import { executeAutomations } from "./automation.service";
 import { cardLabelRepository } from "../repositories/card-label.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
 import { checklistItemRepository } from "../repositories/checklist-item.repository";
 import { attachmentRepository } from "../repositories/attachment.repository";
+import {
+  ACTIVITY_ACTION,
+  AUDIT_ACTION,
+  ENTITY_TYPE,
+  NOTIFICATION_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
@@ -31,7 +37,7 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "normal"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -55,8 +61,8 @@ export const cardService = {
       boardId: list.boardId,
       cardId: card.id,
       userId,
-      action: "card.created",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_CREATED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: card.id,
       metadata: { title: card.title, listId: data.listId },
     });
@@ -66,26 +72,22 @@ export const cardService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "card.created",
-        entityType: "card",
+        action: AUDIT_ACTION.CARD_CREATED,
+        entityType: ENTITY_TYPE.CARD,
         entityId: card.id,
         metadata: { title: card.title, boardId: list.boardId },
       });
     }
 
-    await executeAutomations({
-      type: "CARD_CREATED",
-      boardId: card.boardId,
-      cardId: card.id,
-      listId: card.listId,
-      userId,
-    });
-
     return card;
   },
 
-  update: async (userId: string, id: string, data: UpdateCardInput) => {
-    const card = await cardRepository.findById(id);
+  findById: async (userId: string, cardId: string) => {
+    const card =
+      await cardRepository.findByIdWithMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels(
+        cardId
+      );
+
     if (!card) {
       throw new Error("Card not found");
     }
@@ -93,7 +95,25 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.ADMIN
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    return card;
+  },
+
+  update: async (userId: string, cardId: string, data: UpdateCardInput) => {
+    const card = await cardRepository.findByIdWithMembers(cardId);
+    if (!card) {
+      throw new Error("Card not found");
+    }
+
+    const hasPermission = await checkBoardPermission(
+      userId,
+      card.boardId,
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -125,15 +145,15 @@ export const cardService = {
       metadata.coverImageUpdated = true;
     }
 
-    const updated = await cardRepository.update(id, updateData);
+    const updatedCard = await cardRepository.update(cardId, updateData);
 
     await activityRepository.create({
       boardId: card.boardId,
-      cardId: id,
+      cardId,
       userId,
-      action: "card.updated",
-      entityType: "card",
-      entityId: id,
+      action: ACTIVITY_ACTION.CARD_UPDATED,
+      entityType: ENTITY_TYPE.CARD,
+      entityId: card.id,
       metadata,
     });
 
@@ -147,20 +167,20 @@ export const cardService = {
 
         await notificationRepository.create({
           userId: member.userId,
-          type: "due_date",
+          type: NOTIFICATION_TYPE.DUE_DATE,
           title: "Due date updated",
           message: `Due date for "${card.title}" has been updated`,
-          entityType: "card",
-          entityId: id,
+          entityType: ENTITY_TYPE.CARD,
+          entityId: card.id,
         });
       }
     }
 
-    return updated;
+    return updatedCard;
   },
 
   move: async (userId: string, data: MoveCardInput) => {
-    const card = await cardRepository.findById(data.id);
+    const card = await cardRepository.findByIdWithMembers(data.id);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -177,12 +197,12 @@ export const cardService = {
     const hasPermissionSource = await checkBoardPermission(
       userId,
       sourceList.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     const hasPermissionDestination = await checkBoardPermission(
       userId,
       destinationList.boardId,
-      "normal"
+      ROLE.NORMAL
     );
 
     if (!hasPermissionSource || !hasPermissionDestination) {
@@ -216,11 +236,11 @@ export const cardService = {
 
       await activityRepository.create({
         boardId: destinationList.boardId,
-        cardId: data.id,
+        cardId: card.id,
         userId,
-        action: "card.moved",
-        entityType: "card",
-        entityId: data.id,
+        action: ACTIVITY_ACTION.CARD_MOVED,
+        entityType: ENTITY_TYPE.CARD,
+        entityId: card.id,
         metadata: {
           cardTitle: card.title,
           sourceListId: data.sourceListId,
@@ -236,24 +256,15 @@ export const cardService = {
 
           await notificationRepository.create({
             userId: member.userId,
-            type: "card_moved",
+            type: NOTIFICATION_TYPE.CARD_MOVED,
             title: "Card moved",
             message: `"${card.title}" has been moved to another list`,
-            entityType: "card",
-            entityId: data.id,
+            entityType: ENTITY_TYPE.CARD,
+            entityId: card.id,
           });
         }
       }
     }
-
-    await executeAutomations({
-      type: "CARD_MOVED",
-      boardId: destinationList.boardId,
-      cardId: card.id,
-      fromListId: data.sourceListId,
-      toListId: data.destinationListId,
-      userId,
-    });
 
     return {
       ...card,
@@ -271,14 +282,14 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       list.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
     const allCards = await cardRepository.findAllByListId(data.listId);
-    const listCardIds = new Set(allCards.map((c) => c.id));
+    const listCardIds = new Set(allCards.map((card) => card.id));
 
     for (const order of data.orders) {
       if (!listCardIds.has(order.id)) {
@@ -293,8 +304,8 @@ export const cardService = {
     await activityRepository.create({
       boardId: list.boardId,
       userId,
-      action: "cards.reordered",
-      entityType: "list",
+      action: ACTIVITY_ACTION.CARDS_REORDERED,
+      entityType: ENTITY_TYPE.LIST,
       entityId: data.listId,
       metadata: {
         cardCount: data.orders.length,
@@ -315,34 +326,27 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const updated = await cardRepository.update(data.id, {
+    const updatedCard = await cardRepository.update(data.id, {
       isArchived: true,
     });
 
     await activityRepository.create({
       boardId: card.boardId,
-      cardId: data.id,
+      cardId: card.id,
       userId,
-      action: "card.archived",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_ARCHIVED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: data.id,
       metadata: { title: card.title },
     });
 
-    await executeAutomations({
-      type: "CARD_ARCHIVED",
-      boardId: card.boardId,
-      cardId: card.id,
-      userId,
-    });
-
-    return updated;
+    return updatedCard;
   },
 
   restore: async (userId: string, data: RestoreCardInput) => {
@@ -358,27 +362,27 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
     }
 
-    const updated = await cardRepository.update(data.id, {
+    const updatedCard = await cardRepository.update(data.id, {
       isArchived: false,
     });
 
     await activityRepository.create({
       boardId: card.boardId,
-      cardId: data.id,
+      cardId: card.id,
       userId,
-      action: "card.restored",
-      entityType: "card",
-      entityId: data.id,
+      action: ACTIVITY_ACTION.CARD_RESTORED,
+      entityType: ENTITY_TYPE.CARD,
+      entityId: card.id,
       metadata: { title: card.title },
     });
 
-    return updated;
+    return updatedCard;
   },
 
   delete: async (userId: string, data: DeleteCardInput) => {
@@ -390,7 +394,7 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "admin"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -401,8 +405,8 @@ export const cardService = {
     await activityRepository.create({
       boardId: card.boardId,
       userId,
-      action: "card.deleted",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_DELETED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: data.id,
       metadata: { title: card.title, listId: card.listId },
     });
@@ -411,8 +415,8 @@ export const cardService = {
       await auditLogRepository.create({
         workspaceId: board.workspaceId,
         userId,
-        action: "card.deleted",
-        entityType: "card",
+        action: AUDIT_ACTION.CARD_DELETED,
+        entityType: ENTITY_TYPE.CARD,
         entityId: data.id,
         metadata: { title: card.title, boardId: card.boardId },
       });
@@ -422,7 +426,10 @@ export const cardService = {
   },
 
   duplicate: async (userId: string, data: DuplicateCardInput) => {
-    const originalCard = await cardRepository.findCardDetails(data.id);
+    const originalCard =
+      await cardRepository.findByIdWithBoardCardLabelsChecklistsAttachments(
+        data.id
+      );
     if (!originalCard) {
       throw new Error("Card not found");
     }
@@ -430,7 +437,7 @@ export const cardService = {
     const hasPermission = await checkBoardPermission(
       userId,
       originalCard.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -491,8 +498,8 @@ export const cardService = {
       boardId: originalCard.boardId,
       cardId: newCard.id,
       userId,
-      action: "card.duplicated",
-      entityType: "card",
+      action: ACTIVITY_ACTION.CARD_DUPLICATED,
+      entityType: ENTITY_TYPE.CARD,
       entityId: newCard.id,
       metadata: {
         originalCardId: originalCard.id,
@@ -504,19 +511,21 @@ export const cardService = {
       },
     });
 
-    await auditLogRepository.create({
-      workspaceId: originalCard.board?.workspaceId || "",
-      userId,
-      action: "card.duplicated",
-      entityType: "card",
-      entityId: newCard.id,
-      metadata: {
-        originalCardId: originalCard.id,
-        originalCardTitle: originalCard.title,
-        newCardTitle: newCard.title,
-        listId: originalCard.listId,
-      },
-    });
+    if (originalCard.board) {
+      await auditLogRepository.create({
+        workspaceId: originalCard.board.workspaceId,
+        userId,
+        action: AUDIT_ACTION.CARD_DUPLICATED,
+        entityType: ENTITY_TYPE.CARD,
+        entityId: newCard.id,
+        metadata: {
+          originalCardId: originalCard.id,
+          originalCardTitle: originalCard.title,
+          newCardTitle: newCard.title,
+          listId: originalCard.listId,
+        },
+      });
+    }
 
     return newCard;
   },

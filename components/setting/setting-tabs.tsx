@@ -1,4 +1,3 @@
-"use client";
 import { Settings, User, Bell, Shield, CreditCard } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "./profile-tab";

@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { NewNotification } from "../types/notification.type";
 import { notifications } from "@/db/schema";
 import { and, desc, eq } from "drizzle-orm";
+import { DEFAULT_LIMIT_NOTIFICATION } from "@/lib/constants";
 
 export const notificationRepository = {
   create: async (data: NewNotification) => {
@@ -13,26 +14,24 @@ export const notificationRepository = {
   },
 
   findById: async (id: string) => {
-    const notification = await db.query.notifications.findFirst({
+    return db.query.notifications.findFirst({
       where: eq(notifications.id, id),
     });
-    return notification;
   },
 
-  findByUserId: async (userId: string, unreadOnly = false) => {
+  findByUserIdWithUser: async (userId: string, unreadOnly = false) => {
     const query = unreadOnly
       ? and(eq(notifications.userId, userId), eq(notifications.isRead, false))
       : eq(notifications.userId, userId);
 
-    const userNotifications = await db.query.notifications.findMany({
+    return db.query.notifications.findMany({
       where: query,
       with: {
         user: true,
       },
       orderBy: [desc(notifications.createdAt)],
-      limit: 50,
+      limit: DEFAULT_LIMIT_NOTIFICATION,
     });
-    return userNotifications;
   },
 
   markAsRead: async (id: string) => {

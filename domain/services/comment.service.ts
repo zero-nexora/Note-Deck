@@ -8,7 +8,12 @@ import {
   UpdateCommentInput,
 } from "../schemas/comment.schema";
 import { checkBoardPermission } from "@/lib/check-permissions";
-import { executeAutomations } from "./automation.service";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  NOTIFICATION_TYPE,
+  ROLE,
+} from "@/lib/constants";
 
 export const commentService = {
   create: async (userId: string, data: CreateCommentInput) => {
@@ -20,7 +25,7 @@ export const commentService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.ADMIN
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -32,11 +37,11 @@ export const commentService = {
     }
 
     if (data.parentId) {
-      const parent = await commentRepository.findById(data.parentId);
-      if (!parent) {
+      const parentComment = await commentRepository.findById(data.parentId);
+      if (!parentComment) {
         throw new Error("Parent comment not found");
       }
-      if (parent.cardId !== data.cardId) {
+      if (parentComment.cardId !== data.cardId) {
         throw new Error("Parent comment does not belong to this card");
       }
     }
@@ -55,22 +60,14 @@ export const commentService = {
       boardId: card.boardId,
       cardId: comment.cardId,
       userId,
-      action: "comment.created",
-      entityType: "comment",
+      action: ACTIVITY_ACTION.COMMENT_CREATED,
+      entityType: ENTITY_TYPE.COMMENT,
       entityId: comment.id,
       metadata: {
         content: comment.content.substring(0, 100),
         parentId: data.parentId,
         hasParent: !!data.parentId,
       },
-    });
-
-    await executeAutomations({
-      type: "COMMENT_ADDED",
-      boardId: card.boardId,
-      cardId: card.id,
-      commentId: comment.id,
-      userId,
     });
 
     if (data.mentions && data.mentions.length > 0) {
@@ -81,18 +78,11 @@ export const commentService = {
 
         await notificationRepository.create({
           userId: mentionedUserId,
-          type: "mention",
+          type: NOTIFICATION_TYPE.MENTION,
           title: "You were mentioned in a comment",
           message: `You were mentioned in a comment on "${card.title}"`,
-          entityType: "comment",
+          entityType: ENTITY_TYPE.COMMENT,
           entityId: comment.id,
-        });
-
-        await executeAutomations({
-          type: "USER_MENTIONED",
-          boardId: card.boardId,
-          cardId: card.id,
-          userId: mentionedUserId,
         });
       }
     }
@@ -100,8 +90,12 @@ export const commentService = {
     return comment;
   },
 
-  update: async (userId: string, id: string, data: UpdateCommentInput) => {
-    const comment = await commentRepository.findById(id);
+  update: async (
+    userId: string,
+    commentId: string,
+    data: UpdateCommentInput
+  ) => {
+    const comment = await commentRepository.findById(commentId);
     if (!comment) {
       throw new Error("Comment not found");
     }
@@ -118,7 +112,7 @@ export const commentService = {
     const hasPermission = await checkBoardPermission(
       userId,
       card.boardId,
-      "normal"
+      ROLE.NORMAL
     );
     if (!hasPermission) {
       throw new Error("Permission denied");
@@ -138,7 +132,10 @@ export const commentService = {
       }
     }
 
-    const updated = await commentRepository.update(id, updateData);
+    const updatedComment = await commentRepository.update(
+      commentId,
+      updateData
+    );
 
     const metadata: Record<string, any> = {};
     if (data.content !== undefined) {
@@ -150,8 +147,8 @@ export const commentService = {
       boardId: card.boardId,
       cardId: comment.cardId,
       userId,
-      action: "comment.updated",
-      entityType: "comment",
+      action: ACTIVITY_ACTION.COMMENT_UPDATED,
+      entityType: ENTITY_TYPE.COMMENT,
       entityId: comment.id,
       metadata,
     });
@@ -159,23 +156,25 @@ export const commentService = {
     if (data.mentions && data.mentions.length > 0) {
       const uniqueMentions = [...new Set(data.mentions)];
       const oldMentions = new Set((comment.mentions as string[]) || []);
-      const newMentions = uniqueMentions.filter((uid) => !oldMentions.has(uid));
+      const newMentions = uniqueMentions.filter(
+        (mentionedUserId) => !oldMentions.has(mentionedUserId)
+      );
 
       for (const mentionedUserId of newMentions) {
         if (mentionedUserId === userId) continue;
 
         await notificationRepository.create({
           userId: mentionedUserId,
-          type: "mention",
+          type: NOTIFICATION_TYPE.MENTION,
           title: "You were mentioned",
           message: `You were mentioned in a comment on "${card.title}"`,
-          entityType: "comment",
-          entityId: id,
+          entityType: ENTITY_TYPE.COMMENT,
+          entityId: commentId,
         });
       }
     }
 
-    return updated;
+    return updatedComment;
   },
 
   delete: async (userId: string, data: DeleteCommentInput) => {
@@ -193,7 +192,7 @@ export const commentService = {
       const hasAdminPermission = await checkBoardPermission(
         userId,
         card.boardId,
-        "admin"
+        ROLE.ADMIN
       );
       if (!hasAdminPermission) {
         throw new Error("You can only delete your own comments");
@@ -204,8 +203,8 @@ export const commentService = {
       boardId: card.boardId,
       cardId: card.id,
       userId,
-      action: "comment.deleted",
-      entityType: "comment",
+      action: ACTIVITY_ACTION.COMMENT_DELETED,
+      entityType: ENTITY_TYPE.COMMENT,
       entityId: comment.id,
       metadata: {
         content: comment.content.substring(0, 100),

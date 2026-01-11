@@ -9,34 +9,31 @@ export const workspaceInviteRepository = {
     return invite;
   },
 
-  findById: async (id: string) => {
-    const invite = await db.query.workspaceInvites.findFirst({
-      where: eq(workspaceInvites.id, id),
+  findById: async (inviteId: string) => {
+    return db.query.workspaceInvites.findFirst({
+      where: eq(workspaceInvites.id, inviteId),
     });
-    return invite;
   },
 
   findByToken: async (token: string) => {
-    const invite = await db.query.workspaceInvites.findFirst({
+    return db.query.workspaceInvites.findFirst({
       where: eq(workspaceInvites.token, token),
     });
-    return invite;
   },
 
   findByWorkspaceIdAndEmail: async (workspaceId: string, email: string) => {
-    const invite = await db.query.workspaceInvites.findFirst({
+    return db.query.workspaceInvites.findFirst({
       where: and(
         eq(workspaceInvites.workspaceId, workspaceId),
         eq(workspaceInvites.email, email)
       ),
     });
-    return invite;
   },
 
   findByWorkspaceId: async (workspaceId: string, pendingOnly = false) => {
     const now = new Date();
 
-    const invites = await db.query.workspaceInvites.findMany({
+    return db.query.workspaceInvites.findMany({
       where: (workspaceInvites, { eq, and, isNull, gt }) =>
         pendingOnly
           ? and(
@@ -49,29 +46,27 @@ export const workspaceInviteRepository = {
         desc(workspaceInvites.createdAt),
       ],
     });
-
-    return invites;
   },
 
-  accept: async (id: string) => {
+  accept: async (inviteId: string) => {
     const [updated] = await db
       .update(workspaceInvites)
       .set({ acceptedAt: new Date() })
-      .where(eq(workspaceInvites.id, id))
+      .where(eq(workspaceInvites.id, inviteId))
       .returning();
     return updated;
   },
 
-  updateExpiry: async (id: string, expiresAt: Date) => {
+  updateExpiry: async (inviteId: string, expiresAt: Date) => {
     const [updated] = await db
       .update(workspaceInvites)
       .set({ expiresAt })
-      .where(eq(workspaceInvites.id, id))
+      .where(eq(workspaceInvites.id, inviteId))
       .returning();
     return updated;
   },
 
-  revoke: async (id: string) => {
-    await db.delete(workspaceInvites).where(eq(workspaceInvites.id, id));
+  revoke: async (inviteId: string) => {
+    await db.delete(workspaceInvites).where(eq(workspaceInvites.id, inviteId));
   },
 };

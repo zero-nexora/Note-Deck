@@ -10,29 +10,27 @@ export const userRepository = {
   },
 
   findByEmail: async (email: string) => {
-    const user = await db.query.users.findFirst({
+    return db.query.users.findFirst({
       where: eq(users.email, email),
     });
-    return user;
   },
 
-  findById: async (id: string) => {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, id),
+  findById: async (userId: string) => {
+    return db.query.users.findFirst({
+      where: eq(users.id, userId),
     });
-    return user;
   },
 
-  update: async (id: string, data: UpdateUser) => {
+  update: async (userId: string, data: UpdateUser) => {
     const [updated] = await db
       .update(users)
       .set(data)
-      .where(eq(users.id, id))
+      .where(eq(users.id, userId))
       .returning();
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(users).where(eq(users.id, id));
+  delete: async (userId: string) => {
+    await db.delete(users).where(eq(users.id, userId));
   },
 };

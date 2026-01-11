@@ -53,14 +53,14 @@ const PRICING_PLANS: PricingPlan[] = [
 ];
 
 const HEADER_ANIMATION = {
-  initial: { opacity: 0, y: 30 },
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
+  transition: { duration: 0.5 },
 };
 
 const CARD_ANIMATION = {
-  initial: { opacity: 0, y: 50 },
-  spring: { type: "spring" as const, stiffness: 300, damping: 20 },
+  initial: { opacity: 0, y: 30 },
+  spring: { type: "spring" as const, stiffness: 200, damping: 20 },
 };
 
 export const PricingPreviewSection = () => {
@@ -68,13 +68,11 @@ export const PricingPreviewSection = () => {
   const isHeaderInView = useInView(headerRef, { once: true });
 
   return (
-    <section className="py-24 px-4 relative overflow-hidden">
-      {/* Background gradients */}
+    <section className="section-padding px-4 relative overflow-hidden">
       <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-accent/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
       <div className="container mx-auto max-w-5xl relative z-10">
-        {/* Section header */}
         <motion.div
           ref={headerRef}
           initial={HEADER_ANIMATION.initial}
@@ -82,19 +80,16 @@ export const PricingPreviewSection = () => {
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            Pricing
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold font-display mb-4 glow-text">
-            Simple, Transparent Pricing
+          <span className="badge badge-primary mb-4">Pricing</span>
+          <h2 className="text-heading mb-4">
+            Simple, Transparent <span className="gradient-text">Pricing</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-subheading max-w-2xl mx-auto">
             Choose the plan that fits your team. Upgrade anytime.
           </p>
         </motion.div>
 
-        {/* Pricing cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-">
           {PRICING_PLANS.map((plan, index) => (
             <PricingCard key={plan.name} plan={plan} index={index} />
           ))}
@@ -114,7 +109,7 @@ const PricingCard = ({ plan, index }: PricingCardProps) => {
   const cardRef = useRef(null);
   const isInView = useInView(cardRef, { once: true, margin: "-50px" });
 
-  const animationDelay = index * 0.15;
+  const animationDelay = index * 0.12;
 
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
@@ -129,15 +124,14 @@ const PricingCard = ({ plan, index }: PricingCardProps) => {
       onMouseLeave={handleMouseLeave}
     >
       <motion.div
-        animate={{ scale: isHovered ? 1.03 : 1 }}
+        animate={{ scale: isHovered ? 1.02 : 1 }}
         transition={CARD_ANIMATION.spring}
       >
         <Card
-          className={`glass-card relative overflow-hidden transition-all duration-500 ${
-            plan.popular ? "border-primary/50" : "border-border/30"
-          } ${isHovered ? "neon-border" : ""}`}
+          className={`glass-card relative overflow-hidden h-full transition-all duration-300 ${
+            plan.popular ? "border-primary/40 shadow-glow" : "border-border/30"
+          }`}
         >
-          {/* Popular badge */}
           {plan.popular && (
             <div className="absolute top-0 right-0 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-bl-lg flex items-center gap-1">
               <Sparkles className="w-3 h-3" />
@@ -146,40 +140,39 @@ const PricingCard = ({ plan, index }: PricingCardProps) => {
           )}
 
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-display text-foreground">
+            <CardTitle className="text-lg font-semibold text-foreground">
               {plan.name}
             </CardTitle>
             <p className="text-sm text-muted-foreground">{plan.description}</p>
             <div className="mt-4">
-              <span className="text-4xl font-bold font-display text-foreground">
+              <span className="text-4xl font-bold text-foreground">
                 {plan.price}
               </span>
-              <span className="text-muted-foreground">{plan.period}</span>
+              <span className="text-muted-foreground text-sm">
+                {plan.period}
+              </span>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-4">
-            {/* Features list */}
             <ul className="space-y-2">
               {plan.features.map((feature) => (
                 <li
                   key={feature}
                   className="flex items-center gap-2 text-sm text-muted-foreground"
                 >
-                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                    <Check className="w-3 h-3 text-primary" />
+                  </div>
                   {feature}
                 </li>
               ))}
             </ul>
 
-            {/* CTA button */}
             <Button
               className={`w-full ${
-                plan.popular
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 pulse-glow-btn"
-                  : "btn-outline-glow"
+                plan.popular ? "btn-primary" : "btn-secondary"
               }`}
-              variant={plan.popular ? "default" : "outline"}
             >
               Get Started
             </Button>

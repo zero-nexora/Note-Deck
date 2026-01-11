@@ -9,9 +9,25 @@ export const boardRepository = {
     return board;
   },
 
-  findById: async (id: string) => {
-    return await db.query.boards.findFirst({
-      where: and(eq(boards.id, id), eq(boards.isArchived, false)),
+  findById: async (boardId: string) => {
+    return db.query.boards.findFirst({
+      where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
+    });
+  },
+
+  findByWorkspaceId: async (workspaceId: string, includeArchived = false) => {
+    const query = includeArchived
+      ? eq(boards.workspaceId, workspaceId)
+      : and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false));
+
+    return db.query.boards.findMany({
+      where: query,
+    });
+  },
+
+  findByIdWithWorkspaceMembersListsAndLabels: async (boardId: string) => {
+    return db.query.boards.findFirst({
+      where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
       with: {
         workspace: true,
         members: {
@@ -32,30 +48,34 @@ export const boardRepository = {
                     user: true,
                   },
                 },
-                attachments: true,
-                comments: {
-                  where: isNull(comments.parentId),
-                  with: {
-                    replies: {
-                      with: {
-                        user: true,
-                        reactions: true,
-                      },
-                      orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-                    },
-                    user: true,
-                    reactions: true,
+                attachments: {
+                  columns: {
+                    id: true,
                   },
                 },
+                comments: {
+                  columns: {
+                    id: true,
+                  },
+                  where: isNull(comments.parentId),
+                },
                 checklists: {
+                  columns: {
+                    id: true,
+                  },
                   with: {
-                    items: true,
+                    items: {
+                      columns: {
+                        id: true,
+                        isCompleted: true,
+                      },
+                    },
                   },
                 },
                 cardLabels: {
                   with: {
                     label: true,
-                  },
+                  }
                 },
               },
             },
@@ -66,12 +86,80 @@ export const boardRepository = {
     });
   },
 
-  findByWorkspaceId: async (workspaceId: string, includeArchived = false) => {
+  // findByIdWithWorkspaceMembersListsAndLabels: async (boardId: string) => {
+  //   return db.query.boards.findFirst({
+  //     where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
+  //     with: {
+  //       workspace: true,
+  //       members: {
+  //         with: {
+  //           user: true,
+  //         },
+  //       },
+  //       lists: {
+  //         where: eq(lists.isArchived, false),
+  //         orderBy: (lists, { asc }) => [asc(lists.position)],
+  //         with: {
+  //           cards: {
+  //             where: eq(cards.isArchived, false),
+  //             orderBy: (cards, { asc }) => [asc(cards.position)],
+  //             with: {
+  //               members: {
+  //                 with: {
+  //                   user: true,
+  //                 },
+  //               },
+  //               attachments: true,
+  //               comments: {
+  //                 where: isNull(comments.parentId),
+  //                 with: {
+  //                   replies: {
+  //                     with: {
+  //                       user: true,
+  //                       reactions: {
+  //                         with: {
+  //                           user: true,
+  //                         },
+  //                       },
+  //                     },
+  //                     orderBy: (comments, { asc }) => [asc(comments.createdAt)],
+  //                   },
+  //                   user: true,
+  //                   reactions: {
+  //                     with: {
+  //                       user: true,
+  //                     },
+  //                   },
+  //                 },
+  //               },
+  //               checklists: {
+  //                 with: {
+  //                   items: true,
+  //                 },
+  //               },
+  //               cardLabels: {
+  //                 with: {
+  //                   label: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       labels: true,
+  //     },
+  //   });
+  // },
+
+  findByWorkspaceIdWithMembers: async (
+    workspaceId: string,
+    includeArchived = false
+  ) => {
     const query = includeArchived
       ? eq(boards.workspaceId, workspaceId)
       : and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false));
 
-    const workspaceBoards = await db.query.boards.findMany({
+    return db.query.boards.findMany({
       where: query,
       with: {
         members: {
@@ -82,24 +170,23 @@ export const boardRepository = {
       },
       orderBy: (boards, { desc }) => [desc(boards.createdAt)],
     });
-    return workspaceBoards;
   },
 
-  update: async (id: string, data: UpdateBoard) => {
+  update: async (boardId: string, data: UpdateBoard) => {
     const [updated] = await db
       .update(boards)
       .set({
         ...data,
         updatedAt: new Date(),
       })
-      .where(eq(boards.id, id))
+      .where(eq(boards.id, boardId))
       .returning();
 
     return updated;
   },
 
-  delete: async (id: string) => {
-    await db.delete(boards).where(eq(boards.id, id));
+  delete: async (boardId: string) => {
+    await db.delete(boards).where(eq(boards.id, boardId));
   },
 
   getTotalBoardsByWorkspaceId: async (workspaceId: string) => {
@@ -113,7 +200,7 @@ export const boardRepository = {
   },
 
   getBoardsByWorkspaceId: async (workspaceId: string) => {
-    return await db
+    return db
       .select({
         id: boards.id,
         name: boards.name,
