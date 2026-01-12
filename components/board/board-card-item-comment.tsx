@@ -5,6 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   MessageSquare,
   Reply,
   Edit2,
@@ -153,19 +159,19 @@ export const BoardCardItemComments = ({
     } else {
       const newReaction = await addReaction({ commentId, emoji });
       if (newReaction) {
-        // setComments((prev) =>
-        //   prev.map((c) =>
-        //     c.id === commentId
-        //       ? {
-        //           ...c,
-        //           reactions: [
-        //             ...(c.reactions || []),
-        //             { ...newReaction, emoji },
-        //           ],
-        //         }
-        //       : c
-        //   )
-        // );
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId
+              ? {
+                  ...c,
+                  reactions: [
+                    ...(c.reactions || []),
+                    { ...newReaction, emoji },
+                  ],
+                }
+              : c
+          )
+        );
       }
     }
 
@@ -179,11 +185,17 @@ export const BoardCardItemComments = ({
   };
 
   const groupReactions = (reactions: any[] = []) => {
-    const map = new Map<string, number>();
-    reactions.forEach((r) => map.set(r.emoji, (map.get(r.emoji) || 0) + 1));
-    return Array.from(map.entries()).map(([emoji, count]) => ({
+    const grouped = new Map<string, any[]>();
+    reactions.forEach((r) => {
+      if (!grouped.has(r.emoji)) {
+        grouped.set(r.emoji, []);
+      }
+      grouped.get(r.emoji)?.push(r);
+    });
+    return Array.from(grouped.entries()).map(([emoji, reactionList]) => ({
       emoji,
-      count,
+      count: reactionList.length,
+      users: reactionList.map((r) => r.user.name || "Unknown"),
     }));
   };
 
@@ -246,20 +258,40 @@ export const BoardCardItemComments = ({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {groupReactions(comment.reactions).map(({ emoji, count }) => (
-                <Button
-                  key={emoji}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs border-border hover:bg-primary/10 hover:border-primary/50"
-                  onClick={() => handleToggleReaction(comment.id, emoji)}
-                >
-                  {emoji}{" "}
-                  {count > 1 && (
-                    <span className="ml-1 text-muted-foreground">{count}</span>
-                  )}
-                </Button>
-              ))}
+              <TooltipProvider delayDuration={200}>
+                {groupReactions(comment.reactions).map(
+                  ({ emoji, count, users }) => (
+                    <Tooltip key={emoji}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs border-border hover:bg-primary/10 hover:border-primary/50"
+                          onClick={() =>
+                            handleToggleReaction(comment.id, emoji)
+                          }
+                        >
+                          {emoji}{" "}
+                          {count > 1 && (
+                            <span className="ml-1 text-muted-foreground">
+                              {count}
+                            </span>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="top"
+                        className="max-w-xs bg-popover text-popover-foreground border-border shadow-lg"
+                      >
+                        <div className="text-xs">
+                          {users.slice(0, 5).join(", ")}
+                          {users.length > 5 && ` and ${users.length - 5} more`}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                )}
+              </TooltipProvider>
 
               <div className="relative">
                 <Button
@@ -325,7 +357,7 @@ export const BoardCardItemComments = ({
   );
 
   return (
-    <Card className="p-5 bg-card border-border">
+    <Card className="px-5 bg-card border-border">
       <div className="space-y-5">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">

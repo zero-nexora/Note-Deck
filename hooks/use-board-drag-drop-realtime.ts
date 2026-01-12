@@ -157,16 +157,16 @@ export function useBoardDragDropRealtime({
       if (sourceListId === destListId) {
         sourceList.cards = sourceList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
       } else {
         sourceList.cards = sourceList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
         destList.cards = destList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
       }
 
@@ -208,13 +208,13 @@ export function useBoardDragDropRealtime({
           const newLists = arrayMove(lists, oldIndex, newIndex);
           const orders = newLists.map((list, idx) => ({
             id: list.id,
-            position: (idx + 1) * 1024,
+            position: idx + 1,
           }));
 
           setLists(
             newLists.map((list, idx) => ({
               ...list,
-              position: (idx + 1) * 1024,
+              position: idx + 1,
             }))
           );
 
@@ -224,7 +224,7 @@ export function useBoardDragDropRealtime({
           }).then(() => {
             realtimeUtils.broadcastListMoved({
               listId: active.id as string,
-              position: (newIndex + 1) * 1024,
+              position: newIndex + 1,
             });
           });
         }

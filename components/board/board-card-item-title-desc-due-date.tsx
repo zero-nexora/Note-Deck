@@ -130,7 +130,7 @@ export const BoardCardItemTitleDescDueDate = ({
         </div>
 
         {dueDate && (
-          <Card className="p-4 bg-card border-border">
+          <Card className="px-4 bg-card border-border">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <CalendarIcon className="h-5 w-5 text-primary" />
@@ -152,7 +152,7 @@ export const BoardCardItemTitleDescDueDate = ({
             Description
           </h3>
           {description ? (
-            <Card className="p-4 bg-card border-border">
+            <Card className="px-4 bg-card border-border">
               <p className="text-sm text-foreground whitespace-pre-wrap">
                 {form.getValues("description")}
               </p>
@@ -172,7 +172,7 @@ export const BoardCardItemTitleDescDueDate = ({
   }
 
   return (
-    <Card className="p-6 bg-card border-border">
+    <Card className="px-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-foreground">
           Edit Card Details

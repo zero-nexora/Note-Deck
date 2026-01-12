@@ -133,7 +133,6 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           insertIndex
         );
       } else {
-        // Khác list: remove từ source và add vào dest
         sourceList.cards.splice(sourceCardIndex, 1);
         destList.cards.splice(insertIndex, 0, draggedCard);
       }
@@ -141,16 +140,16 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
       if (sourceListId === destListId) {
         sourceList.cards = sourceList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
       } else {
         sourceList.cards = sourceList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
         destList.cards = destList.cards.map((card, idx) => ({
           ...card,
-          position: (idx + 1) * 1024,
+          position: idx + 1,
         }));
       }
 
@@ -186,13 +185,13 @@ export function useBoardDragDrop({ board }: UseBoardDragDropProps) {
           const newLists = arrayMove(lists, oldIndex, newIndex);
           const orders = newLists.map((list, idx) => ({
             id: list.id,
-            position: (idx + 1) * 1024,
+            position: idx + 1,
           }));
 
           setLists(
             newLists.map((list, idx) => ({
               ...list,
-              position: (idx + 1) * 1024,
+              position: idx + 1,
             }))
           );
 

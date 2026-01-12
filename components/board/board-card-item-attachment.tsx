@@ -76,6 +76,38 @@ export const BoardCardItemAttachments = ({
     return <File className="h-8 w-8 text-muted-foreground" />;
   };
 
+  const getUserInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year:
+        new Date(date).getFullYear() !== now.getFullYear()
+          ? "numeric"
+          : undefined,
+    });
+  };
+
   return (
     <Card className="overflow-hidden bg-card border-border">
       <div className="flex items-center justify-between p-4 border-b border-border">
@@ -155,11 +187,36 @@ export const BoardCardItemAttachments = ({
                   <p className="font-medium text-foreground truncate mb-1">
                     {attachment.fileName}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                     <span>{formatFileSize(attachment.fileSize)}</span>
                     <span>•</span>
                     <span className="uppercase">
                       {attachment.fileType.split("/")[1] || "file"}
+                    </span>
+                    <span>•</span>
+                    <span>{formatDate(attachment.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {attachment.user.image ? (
+                      <div className="relative w-5 h-5 rounded-full overflow-hidden">
+                        <Image
+                          src={attachment.user.image}
+                          alt={attachment.user.name || "User"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-[10px] font-medium text-primary">
+                          {getUserInitials(attachment.user.name)}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {attachment.user.name ||
+                        attachment.user.email ||
+                        "Unknown user"}
                     </span>
                   </div>
                 </div>

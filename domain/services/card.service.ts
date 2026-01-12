@@ -452,7 +452,7 @@ export const cardService = {
       boardId: originalCard.boardId,
       title: `${originalCard.title} (Copy)`,
       description: originalCard.description,
-      position: maxPosition + 1024,
+      position: maxPosition + 1,
       dueDate: originalCard.dueDate,
       coverImage: originalCard.coverImage,
     });
