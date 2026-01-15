@@ -1,4 +1,7 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
@@ -8,7 +11,12 @@ import {
   ReorderChecklistInput,
   UpdateChecklistInput,
 } from "../schemas/checklist.schema";
-import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  PERMISSIONS,
+  ROLE,
+} from "@/lib/constants";
 
 export const checklistService = {
   create: async (userId: string, data: CreateChecklistInput) => {
@@ -17,12 +25,23 @@ export const checklistService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRolePermission = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardChecklistPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_CHECKLIST
+    // );
+
+    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRolePermission) {
       throw new Error("Permission denied");
     }
 
@@ -67,12 +86,23 @@ export const checklistService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRolePermission = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardChecklistPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_CHECKLIST
+    // );
+
+    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRolePermission) {
       throw new Error("Permission denied");
     }
 
@@ -125,12 +155,12 @@ export const checklistService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRolePermission = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRolePermission) {
       throw new Error("Permission denied");
     }
 
@@ -169,12 +199,23 @@ export const checklistService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRolePermission = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardChecklistPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_CHECKLIST
+    // );
+
+    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRolePermission) {
       throw new Error("Permission denied");
     }
 

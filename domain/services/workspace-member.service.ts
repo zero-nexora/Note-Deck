@@ -17,12 +17,33 @@ import {
   ENTITY_TYPE,
   ROLE,
 } from "@/lib/constants";
+import { STRIPE_PLANS } from "@/lib/stripe";
 
 export const workspaceMemberService = {
   add: async (userId: string, data: AddMemberInput) => {
     const workspace = await workspaceRepository.findById(data.workspaceId);
     if (!workspace) {
       throw new Error("Workspace not found");
+    }
+
+    const planKey = workspace.plan as keyof typeof STRIPE_PLANS;
+    const plan = STRIPE_PLANS[planKey];
+
+    if (!plan) {
+      throw new Error("Invalid workspace plan");
+    }
+
+    const memberLimit = plan.limits.membersPerWorkspace;
+
+    if (memberLimit !== -1) {
+      const currentMemberCount =
+        await workspaceMemberRepository.countByWorkspaceId(data.workspaceId);
+
+      if (currentMemberCount >= memberLimit) {
+        throw new Error(
+          `Member limit reached for ${plan.name} plan (${memberLimit} members)`
+        );
+      }
     }
 
     const hasPermission = await checkWorkspacePermission(

@@ -20,7 +20,10 @@ export function useWorkspace() {
 
   const createWorkspace = async (input: CreateWorkspaceInput) => {
     const result = await createWorkspaceAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.push(`/workspaces/${result.data!.id}`);
     router.refresh();
@@ -31,7 +34,10 @@ export function useWorkspace() {
     input: UpdateWorkspaceNameInput
   ) => {
     const result = await updateWorkspaceNameAction(workspaceId, input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };
@@ -41,14 +47,20 @@ export function useWorkspace() {
     input: ChangePlanInput
   ) => {
     const result = await changeWorkspacePlanAction(workspaceId, input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };
 
   const deleteWorkspace = async (input: DeleteWorkspaceInput) => {
     const result = await deleteWorkspaceAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.push("/workspaces");
     router.refresh();

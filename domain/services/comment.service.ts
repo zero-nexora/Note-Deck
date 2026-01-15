@@ -7,11 +7,15 @@ import {
   DeleteCommentInput,
   UpdateCommentInput,
 } from "../schemas/comment.schema";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import {
   ACTIVITY_ACTION,
   ENTITY_TYPE,
   NOTIFICATION_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -22,12 +26,23 @@ export const commentService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasBoardRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasCardCommentPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_COMMENT
+    // );
+
+    // if (!hasBoardRoleAccess || !hasCardCommentPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasBoardRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -109,12 +124,23 @@ export const commentService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasBoardRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardCommentPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_COMMENT
+    // );
+
+    // if (!hasBoardRoleAccess || !hasCardCommentPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasBoardRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -194,6 +220,7 @@ export const commentService = {
         card.boardId,
         ROLE.ADMIN
       );
+
       if (!hasAdminPermission) {
         throw new Error("You can only delete your own comments");
       }

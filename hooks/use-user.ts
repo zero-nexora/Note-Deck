@@ -13,7 +13,10 @@ export function useUser() {
 
   const updateUser = async (id: string, input: UpdateUserInput) => {
     const result = await updateUserAction(id, input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
 
     toast.success(result.message);
     router.refresh();
@@ -22,7 +25,10 @@ export function useUser() {
 
   const deleteUser = async (input: DeleteUserInput) => {
     const result = await deleteUserAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
 
     toast.success(result.message);
     router.refresh();

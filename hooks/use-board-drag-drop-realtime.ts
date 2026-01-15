@@ -175,7 +175,7 @@ export function useBoardDragDropRealtime({
   }, []);
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    async (event: DragEndEvent) => {
       const { active, over } = event;
 
       setActiveId(null);
@@ -218,15 +218,19 @@ export function useBoardDragDropRealtime({
             }))
           );
 
-          reorderLists({
+          const result = await reorderLists({
             boardId: board.id,
             orders,
-          }).then(() => {
+          });
+
+          if (result) {
             realtimeUtils.broadcastListMoved({
               listId: active.id as string,
               position: newIndex + 1,
             });
-          });
+          } else {
+            setLists(board.lists);
+          }
         }
         setOriginalSourceListId(null);
         return;
@@ -263,10 +267,12 @@ export function useBoardDragDropRealtime({
             position: c.position,
           }));
 
-          reorderCards({
+          const result = await reorderCards({
             listId: currentDestListId,
             orders,
-          }).then(() => {
+          });
+
+          if (result) {
             const movedCard = destList.cards.find((c) => c.id === active.id);
             if (movedCard) {
               realtimeUtils.broadcastCardMoved({
@@ -276,7 +282,9 @@ export function useBoardDragDropRealtime({
                 position: movedCard.position,
               });
             }
-          });
+          } else {
+            setLists(board.lists);
+          }
         } else {
           const sourceList = lists.find((l) => l.id === originalSourceListId);
           const destList = lists.find((l) => l.id === currentDestListId);
@@ -293,13 +301,15 @@ export function useBoardDragDropRealtime({
             position: c.position,
           }));
 
-          moveCard({
+          const result = await moveCard({
             id: active.id as string,
             sourceListId: originalSourceListId,
             destinationListId: currentDestListId,
             sourceOrders,
             destinationOrders,
-          }).then(() => {
+          });
+
+          if (result) {
             const movedCard = destList.cards.find((c) => c.id === active.id);
             realtimeUtils.broadcastCardMoved({
               cardId: active.id as string,
@@ -307,7 +317,9 @@ export function useBoardDragDropRealtime({
               destinationListId: currentDestListId,
               position: movedCard?.position || 0,
             });
-          });
+          } else {
+            setLists(board.lists);
+          }
         }
       } catch (error) {
         console.error("Error updating position:", error);

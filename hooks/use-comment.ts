@@ -42,7 +42,7 @@ export function useComment() {
     const result = await deleteCommentAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

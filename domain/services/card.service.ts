@@ -3,7 +3,10 @@ import { listRepository } from "../repositories/list.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { notificationRepository } from "../repositories/notification.repository";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import {
   ArchiveCardInput,
   CreateCardInput,
@@ -24,8 +27,10 @@ import {
   AUDIT_ACTION,
   ENTITY_TYPE,
   NOTIFICATION_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
+import { STRIPE_PLANS } from "@/lib/stripe";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
@@ -34,12 +39,49 @@ export const cardService = {
       throw new Error("List not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const board = await boardRepository.findByIdWithWorkspace(list.boardId);
+    if (!board) {
+      throw new Error("Board not found");
+    }
+
+    const planKey = board.workspace.plan as keyof typeof STRIPE_PLANS;
+    const plan = STRIPE_PLANS[planKey];
+
+    if (!plan) {
+      throw new Error("Invalid workspace plan");
+    }
+
+    const cardLimit = plan.limits.cardsPerBoard;
+
+    if (cardLimit !== -1) {
+      const currentCardCount = await cardRepository.countByBoardId(
+        list.boardId
+      );
+
+      if (currentCardCount >= cardLimit) {
+        throw new Error(
+          `Card limit reached for ${plan.name} plan (${cardLimit} cards per board)`
+        );
+      }
+    }
+
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       list.boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasCardCreatePermission = await checkUserGroupPermission(
+    //   userId,
+    //   list.boardId,
+    //   PERMISSIONS.CARD_CREATE
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardCreatePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -67,17 +109,14 @@ export const cardService = {
       metadata: { title: card.title, listId: data.listId },
     });
 
-    const board = await boardRepository.findById(list.boardId);
-    if (board) {
-      await auditLogRepository.create({
-        workspaceId: board.workspaceId,
-        userId,
-        action: AUDIT_ACTION.CARD_CREATED,
-        entityType: ENTITY_TYPE.CARD,
-        entityId: card.id,
-        metadata: { title: card.title, boardId: list.boardId },
-      });
-    }
+    await auditLogRepository.create({
+      workspaceId: board.workspaceId,
+      userId,
+      action: AUDIT_ACTION.CARD_CREATED,
+      entityType: ENTITY_TYPE.CARD,
+      entityId: card.id,
+      metadata: { title: card.title, boardId: list.boardId },
+    });
 
     return card;
   },
@@ -92,12 +131,23 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasCardViewPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.boardId,
+    //   PERMISSIONS.CARD_VIEW
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardViewPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -110,12 +160,23 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardEditPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.boardId,
+    //   PERMISSIONS.CARD_EDIT
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardEditPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -194,18 +255,32 @@ export const cardService = {
       throw new Error("List not found");
     }
 
-    const hasPermissionSource = await checkBoardPermission(
+    const hasWorkspaceRoleAccessSource = await checkBoardPermission(
       userId,
       sourceList.boardId,
       ROLE.NORMAL
     );
-    const hasPermissionDestination = await checkBoardPermission(
+    const hasWorkspaceRoleAccessDestination = await checkBoardPermission(
       userId,
       destinationList.boardId,
       ROLE.NORMAL
     );
 
-    if (!hasPermissionSource || !hasPermissionDestination) {
+    // const hasCardMovePermission = await checkUserGroupPermission(
+    //   userId,
+    //   sourceList.boardId,
+    //   PERMISSIONS.CARD_MOVE
+    // );
+
+    // if (
+    //   !hasWorkspaceRoleAccessSource ||
+    //   !hasWorkspaceRoleAccessDestination ||
+    //   !hasCardMovePermission
+    // ) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccessSource || !hasWorkspaceRoleAccessDestination) {
       throw new Error("Permission denied");
     }
 
@@ -279,12 +354,12 @@ export const cardService = {
       throw new Error("List not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       list.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -323,12 +398,12 @@ export const cardService = {
       return card;
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -359,12 +434,12 @@ export const cardService = {
       return card;
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -391,12 +466,23 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasCardDeletePermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.boardId,
+    //   PERMISSIONS.CARD_DELETE
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardDeletePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -434,12 +520,12 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       originalCard.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 

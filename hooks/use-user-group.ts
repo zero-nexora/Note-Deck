@@ -18,7 +18,10 @@ export function useUserGroup() {
 
   const createUserGroup = async (input: CreateUserGroupInput) => {
     const result = await createUserGroupAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };
@@ -30,7 +33,7 @@ export function useUserGroup() {
     const result = await updateUserGroupAction(groupId, input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -39,7 +42,10 @@ export function useUserGroup() {
 
   const deleteUserGroup = async (input: DeleteUserGroupInput) => {
     const result = await deleteUserGroupAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };

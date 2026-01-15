@@ -24,8 +24,13 @@ export const ExpireInviteSchema = z.object({
   id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
+export const ListPendingInvitesSchema = z.object({
+  workspaceId: z.string().uuid(),
+});
+
 export type CreateInviteInput = z.infer<typeof CreateInviteSchema>;
 export type ResendInviteInput = z.infer<typeof ResendInviteSchema>;
 export type RevokeInviteInput = z.infer<typeof RevokeInviteSchema>;
 export type AcceptInviteInput = z.infer<typeof AcceptInviteSchema>;
 export type ExpireInviteInput = z.infer<typeof ExpireInviteSchema>;
+export type ListPendingInvitesInput = z.infer<typeof ListPendingInvitesSchema>;

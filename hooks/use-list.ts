@@ -50,7 +50,7 @@ export function useList() {
     const result = await reorderListsAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return false;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -83,7 +83,7 @@ export function useList() {
     const result = await deleteListAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return false;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

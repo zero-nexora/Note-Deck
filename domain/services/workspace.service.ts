@@ -1,7 +1,10 @@
 import { STRIPE_PLANS } from "@/lib/stripe";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import {
+  // checkUserGroupPermission,
+  checkWorkspacePermission,
+} from "@/lib/check-permissions";
 import {
   ChangePlanInput,
   CreateWorkspaceInput,
@@ -15,6 +18,7 @@ import {
   DEFAULT_PLAN,
   DEFAULT_WORKSPACE_OWNER_ROLE,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -60,13 +64,13 @@ export const workspaceService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const hasWorkspaceAccess = await checkWorkspacePermission(
       userId,
       workspace.id,
       ROLE.OBSERVER
     );
 
-    if (!hasPermission) {
+    if (!hasWorkspaceAccess) {
       throw new Error("Permission denied");
     }
 
@@ -84,12 +88,17 @@ export const workspaceService = {
     const result = [];
 
     for (const workspace of workspaces) {
-      const hasPermission = await checkWorkspacePermission(
+      const hasWorkspaceAccess = await checkWorkspacePermission(
         userId,
         workspace.id,
         ROLE.OBSERVER
       );
-      if (hasPermission) {
+      // const hasWorkspaceViewPermission = await checkUserGroupPermission(
+      //   userId,
+      //   workspace.id,
+      //   PERMISSIONS.WORKSPACE_VIEW
+      // );
+      if (hasWorkspaceAccess) {
         result.push(workspace);
       }
     }
@@ -108,13 +117,23 @@ export const workspaceService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const hasWorkspaceAccess = await checkWorkspacePermission(
       userId,
       workspace.id,
       ROLE.ADMIN
     );
 
-    if (!hasPermission) {
+    // const hasWorkspaceEditPermission = await checkUserGroupPermission(
+    //   userId,
+    //   workspace.id,
+    //   PERMISSIONS.WORKSPACE_EDIT
+    // );
+
+    // if (!hasWorkspaceAccess || !hasWorkspaceEditPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceAccess) {
       throw new Error("Permission denied");
     }
 
@@ -155,13 +174,13 @@ export const workspaceService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const hasWorkspaceAccess = await checkWorkspacePermission(
       userId,
       workspace.id,
       ROLE.ADMIN
     );
 
-    if (!hasPermission) {
+    if (!hasWorkspaceAccess) {
       throw new Error("Permission denied");
     }
 
@@ -204,13 +223,23 @@ export const workspaceService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const hasWorkspaceAccess = await checkWorkspacePermission(
       userId,
       data.id,
       ROLE.ADMIN
     );
 
-    if (!hasPermission) {
+    // const hasWorkspaceDeletePermission = await checkUserGroupPermission(
+    //   userId,
+    //   workspace.id,
+    //   PERMISSIONS.WORKSPACE_DELETE
+    // );
+
+    // if (!hasWorkspaceAccess || !hasWorkspaceDeletePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceAccess) {
       throw new Error("Permission denied");
     }
 

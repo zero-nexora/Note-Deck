@@ -62,20 +62,22 @@ export function useCard() {
     const result = await moveCardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
+    return true;
   };
 
   const reorderCards = async (input: ReorderCardsInput) => {
     const result = await reorderCardsAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
+    return true;
   };
 
   const archiveCard = async (input: ArchiveCardInput) => {
@@ -104,7 +106,7 @@ export function useCard() {
     const result = await deleteCardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

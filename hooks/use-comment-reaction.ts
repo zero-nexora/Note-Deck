@@ -29,7 +29,7 @@ export function useCommentReaction() {
     const result = await removeCommentReactionAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

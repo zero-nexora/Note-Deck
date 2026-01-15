@@ -1,8 +1,8 @@
 "use client";
 
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
-import { ActionsMenu } from "../common/actions-menu";
-import { GripVertical } from "lucide-react";
+import { ActionsMenu, ActionItem } from "../common/actions-menu";
+import { GripVertical, Copy, Trash2 } from "lucide-react";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { Button } from "../ui/button";
@@ -23,6 +23,21 @@ export const BoardListHeader = ({
   onDelete,
   onDuplicate,
 }: BoardListHeaderProps) => {
+  const actions: ActionItem[] = [
+    {
+      label: "Duplicate list",
+      icon: Copy,
+      onClick: onDuplicate,
+    },
+    {
+      label: "Delete list",
+      icon: Trash2,
+      onClick: onDelete,
+      variant: "destructive",
+      separator: true,
+    },
+  ];
+
   return (
     <div className="flex items-center justify-between gap-2 p-3 border-b border-border">
       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -46,7 +61,7 @@ export const BoardListHeader = ({
         </h3>
       </div>
 
-      <ActionsMenu onDuplicate={onDuplicate} onDelete={onDelete} />
+      <ActionsMenu actions={actions} />
     </div>
   );
 };

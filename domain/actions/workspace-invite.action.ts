@@ -11,6 +11,8 @@ import {
   AcceptInviteSchema,
   ExpireInviteInput,
   ExpireInviteSchema,
+  ListPendingInvitesInput,
+  ListPendingInvitesSchema,
 } from "@/domain/schemas/workspace-invite.schema";
 import { workspaceInviteService } from "@/domain/services/workspace-invite.service";
 import { requireAuth } from "@/lib/session";
@@ -29,6 +31,31 @@ export const createWorkspaceInviteAction = async (input: CreateInviteInput) => {
 
     const invite = await workspaceInviteService.create(user.id, parsed.data);
     return success("Invite created successfully", invite);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const listPendingWorkspaceInvitesAction = async (
+  input: ListPendingInvitesInput
+) => {
+  try {
+    const user = await requireAuth();
+
+    const parsed = ListPendingInvitesSchema.safeParse(input);
+    if (!parsed.success) {
+      const message =
+        Object.values(parsed.error.flatten().fieldErrors)[0]?.[0] ??
+        "Invalid input";
+      return error(message);
+    }
+
+    const invites = await workspaceInviteService.listPendingInvites(
+      user.id,
+      parsed.data
+    );
+
+    return success("Pending invites fetched successfully", invites);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

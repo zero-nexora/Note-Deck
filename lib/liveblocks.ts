@@ -131,6 +131,20 @@ export type RoomEvent =
       value: any;
       userId: string;
       timestamp: number;
+    }
+  | {
+      type: "CARD_DUPLICATED";
+      sourceCardId: string;
+      newCardId?: string;
+      listId: string;
+      userId: string;
+      timestamp: number;
+    }
+  | {
+      type: "LIST_DUPLICATED";
+      sourceListId: string;
+      userId: string;
+      timestamp: number;
     };
 
 export const liveblocksClient = createClient({

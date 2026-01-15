@@ -122,6 +122,18 @@ export const useBoardRealtime = ({
     [broadcast, user.id]
   );
 
+  const broadcastCardDuplicate = useCallback(
+    (data: { sourceCardId: string; listId: string }) => {
+      broadcast({
+        type: "CARD_DUPLICATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
   const broadcastCardDeleted = useCallback(
     (data: { cardId: string; listId: string }) => {
       broadcast({
@@ -138,6 +150,18 @@ export const useBoardRealtime = ({
     (data: { listId: string }) => {
       broadcast({
         type: "LIST_CREATED",
+        ...data,
+        userId: user.id,
+        timestamp: Date.now(),
+      });
+    },
+    [broadcast, user.id]
+  );
+
+  const broadcastListDuplicate = useCallback(
+    (data: { sourceListId: string }) => {
+      broadcast({
+        type: "LIST_DUPLICATED",
         ...data,
         userId: user.id,
         timestamp: Date.now(),
@@ -314,10 +338,12 @@ export const useBoardRealtime = ({
     broadcastCardMoved,
     broadcastCardUpdated,
     broadcastCardCreated,
+    broadcastCardDuplicate,
     broadcastCardDeleted,
     broadcastListCreated,
     broadcastListUpdated,
     broadcastListDeleted,
+    broadcastListDuplicate,
     broadcastListMoved,
     broadcastLabelAdded,
     broadcastLabelRemoved,

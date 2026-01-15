@@ -1,7 +1,21 @@
 import { db } from "@/db";
-import { boardMembers, workspaceMembers } from "@/db/schema";
+import {
+  boardMembers,
+  userGroupMembers,
+  userGroups,
+  workspaceMembers,
+} from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { Role } from "./constants";
+
+const roleHierarchy: Record<Role, number> = {
+  admin: 3,
+  normal: 2,
+  observer: 1,
+};
+
+const hasRequiredRole = (memberRole: Role, requiredRole: Role) =>
+  roleHierarchy[memberRole] >= roleHierarchy[requiredRole];
 
 export const checkWorkspacePermission = async (
   userId: string,
@@ -17,9 +31,7 @@ export const checkWorkspacePermission = async (
 
   if (!member) return false;
 
-  const roleHierarchy = { admin: 3, normal: 2, observer: 1 };
-
-  return roleHierarchy[member.role] >= roleHierarchy[requiredRole];
+  return hasRequiredRole(member.role, requiredRole);
 };
 
 export const checkBoardPermission = async (
@@ -36,7 +48,27 @@ export const checkBoardPermission = async (
 
   if (!member) return false;
 
-  const roleHierarchy = { admin: 3, normal: 2, observer: 1 };
+  return hasRequiredRole(member.role, requiredRole);
+};
 
-  return roleHierarchy[member.role] >= roleHierarchy[requiredRole];
+export const checkUserGroupPermission = async (
+  userId: string,
+  workspaceId: string,
+  requiredPermission: string
+): Promise<boolean> => {
+  const groups = await db.query.userGroups.findMany({
+    where: eq(userGroups.workspaceId, workspaceId),
+    with: {
+      members: {
+        where: eq(userGroupMembers.userId, userId),
+      },
+    },
+  });
+
+  return groups.some((group) => {
+    if (group.members.length === 0) return false;
+
+    const permissions = group.permissions as Record<string, boolean>;
+    return permissions[requiredPermission] === true;
+  });
 };

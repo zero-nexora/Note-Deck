@@ -22,28 +22,41 @@ export function useWorkspaceMember() {
 
   const addWorkspaceMember = async (input: AddMemberInput) => {
     const result = await addWorkspaceMemberAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };
 
   const removeWorkspaceMember = async (input: RemoveMemberInput) => {
     const result = await removeWorkspaceMemberAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };
 
   const changeWorkspaceMemberRole = async (input: ChangeMemberRoleInput) => {
     const result = await changeWorkspaceMemberRoleAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
+    return result.data;
   };
 
   const leaveWorkspace = async (input: LeaveWorkspaceInput) => {
     const result = await leaveWorkspaceAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.push("/workspaces");
     router.refresh();
@@ -51,7 +64,10 @@ export function useWorkspaceMember() {
 
   const transferWorkspaceOwnership = async (input: TransferOwnershipInput) => {
     const result = await transferWorkspaceOwnershipAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };

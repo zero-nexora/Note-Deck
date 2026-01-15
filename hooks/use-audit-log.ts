@@ -7,7 +7,10 @@ import { toast } from "sonner";
 export function useAuditLog() {
   const logAction = async (input: LogWorkspaceActionInput) => {
     const result = await logActionAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
   };
 
   return {

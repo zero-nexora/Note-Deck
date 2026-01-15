@@ -29,7 +29,7 @@ export function useCardLabel() {
     const result = await removeCardLabelAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

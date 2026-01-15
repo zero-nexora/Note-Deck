@@ -1,4 +1,7 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardMemberRepository } from "../repositories/card-member.repository";
 import { cardRepository } from "../repositories/card.repository";
@@ -12,6 +15,7 @@ import {
   ACTIVITY_ACTION,
   ENTITY_TYPE,
   NOTIFICATION_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -22,12 +26,23 @@ export const cardMemberService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardAddMemberPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_ASSIGN
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardAddMemberPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -80,12 +95,23 @@ export const cardMemberService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasCardRemoveMemberPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_ASSIGN
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardRemoveMemberPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 

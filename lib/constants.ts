@@ -247,3 +247,37 @@ export const NOTIFICATION_TYPE = {
 
 export type NotificationType =
   (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
+
+export const PERMISSIONS = {
+  WORKSPACE_VIEW: "workspace.view",
+  WORKSPACE_EDIT: "workspace.edit",
+  WORKSPACE_DELETE: "workspace.delete",
+  WORKSPACE_SETTINGS: "workspace.settings",
+
+  BOARD_CREATE: "board.create",
+  BOARD_VIEW: "board.view",
+  BOARD_EDIT: "board.edit",
+  BOARD_DELETE: "board.delete",
+  BOARD_ARCHIVE: "board.archive",
+
+  CARD_CREATE: "card.create",
+  CARD_VIEW: "card.view",
+  CARD_EDIT: "card.edit",
+  CARD_DELETE: "card.delete",
+  CARD_MOVE: "card.move",
+  CARD_ASSIGN: "card.assign",
+  CARD_LABEL: "card.label",
+  CARD_ATTACHMENT: "card.attachment",
+  CARD_CHECKLIST: "card.checklist",
+  CARD_COMMENT: "card.comment",
+
+  MEMBER_INVITE: "member.invite",
+  MEMBER_REMOVE: "member.remove",
+  MEMBER_ROLE: "member.role",
+
+  ADMIN_AUTOMATION: "admin.automation",
+  ADMIN_INTEGRATION: "admin.integration",
+  ADMIN_BILLING: "admin.billing",
+  ADMIN_AUDIT: "admin.audit",
+} as const;
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

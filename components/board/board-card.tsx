@@ -3,7 +3,7 @@
 import { BoardWithMember } from "@/domain/types/board.type";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Archive, Users, Clock } from "lucide-react";
+import { Archive, Users, Clock, Pencil, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { useModal } from "@/stores/modal-store";
@@ -12,16 +12,22 @@ import { useConfirm } from "@/stores/confirm-store";
 import { useBoard } from "@/hooks/use-board";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { ActionsMenu } from "../common/actions-menu";
+import { ActionsMenu, ActionItem } from "../common/actions-menu";
+import { useSession } from "next-auth/react";
 
 interface BoardCardProps {
   board: BoardWithMember;
 }
 
 export const BoardCard = ({ board }: BoardCardProps) => {
+  const { data: session } = useSession();
   const { open: openModal } = useModal();
   const { open: openConfirm } = useConfirm();
-  const { deleteBoard } = useBoard();
+  const { deleteBoard, archiveBoard, restoreBoard } = useBoard();
+
+  const currentUserId = session?.user?.id;
+  const currentMember = board.members.find((m) => m.userId === currentUserId);
+  const isAdmin = currentMember?.role === "admin";
 
   const maxVisibleAvatars = 3;
   const remainingMembers = Math.max(
@@ -43,11 +49,50 @@ export const BoardCard = ({ board }: BoardCardProps) => {
       title: "Delete Board",
       description:
         "Are you sure you want to delete this board? This action cannot be undone.",
+      variant: "destructive",
       onConfirm: async () => {
         await deleteBoard({ id: board.id });
       },
     });
   };
+
+  const handleArchiveToggle = () => {
+    openConfirm({
+      title: board.isArchived ? "Restore Board" : "Archive Board",
+      description: board.isArchived
+        ? "Restore this board and make it active again?"
+        : "Archive this board? You can restore it later.",
+      onConfirm: async () => {
+        if (board.isArchived) {
+          await restoreBoard({ id: board.id });
+        } else {
+          await archiveBoard({ id: board.id });
+        }
+      },
+    });
+  };
+
+  const actions: ActionItem[] = isAdmin
+    ? [
+        {
+          label: "Edit",
+          icon: Pencil,
+          onClick: handleEdit,
+        },
+        {
+          label: board.isArchived ? "Restore" : "Archive",
+          icon: Archive,
+          onClick: handleArchiveToggle,
+        },
+        {
+          label: "Delete",
+          icon: Trash2,
+          variant: "destructive",
+          separator: true,
+          onClick: handleDelete,
+        },
+      ]
+    : [];
 
   return (
     <Link href={`/workspaces/${board.workspaceId}/boards/${board.id}`}>
@@ -65,7 +110,7 @@ export const BoardCard = ({ board }: BoardCardProps) => {
               )}
             </div>
 
-            <ActionsMenu onEdit={handleEdit} onDelete={handleDelete} />
+            {actions.length > 0 && <ActionsMenu actions={actions} />}
           </div>
 
           {board.isArchived && (

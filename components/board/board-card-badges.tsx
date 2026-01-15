@@ -102,7 +102,6 @@ export const BoardCardBadges = ({ card }: BoardCardBadgesProps) => {
     );
   }
 
-  /* Checklists (count only) */
   if (hasChecklists) {
     badges.push(
       <div

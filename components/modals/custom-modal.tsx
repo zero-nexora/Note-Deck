@@ -23,7 +23,7 @@ export const CustomModal = () => {
             <DialogDescription>{data.description}</DialogDescription>
           )}
         </DialogHeader>
-        {data?.children}
+        <div className="p-2 overflow-auto">{data?.children}</div>
       </DialogContent>
     </Dialog>
   );

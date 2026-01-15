@@ -9,6 +9,7 @@ import {
   RevokeInviteInput,
   AcceptInviteInput,
   ExpireInviteInput,
+  ListPendingInvitesInput,
 } from "../schemas/workspace-invite.schema";
 import crypto from "crypto";
 import { auditLogRepository } from "../repositories/audit-log.repository";
@@ -92,6 +93,24 @@ export const workspaceInviteService = {
     });
 
     return invite;
+  },
+
+  listPendingInvites: async (userId: string, data: ListPendingInvitesInput) => {
+    const hasPermission = await checkWorkspacePermission(
+      userId,
+      data.workspaceId,
+      ROLE.ADMIN
+    );
+    if (!hasPermission) {
+      throw new Error("Permission denied");
+    }
+
+    const invites = await workspaceInviteRepository.findByWorkspaceId(
+      data.workspaceId,
+      true
+    );
+
+    return invites;
   },
 
   resend: async (userId: string, data: ResendInviteInput) => {

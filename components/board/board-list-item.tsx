@@ -70,6 +70,7 @@ export const BoardListItem = ({
       description: "Are you sure you want to duplicate this list?",
       onConfirm: async () => {
         await duplicateList({ id: list.id });
+        realtimeUtils?.broadcastListDuplicate({ sourceListId: list.id });
       },
     });
   };

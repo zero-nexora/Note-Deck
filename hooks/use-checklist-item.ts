@@ -35,7 +35,7 @@ export function useChecklistItem() {
     const result = await toggleChecklistItemAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -59,7 +59,7 @@ export function useChecklistItem() {
     const result = await reorderChecklistItemAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -69,7 +69,7 @@ export function useChecklistItem() {
     const result = await deleteChecklistItemAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();

@@ -12,7 +12,23 @@ export const cardRepository = {
   findById: async (cardId: string) => {
     return db.query.cards.findFirst({
       where: eq(cards.id, cardId),
+      with: {
+        board: {
+          columns: {
+            workspaceId: true,
+          },
+        },
+      },
     });
+  },
+
+  countByBoardId: async (boardId: string): Promise<number> => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(cards)
+      .where(eq(cards.boardId, boardId));
+
+    return Number(result[0].count);
   },
 
   findByIdWithMembers: async (cardId: string) => {
@@ -156,48 +172,6 @@ export const cardRepository = {
       .where(eq(cards.id, cardId))
       .returning();
   },
-
-  // findCardByIdWithCardLabelsChecklistsAttachmentsBoardAndcomments: async (
-  //   cardId: string
-  // ) => {
-  //   return db.query.cards.findFirst({
-  //     where: eq(cards.id, cardId),
-  //     with: {
-  //       cardLabels: {
-  //         with: {
-  //           label: true,
-  //         },
-  //       },
-  //       checklists: {
-  //         with: {
-  //           items: true,
-  //         },
-  //       },
-  //       attachments: true,
-  //       board: true,
-  //       comments: {
-  //         with: {
-  //           user: true,
-  //           replies: {
-  //             with: {
-  //               user: true,
-  //               reactions: {
-  //                 with: { user: true },
-  //               },
-  //             },
-  //             orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-  //           },
-  //           reactions: {
-  //             with: {
-  //               user: true,
-  //             },
-  //           },
-  //         },
-  //         orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-  //       },
-  //     },
-  //   });
-  // },
 
   findAllByListId: async (listId: string) => {
     return db.query.cards.findMany({

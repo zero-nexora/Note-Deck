@@ -10,6 +10,15 @@ export const workspaceMemberRepository = {
     return member;
   },
 
+  countByWorkspaceId: async (workspaceId: string): Promise<number> => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.workspaceId, workspaceId));
+
+    return Number(result[0].count);
+  },
+
   findByWorkspaceIdAndUserId: async (workspaceId: string, userId: string) => {
     return db.query.workspaceMembers.findFirst({
       where: and(

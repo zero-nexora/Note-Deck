@@ -1,7 +1,10 @@
 import { attachmentRepository } from "../repositories/attachment.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import {
   CreateAttachmentInput,
   DeleteAttachmentInput,
@@ -10,6 +13,7 @@ import {
   ACTIVITY_ACTION,
   ENTITY_TYPE,
   MAX_FILE_SIZE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -20,12 +24,23 @@ export const attachmentService = {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardAddAttachmentPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.board.workspaceId,
+    //   PERMISSIONS.CARD_ATTACHMENT
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardAddAttachmentPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -84,12 +99,23 @@ export const attachmentService = {
     }
 
     if (attachment.userId !== userId) {
-      const hasAdminPermission = await checkBoardPermission(
+      const hasBoardRoleAccess = await checkBoardPermission(
         userId,
         card.boardId,
         ROLE.ADMIN
       );
-      if (!hasAdminPermission) {
+
+      // const hasCardAttachmentPermission = await checkUserGroupPermission(
+      //   userId,
+      //   card.board.workspaceId,
+      //   PERMISSIONS.CARD_ATTACHMENT
+      // );
+
+      // if (!hasBoardRoleAccess || !hasCardAttachmentPermission) {
+      //   throw new Error("You can only delete your own attachments");
+      // }
+
+      if (!hasBoardRoleAccess) {
         throw new Error("You can only delete your own attachments");
       }
     }

@@ -17,17 +17,26 @@ import { toast } from "sonner";
 export function useActivity() {
   const logBoardAction = async (input: LogBoardActionInput) => {
     const result = await logBoardActionAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
   };
 
   const logListAction = async (input: LogListActionInput) => {
     const result = await logListActionAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
   };
 
   const logCardAction = async (input: LogCardActionInput) => {
     const result = await logCardActionAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
   };
 
   const readActivity = async (input: ReadActivityInput) => {

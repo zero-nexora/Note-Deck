@@ -18,34 +18,34 @@ export function useLabel() {
 
   const createLabel = async (input: CreateLabelInput) => {
     const result = await createLabelAction(input);
-    if (result.success) {
-      toast.success(result.message);
-      router.refresh();
-      return result.data;
-    } else {
+    if (!result.success) {
       toast.error(result.message);
       return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const updateLabel = async (id: string, input: UpdateLabelInput) => {
     const result = await updateLabelAction(id, input);
-    if (result.success) {
-      toast.success(result.message);
-      router.refresh();
-    } else {
+    if (!result.success) {
       toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
+    return result.data;
   };
 
   const deleteLabel = async (input: DeleteLabelInput) => {
     const result = await deleteLabelAction(input);
-    if (result.success) {
-      toast.success(result.message);
-      router.refresh();
-    } else {
+    if (!result.success) {
       toast.error(result.message);
+      return null;
     }
+    toast.success(result.message);
+    router.refresh();
   };
 
   return {

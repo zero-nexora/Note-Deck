@@ -44,6 +44,7 @@ import {
 } from "../ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useUserGroupMember } from "@/hooks/use-user-group-member";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface UserGroupDetailsProps {
   userGroup: UserGroupWithMembers;
@@ -57,6 +58,7 @@ export const UserGroupDetails = ({
   const { close } = useModal();
   const { updateUserGroup, deleteUserGroup } = useUserGroup();
   const { addUserGroupMember, removeUserGroupMember } = useUserGroupMember();
+  const { open } = useConfirm();
 
   const [userGroup, setUserGroup] = useState(initialUserGroup);
   const [isEditing, setIsEditing] = useState(false);
@@ -104,8 +106,15 @@ export const UserGroupDetails = ({
   };
 
   const handleDelete = async () => {
-    await deleteUserGroup({ id: userGroup.id });
-    close();
+    open({
+      title: "Delete User Group",
+      description:
+        "Are you sure you want to delete this user group? This action cannot be undone.",
+      onConfirm: async () => {
+        await deleteUserGroup({ id: userGroup.id });
+        close();
+      },
+    });
   };
 
   const handleAddMember = async () => {

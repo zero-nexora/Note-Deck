@@ -24,7 +24,7 @@ export function useBoard() {
     const result = await createBoardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -35,7 +35,7 @@ export function useBoard() {
     const result = await updateBoardAction(boardId, input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -45,7 +45,7 @@ export function useBoard() {
     const result = await archiveBoardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -55,7 +55,7 @@ export function useBoard() {
     const result = await restoreBoardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.refresh();
@@ -65,7 +65,7 @@ export function useBoard() {
     const result = await deleteBoardAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return;
+      return null;
     }
     toast.success(result.message);
     router.push("/boards");

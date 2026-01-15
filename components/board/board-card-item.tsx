@@ -11,6 +11,10 @@ import { BoardCardItemDetail } from "./board-card-item-detail";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { CardDraggingIndicator } from "./card-dragging-indicator";
 import { useEffect } from "react";
+import { useCard } from "@/hooks/use-card";
+import { useConfirm } from "@/stores/confirm-store";
+import { Copy, Trash2 } from "lucide-react";
+import { ActionsMenu } from "../common/actions-menu";
 
 interface BoardCardItemProps {
   card: BoardWithListLabelsAndMembers["lists"][number]["cards"][number];
@@ -26,6 +30,8 @@ export const BoardCardItem = ({
   realtimeUtils,
 }: BoardCardItemProps) => {
   const { open, isOpen } = useSheet();
+  const { deleteCard, duplicateCard } = useCard();
+  const { open: openConfirm } = useConfirm();
 
   const isDraggingByOthers = realtimeUtils?.isDraggingCardByOthers(card.id);
   const canDrag = realtimeUtils?.canDragCard(card.id) ?? true;
@@ -76,6 +82,43 @@ export const BoardCardItem = ({
     });
   };
 
+  const handleDuplicate = async () => {
+    await duplicateCard({ id: card.id });
+    realtimeUtils?.broadcastCardDuplicate({
+      sourceCardId: card.id,
+      listId: card.listId,
+    });
+  };
+
+  const handleDelete = () => {
+    openConfirm({
+      title: "Delete card",
+      description: "Are you sure you want to delete this card?",
+      variant: "destructive",
+      onConfirm: async () => {
+        await deleteCard({ id: card.id });
+        realtimeUtils?.broadcastCardDeleted({
+          cardId: card.id,
+          listId: card.listId,
+        });
+      },
+    });
+  };
+
+  const actions = [
+    {
+      label: "Duplicate",
+      icon: Copy,
+      onClick: handleDuplicate,
+    },
+    {
+      label: "Delete",
+      icon: Trash2,
+      variant: "destructive" as const,
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <div
       ref={setNodeRef}
@@ -91,6 +134,16 @@ export const BoardCardItem = ({
       )}
       onClick={handleViewDetailCard}
     >
+      <div
+        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ActionsMenu
+          actions={actions}
+          triggerClassName="h-7 w-7 bg-background/80 backdrop-blur hover:bg-accent"
+        />
+      </div>
+
       {hasCover && (
         <BoardCardCover coverImage={card.coverImage} title={card.title} />
       )}

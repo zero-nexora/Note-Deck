@@ -1,12 +1,21 @@
 import { db } from "@/db";
 import { NewBoard, UpdateBoard } from "../types/board.type";
-import { boards, cards, comments, lists } from "@/db/schema";
-import { and, count, eq, isNull, sql } from "drizzle-orm";
+import { boards, cards, lists } from "@/db/schema";
+import { and, count, eq, sql } from "drizzle-orm";
 
 export const boardRepository = {
   create: async (data: NewBoard) => {
     const [board] = await db.insert(boards).values(data).returning();
     return board;
+  },
+
+  findByIdWithWorkspace: async (boardId: string) => {
+    return db.query.boards.findFirst({
+      where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
+      with: {
+        workspace: true,
+      },
+    });
   },
 
   findById: async (boardId: string) => {
@@ -94,70 +103,14 @@ export const boardRepository = {
     });
   },
 
-  // findByIdWithWorkspaceMembersListsAndLabels: async (boardId: string) => {
-  //   return db.query.boards.findFirst({
-  //     where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
-  //     with: {
-  //       workspace: true,
-  //       members: {
-  //         with: {
-  //           user: true,
-  //         },
-  //       },
-  //       lists: {
-  //         where: eq(lists.isArchived, false),
-  //         orderBy: (lists, { asc }) => [asc(lists.position)],
-  //         with: {
-  //           cards: {
-  //             where: eq(cards.isArchived, false),
-  //             orderBy: (cards, { asc }) => [asc(cards.position)],
-  //             with: {
-  //               members: {
-  //                 with: {
-  //                   user: true,
-  //                 },
-  //               },
-  //               attachments: true,
-  //               comments: {
-  //                 where: isNull(comments.parentId),
-  //                 with: {
-  //                   replies: {
-  //                     with: {
-  //                       user: true,
-  //                       reactions: {
-  //                         with: {
-  //                           user: true,
-  //                         },
-  //                       },
-  //                     },
-  //                     orderBy: (comments, { asc }) => [asc(comments.createdAt)],
-  //                   },
-  //                   user: true,
-  //                   reactions: {
-  //                     with: {
-  //                       user: true,
-  //                     },
-  //                   },
-  //                 },
-  //               },
-  //               checklists: {
-  //                 with: {
-  //                   items: true,
-  //                 },
-  //               },
-  //               cardLabels: {
-  //                 with: {
-  //                   label: true,
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //       labels: true,
-  //     },
-  //   });
-  // },
+  countByWorkspaceId: async (workspaceId: string): Promise<number> => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(boards)
+      .where(eq(boards.workspaceId, workspaceId));
+
+    return Number(result[0].count);
+  },
 
   findByWorkspaceIdWithMembers: async (
     workspaceId: string,

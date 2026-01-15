@@ -22,7 +22,10 @@ export function useAutomation() {
 
   const createAutomation = async (input: CreateAutomationInput) => {
     const result = await createAutomationAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
     return result.data;
@@ -30,7 +33,10 @@ export function useAutomation() {
 
   const updateAutomation = async (id: string, input: UpdateAutomationInput) => {
     const result = await updateAutomationAction(id, input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
     return result.data;
@@ -38,7 +44,10 @@ export function useAutomation() {
 
   const enableAutomation = async (input: EnableAutomationInput) => {
     const result = await enableAutomationAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
     return result.data;
@@ -46,7 +55,10 @@ export function useAutomation() {
 
   const disableAutomation = async (input: DisableAutomationInput) => {
     const result = await disableAutomationAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
     return result.data;
@@ -54,7 +66,10 @@ export function useAutomation() {
 
   const deleteAutomation = async (input: DeleteAutomationInput) => {
     const result = await deleteAutomationAction(input);
-    if (!result.success) return toast.error(result.message);
+    if (!result.success) {
+      toast.error(result.message);
+      return null;
+    }
     toast.success(result.message);
     router.refresh();
   };

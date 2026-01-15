@@ -1,4 +1,7 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import {
+  checkBoardPermission,
+  // checkUserGroupPermission,
+} from "@/lib/check-permissions";
 import { cardRepository } from "../repositories/card.repository";
 import { labelRepository } from "../repositories/label.repository";
 import {
@@ -7,7 +10,12 @@ import {
 } from "../schemas/card-label.schema";
 import { cardLabelRepository } from "../repositories/card-label.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  PERMISSIONS,
+  ROLE,
+} from "@/lib/constants";
 
 export const cardLabelService = {
   add: async (userId: string, data: AddCardLabelInput) => {
@@ -25,12 +33,23 @@ export const cardLabelService = {
       throw new Error("Label does not belong to this board");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardLabelAddPermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.boardId,
+    //   PERMISSIONS.CARD_LABEL
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardLabelAddPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -73,12 +92,23 @@ export const cardLabelService = {
       throw new Error("Label not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       card.boardId,
       ROLE.NORMAL
     );
-    if (!hasPermission) {
+
+    // const hasCardLabelRemovePermission = await checkUserGroupPermission(
+    //   userId,
+    //   card.boardId,
+    //   PERMISSIONS.CARD_LABEL
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasCardLabelRemovePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 

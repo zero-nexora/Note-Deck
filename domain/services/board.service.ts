@@ -2,6 +2,7 @@ import {
   ACTIVITY_ACTION,
   AUDIT_ACTION,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 import { activityRepository } from "../repositories/activity.repository";
@@ -18,8 +19,10 @@ import {
 } from "../schemas/board.schema";
 import {
   checkBoardPermission,
+  // checkUserGroupPermission,
   checkWorkspacePermission,
 } from "@/lib/check-permissions";
+import { STRIPE_PLANS } from "@/lib/stripe";
 
 export const boardService = {
   create: async (userId: string, data: CreateBoardInput) => {
@@ -28,12 +31,44 @@ export const boardService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const planKey = workspace.plan as keyof typeof STRIPE_PLANS;
+    const plan = STRIPE_PLANS[planKey];
+
+    if (!plan) {
+      throw new Error("Invalid workspace plan");
+    }
+
+    const boardLimit = plan.limits.boards;
+
+    if (boardLimit !== -1) {
+      const currentBoardCount = await boardRepository.countByWorkspaceId(
+        data.workspaceId
+      );
+
+      if (currentBoardCount >= boardLimit) {
+        throw new Error(
+          `Board limit reached for ${plan.name} plan (${boardLimit} boards)`
+        );
+      }
+    }
+
+    const hasWorkspaceRoleAccess = await checkWorkspacePermission(
       userId,
       data.workspaceId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasBoardCreatePermission = await checkUserGroupPermission(
+    //   userId,
+    //   data.workspaceId,
+    //   PERMISSIONS.BOARD_CREATE
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasBoardCreatePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -83,12 +118,23 @@ export const boardService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       board.id,
       ROLE.OBSERVER
     );
-    if (!hasPermission) {
+
+    // const hasBoardViewPermission = await checkUserGroupPermission(
+    //   userId,
+    //   board.workspaceId,
+    //   PERMISSIONS.BOARD_VIEW
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasBoardViewPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -101,25 +147,38 @@ export const boardService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
+    const hasWorkspaceRoleAccess = await checkWorkspacePermission(
       userId,
       workspaceId,
       ROLE.OBSERVER
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
-    const boards = await boardRepository.findByWorkspaceIdWithMembers(workspaceId);
+    const boards = await boardRepository.findByWorkspaceIdWithMembers(
+      workspaceId
+    );
 
     const result = [];
     for (const board of boards) {
-      const hasBoardPermission = await checkBoardPermission(
+      const hasBoardPermissionAccess = await checkBoardPermission(
         userId,
         board.id,
         ROLE.OBSERVER
       );
-      if (hasBoardPermission) {
+
+      // const hasBoardViewPermission = await checkUserGroupPermission(
+      //   userId,
+      //   workspaceId,
+      //   PERMISSIONS.BOARD_VIEW
+      // );
+
+      // if (hasBoardPermissionAccess && hasBoardViewPermission) {
+      //   result.push(board);
+      // }
+
+      if (hasBoardPermissionAccess) {
         result.push(board);
       }
     }
@@ -133,12 +192,23 @@ export const boardService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       boardId,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasBoardEditPermission = await checkUserGroupPermission(
+    //   userId,
+    //   board.workspaceId,
+    //   PERMISSIONS.BOARD_EDIT
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasBoardEditPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -198,12 +268,23 @@ export const boardService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       data.id,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasBoardDeletePermission = await checkUserGroupPermission(
+    //   userId,
+    //   board.workspaceId,
+    //   PERMISSIONS.BOARD_DELETE
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasBoardDeletePermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -229,12 +310,23 @@ export const boardService = {
       return board;
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       data.id,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+
+    // const hasBoardEditPermission = await checkUserGroupPermission(
+    //   userId,
+    //   board.workspaceId,
+    //   PERMISSIONS.BOARD_EDIT
+    // );
+
+    // if (!hasWorkspaceRoleAccess || !hasBoardEditPermission) {
+    //   throw new Error("Permission denied");
+    // }
+
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
@@ -273,12 +365,12 @@ export const boardService = {
       return board;
     }
 
-    const hasPermission = await checkBoardPermission(
+    const hasWorkspaceRoleAccess = await checkBoardPermission(
       userId,
       data.id,
       ROLE.ADMIN
     );
-    if (!hasPermission) {
+    if (!hasWorkspaceRoleAccess) {
       throw new Error("Permission denied");
     }
 
