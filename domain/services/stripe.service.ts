@@ -80,13 +80,15 @@ export const stripeService = {
     });
   },
 
-  handleInvoicePaid: async (invoice: Stripe.Invoice) => {
-    const line = invoice.lines.data.find((l) => l.subscription);
+  handleInvoicePaymentSucceeded: async (invoice: Stripe.Invoice) => {
+    const line = invoice.lines.data.find((l) => l.subscription !== null);
+
+    if (!line || !line.subscription) return;
 
     const subscriptionId =
-      typeof line?.subscription === "string"
+      typeof line.subscription === "string"
         ? line.subscription
-        : line?.subscription?.id;
+        : line.subscription.id;
 
     if (!subscriptionId) return;
 
@@ -95,7 +97,9 @@ export const stripeService = {
     const workspaceId = subscription.metadata.workspaceId;
     const plan = subscription.metadata.plan as Plan;
 
-    if (!workspaceId || !plan) throw new Error("Missing metadata");
+    if (!workspaceId || !plan) {
+      throw new Error("Missing subscription metadata");
+    }
 
     await workspaceRepository.update(workspaceId, {
       plan,

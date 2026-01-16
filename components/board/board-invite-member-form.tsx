@@ -91,7 +91,7 @@ export const BoardInviteMemberForm = ({
         </div>
       )}
 
-      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+      <div className="space-y-2">
         {availableMembers.map((member) => {
           const isSelected = selectedUserIds.includes(member.userId);
 

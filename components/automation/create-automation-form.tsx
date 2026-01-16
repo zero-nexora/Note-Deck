@@ -179,7 +179,7 @@ export const CreateAutomationForm = ({
                       <SelectValue placeholder="Choose a trigger event" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-popover border-border max-h-[300px]">
+                  <SelectContent className="bg-popover border-border">
                     {TRIGGER_CATEGORIES.map((category) => {
                       const categoryTriggers = AUTOMATION_TRIGGERS.filter(
                         (t) => t.category === category.id
@@ -391,7 +391,7 @@ export const CreateAutomationForm = ({
                               <SelectValue placeholder="Choose an action" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-popover border-border max-h-[300px]">
+                          <SelectContent className="bg-popover border-border">
                             {ACTION_CATEGORIES.map((category) => {
                               const categoryActions = AUTOMATION_ACTIONS.filter(
                                 (a) => a.category === category.id
@@ -539,7 +539,7 @@ export const CreateAutomationForm = ({
 
         <Separator className="bg-border" />
 
-        <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background">
+        <div className="flex items-center justify-end gap-3">
           <Button
             type="button"
             variant="outline"

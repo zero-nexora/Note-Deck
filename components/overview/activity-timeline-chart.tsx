@@ -34,7 +34,7 @@ interface ActivityTimelineChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-background border border-border p-4 rounded-lg shadow-xl">
+      <div className="bg-card border border-border p-4 rounded-lg shadow-xl">
         <p className="font-semibold text-foreground mb-2">{label}</p>
         <div className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-primary" />
@@ -66,9 +66,9 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
 
   const getBarColor = (value: number) => {
     const intensity = value / maxActivity;
-    if (intensity > 0.7) return "rgb(139 92 246)"; // violet-500
-    if (intensity > 0.4) return "rgb(59 130 246)"; // blue-500
-    return "rgb(148 163 184)"; // slate-400
+    if (intensity > 0.7) return "hsl(262 83% 58%)"; // primary
+    if (intensity > 0.4) return "hsl(262 75% 55%)"; // primary lighter
+    return "hsl(270 8% 46%)"; // muted-foreground
   };
 
   return (
@@ -98,36 +98,34 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
 
         {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-4 pt-4">
-          <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Activity className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+              <Activity className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Activities
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {totalActivities}
-            </p>
+            <p className="text-2xl font-bold text-primary">{totalActivities}</p>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-950/50 p-3 rounded-lg border border-purple-200 dark:border-purple-900">
+          <div className="bg-muted p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="w-3 h-3 text-accent-foreground" />
               <span className="text-xs font-medium text-muted-foreground">
                 Average/Hour
               </span>
             </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-2xl font-bold text-accent-foreground">
               {avgActivities}
             </p>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded-lg border border-green-200 dark:border-green-900">
+          <div className="bg-secondary p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-3 h-3 text-green-600 dark:text-green-400" />
+              <Clock className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Peak Hour
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl font-bold text-primary">
               {peakHour.hour.toString().padStart(2, "0")}:00
             </p>
           </div>
@@ -143,43 +141,7 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
             >
               <CartesianGrid
                 strokeDasharray="3 3"
-                className="stroke-muted"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="hourLabel"
-                tick={{ fontSize: 11 }}
-                className="text-muted-foreground"
-              />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                className="text-muted-foreground"
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "hsl(var(--muted))" }}
-              />
-              <Bar dataKey="count" fill="rgb(59 130 246)" radius={[8, 8, 0, 0]}>
-                {formattedData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.count)} />
-                ))}
-              </Bar>
-              <Line
-                type="monotone"
-                dataKey="count"
-                stroke="rgb(139 92 246)"
-                strokeWidth={3}
-                dot={false}
-              />
-            </ComposedChart>
-          ) : (
-            <BarChart
-              data={formattedData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="stroke-muted"
+                className="stroke-border"
                 vertical={false}
               />
               <XAxis
@@ -197,7 +159,47 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
               />
               <Bar
                 dataKey="count"
-                fill="rgb(59 130 246)"
+                fill="hsl(262 83% 58%)"
+                radius={[8, 8, 0, 0]}
+              >
+                {formattedData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.count)} />
+                ))}
+              </Bar>
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(262 80% 50%)"
+                strokeWidth={3}
+                dot={false}
+              />
+            </ComposedChart>
+          ) : (
+            <BarChart
+              data={formattedData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-border"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="hourLabel"
+                tick={{ fontSize: 11 }}
+                className="text-muted-foreground"
+              />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                className="text-muted-foreground"
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "hsl(var(--muted))" }}
+              />
+              <Bar
+                dataKey="count"
+                fill="hsl(262 83% 58%)"
                 radius={[8, 8, 0, 0]}
                 name="Activities"
               >
@@ -219,8 +221,8 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
             <h4 className="text-sm font-semibold text-foreground">
               Morning (6-12)
             </h4>
-            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900">
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="p-3 rounded-lg bg-accent border border-border">
+              <p className="text-2xl font-bold text-primary">
                 {data
                   .filter((d) => d.hour >= 6 && d.hour < 12)
                   .reduce((sum, d) => sum + d.count, 0)}
@@ -232,8 +234,8 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
             <h4 className="text-sm font-semibold text-foreground">
               Afternoon (12-18)
             </h4>
-            <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-900">
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="p-3 rounded-lg bg-muted border border-border">
+              <p className="text-2xl font-bold text-accent-foreground">
                 {data
                   .filter((d) => d.hour >= 12 && d.hour < 18)
                   .reduce((sum, d) => sum + d.count, 0)}
@@ -245,8 +247,8 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
             <h4 className="text-sm font-semibold text-foreground">
               Evening (18-24)
             </h4>
-            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-900">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="p-3 rounded-lg bg-secondary border border-border">
+              <p className="text-2xl font-bold text-primary">
                 {data
                   .filter((d) => d.hour >= 18 || d.hour < 6)
                   .reduce((sum, d) => sum + d.count, 0)}
@@ -258,8 +260,8 @@ export const ActivityTimelineChart = ({ data }: ActivityTimelineChartProps) => {
             <h4 className="text-sm font-semibold text-foreground">
               Night (0-6)
             </h4>
-            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-900">
-              <p className="text-2xl font-bold text-slate-600 dark:text-slate-400">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-2xl font-bold text-muted-foreground">
                 {data
                   .filter((d) => d.hour >= 0 && d.hour < 6)
                   .reduce((sum, d) => sum + d.count, 0)}

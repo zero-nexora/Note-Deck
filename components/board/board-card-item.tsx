@@ -9,11 +9,10 @@ import { BoardCardContent } from "./board-card-content";
 import { useSheet } from "@/stores/sheet-store";
 import { BoardCardItemDetail } from "./board-card-item-detail";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
-import { CardDraggingIndicator } from "./card-dragging-indicator";
 import { useEffect } from "react";
 import { useCard } from "@/hooks/use-card";
 import { useConfirm } from "@/stores/confirm-store";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, User } from "lucide-react";
 import { ActionsMenu } from "../common/actions-menu";
 
 interface BoardCardItemProps {
@@ -34,6 +33,7 @@ export const BoardCardItem = ({
   const { open: openConfirm } = useConfirm();
 
   const isDraggingByOthers = realtimeUtils?.isDraggingCardByOthers(card.id);
+  const draggingUser = realtimeUtils?.getUserDraggingCard(card.id);
   const canDrag = realtimeUtils?.canDragCard(card.id) ?? true;
 
   const {
@@ -66,6 +66,8 @@ export const BoardCardItem = ({
   const hasCover = !!card.coverImage;
 
   const handleViewDetailCard = () => {
+    if (isDraggingByOthers) return;
+
     realtimeUtils?.setEditingCard(card.id);
 
     open({
@@ -126,31 +128,42 @@ export const BoardCardItem = ({
       {...attributes}
       {...(canDrag ? listeners : {})}
       className={cn(
-        "group relative rounded-lg bg-card border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all cursor-pointer",
-        canDrag && "cursor-grab active:cursor-grabbing",
-        !canDrag && "cursor-not-allowed opacity-60",
-        isDragging && "opacity-50 rotate-3",
-        isDraggingByOthers && "opacity-50 pointer-events-none"
+        "group relative rounded-lg bg-card border shadow-sm transition-all",
+        canDrag &&
+          !isDraggingByOthers &&
+          "cursor-grab hover:border-primary/50 hover:shadow-md active:cursor-grabbing",
+        isDragging && "opacity-50",
+        isDraggingByOthers && "cursor-not-allowed opacity-60"
       )}
       onClick={handleViewDetailCard}
     >
-      <div
-        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ActionsMenu
-          actions={actions}
-          triggerClassName="h-7 w-7 bg-background/80 backdrop-blur hover:bg-accent"
-        />
-      </div>
+      {isDraggingByOthers && draggingUser && (
+        <div
+          className="absolute -top-2 left-2 z-20 px-2.5 py-1 rounded-md text-xs font-medium text-white shadow-md flex items-center gap-1.5"
+          style={{ backgroundColor: draggingUser.user.color }}
+        >
+          <User className="h-3 w-3" />
+          <span>{draggingUser.user.name}</span>
+        </div>
+      )}
+
+      {!isDraggingByOthers && (
+        <div
+          className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ActionsMenu
+            actions={actions}
+            triggerClassName="h-7 w-7 bg-background/95 backdrop-blur hover:bg-accent shadow-sm"
+          />
+        </div>
+      )}
 
       {hasCover && (
         <BoardCardCover coverImage={card.coverImage} title={card.title} />
       )}
 
       <BoardCardContent card={card} hasCover={hasCover} />
-
-      <CardDraggingIndicator cardId={card.id} realtimeUtils={realtimeUtils} />
     </div>
   );
 };

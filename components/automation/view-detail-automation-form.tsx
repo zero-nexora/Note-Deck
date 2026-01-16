@@ -70,7 +70,7 @@ export const ViewDetailAutomationForm = ({
   };
 
   return (
-    <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Zap className="h-5 w-5 text-primary" />
@@ -223,7 +223,7 @@ export const ViewDetailAutomationForm = ({
 
       <Separator className="bg-border" />
 
-      <div className="flex justify-end sticky bottom-0 bg-background pt-4">
+      <div className="flex justify-end bg-background">
         <Button
           variant="outline"
           onClick={close}

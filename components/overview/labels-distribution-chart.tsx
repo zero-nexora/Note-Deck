@@ -33,7 +33,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-background border border-border p-4 rounded-lg shadow-xl">
+      <div className="bg-card border border-border p-4 rounded-lg shadow-xl">
         <div className="flex items-center gap-2 mb-2">
           <div
             className="w-4 h-4 rounded"
@@ -130,36 +130,32 @@ export const LabelsDistributionChart = ({
 
         {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-4 pt-4">
-          <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Tag className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+              <Tag className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Labels
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {data.length}
-            </p>
+            <p className="text-2xl font-bold text-primary">{data.length}</p>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded-lg border border-green-200 dark:border-green-900">
+          <div className="bg-muted p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full bg-accent-foreground" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Cards
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {total}
-            </p>
+            <p className="text-2xl font-bold text-accent-foreground">{total}</p>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-950/50 p-3 rounded-lg border border-purple-200 dark:border-purple-900">
+          <div className="bg-secondary p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Most Used
               </span>
             </div>
-            <p className="text-lg font-bold text-purple-600 dark:text-purple-400 truncate">
+            <p className="text-lg font-bold text-primary truncate">
               {mostUsedLabel.labelName}
             </p>
           </div>
@@ -222,7 +218,7 @@ export const LabelsDistributionChart = ({
                     {label.cardsCount} cards
                   </span>
                   <span className="font-semibold text-primary min-w-[50px] text-right">
-                    {label.percent}%
+                    {isNaN(Number(label.percent)) ? 0 : label.percent}%
                   </span>
                 </div>
               </div>

@@ -1,16 +1,14 @@
-"use client";
-
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { useList } from "@/hooks/use-list";
+import { useConfirm } from "@/stores/confirm-store";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { cn } from "@/lib/utils";
-import { BoardListCards } from "./board-list-cards";
-import { BoardListHeader } from "./board-list-header";
-import { BoardListFooter } from "./board-list-footer";
-import { useConfirm } from "@/stores/confirm-store";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { User } from "lucide-react";
+import { BoardListHeader } from "./board-list-header";
+import { BoardListCards } from "./board-list-cards";
+import { BoardListFooter } from "./board-list-footer";
+import { cn } from "@/lib/utils";
 
 interface BoardListItemProps {
   list: BoardWithListLabelsAndMembers["lists"][number];
@@ -80,27 +78,19 @@ export const BoardListItem = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "w-[320px] shrink-0 flex flex-col rounded-lg bg-card border border-border shadow-sm",
+        "w-[320px] shrink-0 flex flex-col rounded-lg bg-card border shadow-sm relative",
         isDragging && "opacity-50 cursor-grabbing",
-        isDraggingByOthers && "opacity-50 pointer-events-none"
+        isDraggingByOthers && "opacity-60"
       )}
     >
+      {/* List Dragging Badge */}
       {isDraggingByOthers && draggingUser && (
         <div
-          className="absolute inset-0 rounded-lg border-2 z-10"
-          style={{
-            borderColor: draggingUser.user.color,
-          }}
+          className="absolute top-2 right-2 z-20 px-3 py-1.5 rounded-md text-sm font-medium text-white shadow-md flex items-center gap-2"
+          style={{ backgroundColor: draggingUser.user.color }}
         >
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-2 rounded-lg text-white font-medium shadow-lg flex items-center gap-2"
-            style={{
-              backgroundColor: draggingUser.user.color,
-            }}
-          >
-            <User className="h-4 w-4" />
-            <span>{draggingUser.user.name} is moving this list...</span>
-          </div>
+          <User className="h-4 w-4" />
+          <span>{draggingUser.user.name}</span>
         </div>
       )}
 
@@ -114,7 +104,7 @@ export const BoardListItem = ({
         onDuplicate={handleDuplicateList}
       />
 
-      <div className="flex-1 overflow-y-auto p-1 space-y-3">
+      <div className="flex-1 overflow-y-auto p-2 space-y-2">
         <BoardListCards
           boardMembers={boardMembers}
           boardLabels={boardLabels}

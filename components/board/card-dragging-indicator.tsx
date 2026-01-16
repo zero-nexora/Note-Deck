@@ -51,7 +51,6 @@ export const CardEditingIndicator = ({
 
   return (
     <div
-      
       style={{
         backgroundColor: editingUser.user.color,
       }}

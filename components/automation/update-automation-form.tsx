@@ -131,7 +131,7 @@ export const UpdateAutomationForm = ({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6 max-h-[70vh] overflow-y-auto px-1"
+        className="space-y-6"
       >
         <FormField
           control={form.control}
@@ -191,7 +191,7 @@ export const UpdateAutomationForm = ({
                       <SelectValue placeholder="Choose a trigger event" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-popover border-border max-h-[300px]">
+                  <SelectContent className="bg-popover border-border">
                     {TRIGGER_CATEGORIES.map((category) => {
                       const categoryTriggers = AUTOMATION_TRIGGERS.filter(
                         (t) => t.category === category.id
@@ -417,7 +417,7 @@ export const UpdateAutomationForm = ({
                               <SelectValue placeholder="Choose an action" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-popover border-border max-h-[300px]">
+                          <SelectContent className="bg-popover border-border">
                             {ACTION_CATEGORIES.map((category) => {
                               const categoryActions = AUTOMATION_ACTIONS.filter(
                                 (a) => a.category === category.id
@@ -573,7 +573,7 @@ export const UpdateAutomationForm = ({
 
         <Separator className="bg-border" />
 
-        <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background">
+        <div className="flex items-center justify-end gap-3 bg-background">
           <Button
             type="button"
             variant="outline"

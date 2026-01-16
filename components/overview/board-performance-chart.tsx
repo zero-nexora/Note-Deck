@@ -33,12 +33,12 @@ interface BoardPerformanceChartProps {
 }
 
 const COLORS = [
-  "rgb(59 130 246)", // blue-500
-  "rgb(139 92 246)", // violet-500
-  "rgb(236 72 153)", // pink-500
-  "rgb(245 158 11)", // amber-500
-  "rgb(16 185 129)", // emerald-500
-  "rgb(6 182 212)", // cyan-500
+  "hsl(262 83% 58%)",
+  "hsl(262 75% 55%)",
+  "hsl(262 70% 52%)",
+  "hsl(262 80% 50%)",
+  "hsl(262 85% 60%)",
+  "hsl(262 78% 56%)",
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -50,7 +50,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
 
     return (
-      <div className="bg-background border border-border p-4 rounded-lg shadow-xl min-w-[200px]">
+      <div className="bg-card border border-border p-4 rounded-lg shadow-xl min-w-[200px]">
         <p className="font-bold text-foreground mb-3 text-base">{label}</p>
         <div className="space-y-2">
           {payload.map((entry: any, index: number) => (
@@ -77,7 +77,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               <span className="text-sm text-muted-foreground">
                 Completion Rate
               </span>
-              <span className="font-bold text-green-600 dark:text-green-400">
+              <span className="font-bold text-accent-foreground">
                 {completionRate}%
               </span>
             </div>
@@ -154,49 +154,47 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
 
         {/* Stats Summary */}
         <div className="grid grid-cols-4 gap-3 pt-4">
-          <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <Target className="w-4 h-4 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Cards
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {totalCards}
-            </p>
+            <p className="text-2xl font-bold text-primary">{totalCards}</p>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded-lg border border-green-200 dark:border-green-900">
+          <div className="bg-muted p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="w-4 h-4 text-accent-foreground" />
               <span className="text-xs font-medium text-muted-foreground">
                 Completed
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl font-bold text-accent-foreground">
               {totalCompleted}
             </p>
           </div>
-          <div className="bg-red-50 dark:bg-red-950/50 p-3 rounded-lg border border-red-200 dark:border-red-900">
+          <div className="bg-secondary p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <AlertCircle className="w-4 h-4 text-destructive" />
               <span className="text-xs font-medium text-muted-foreground">
                 Overdue
               </span>
             </div>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+            <p className="text-2xl font-bold text-destructive">
               {totalOverdue}
             </p>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-950/50 p-3 rounded-lg border border-purple-200 dark:border-purple-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                 %
               </div>
               <span className="text-xs font-medium text-muted-foreground">
                 Avg Rate
               </span>
             </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+            <p className="text-2xl font-bold text-primary">
               {avgCompletionRate}%
             </p>
           </div>
@@ -212,7 +210,7 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              className="stroke-muted"
+              className="stroke-border"
               vertical={false}
             />
             <XAxis
@@ -233,7 +231,7 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
               <>
                 <Bar
                   dataKey="totalCards"
-                  fill="rgb(59 130 246)"
+                  fill="hsl(262 83% 58%)"
                   name="Total Cards"
                   radius={[8, 8, 0, 0]}
                 >
@@ -247,13 +245,13 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
                 </Bar>
                 <Bar
                   dataKey="completedCards"
-                  fill="rgb(34 197 94)"
+                  fill="hsl(262 80% 50%)"
                   name="Completed"
                   radius={[8, 8, 0, 0]}
                 />
                 <Bar
                   dataKey="overdueCards"
-                  fill="rgb(239 68 68)"
+                  fill="hsl(0 72% 51%)"
                   name="Overdue"
                   radius={[8, 8, 0, 0]}
                 />
@@ -261,12 +259,12 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
             ) : (
               <Bar
                 dataKey="completedCards"
-                fill="rgb(34 197 94)"
+                fill="hsl(262 80% 50%)"
                 name="Completed Cards"
                 radius={[8, 8, 0, 0]}
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill="rgb(34 197 94)" />
+                  <Cell key={`cell-${index}`} fill="hsl(262 80% 50%)" />
                 ))}
               </Bar>
             )}
@@ -305,16 +303,16 @@ export const BoardPerformanceChart = ({ data }: BoardPerformanceChartProps) => {
                     {board.totalCards}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-400">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground">
                       {board.completedCards}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-400">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive">
                       {board.overdueCards}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center font-semibold text-purple-600 dark:text-purple-400">
+                  <td className="px-4 py-3 text-center font-semibold text-primary">
                     {board.completionRate}%
                   </td>
                 </tr>

@@ -39,50 +39,50 @@ export const DueDateAnalyticsCard = ({
       label: "Overdue",
       value: analytics.overdue,
       percentage: total > 0 ? (analytics.overdue / total) * 100 : 0,
-      color: "bg-red-500",
-      bgColor: "bg-red-50 dark:bg-red-950/50",
-      borderColor: "border-red-200 dark:border-red-900",
-      textColor: "text-red-600 dark:text-red-400",
+      color: "bg-destructive",
+      bgColor: "bg-destructive/10",
+      borderColor: "border-destructive/20",
+      textColor: "text-destructive",
       icon: AlertCircle,
     },
     {
       label: "Due Today",
       value: analytics.dueToday,
       percentage: total > 0 ? (analytics.dueToday / total) * 100 : 0,
-      color: "bg-orange-500",
-      bgColor: "bg-orange-50 dark:bg-orange-950/50",
-      borderColor: "border-orange-200 dark:border-orange-900",
-      textColor: "text-orange-600 dark:text-orange-400",
+      color: "bg-primary",
+      bgColor: "bg-accent",
+      borderColor: "border-border",
+      textColor: "text-primary",
       icon: AlertTriangle,
     },
     {
       label: "Due This Week",
       value: analytics.dueThisWeek,
       percentage: total > 0 ? (analytics.dueThisWeek / total) * 100 : 0,
-      color: "bg-yellow-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-950/50",
-      borderColor: "border-yellow-200 dark:border-yellow-900",
-      textColor: "text-yellow-600 dark:text-yellow-400",
+      color: "bg-accent-foreground",
+      bgColor: "bg-muted",
+      borderColor: "border-border",
+      textColor: "text-accent-foreground",
       icon: Clock,
     },
     {
       label: "Due This Month",
       value: analytics.dueThisMonth,
       percentage: total > 0 ? (analytics.dueThisMonth / total) * 100 : 0,
-      color: "bg-blue-500",
-      bgColor: "bg-blue-50 dark:bg-blue-950/50",
-      borderColor: "border-blue-200 dark:border-blue-900",
-      textColor: "text-blue-600 dark:text-blue-400",
+      color: "bg-primary",
+      bgColor: "bg-secondary",
+      borderColor: "border-border",
+      textColor: "text-primary",
       icon: Calendar,
     },
     {
       label: "No Due Date",
       value: analytics.noDueDate,
       percentage: total > 0 ? (analytics.noDueDate / total) * 100 : 0,
-      color: "bg-slate-400",
-      bgColor: "bg-slate-50 dark:bg-slate-950/50",
-      borderColor: "border-slate-200 dark:border-slate-900",
-      textColor: "text-slate-600 dark:text-slate-400",
+      color: "bg-muted-foreground",
+      bgColor: "bg-muted/50",
+      borderColor: "border-border",
+      textColor: "text-muted-foreground",
       icon: Calendar,
     },
   ];
@@ -105,13 +105,13 @@ export const DueDateAnalyticsCard = ({
       <CardContent className="space-y-6">
         {/* Alert Banner */}
         {urgentCards > 0 && (
-          <div className="flex items-start gap-3 rounded-lg bg-linear-to-r from-red-50 to-orange-50 dark:from-red-950/50 dark:to-orange-950/50 p-4 border border-red-200 dark:border-red-900">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 rounded-lg bg-destructive/10 p-4 border border-destructive/20">
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-semibold text-red-700 dark:text-red-400">
+              <p className="font-semibold text-destructive">
                 Attention Required!
               </p>
-              <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+              <p className="text-sm text-destructive/80 mt-1">
                 {urgentCards} {urgentCards === 1 ? "card needs" : "cards need"}{" "}
                 immediate attention
                 {analytics.overdue > 0 && ` (${analytics.overdue} overdue)`}
@@ -122,36 +122,32 @@ export const DueDateAnalyticsCard = ({
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-linear-to-br from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/30 p-3 rounded-lg border border-red-200 dark:border-red-900">
+          <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20">
             <div className="flex items-center gap-2 mb-1">
-              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <AlertCircle className="w-4 h-4 text-destructive" />
               <span className="text-xs font-medium text-muted-foreground">
                 Urgent
               </span>
             </div>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {urgentCards}
-            </p>
+            <p className="text-2xl font-bold text-destructive">{urgentCards}</p>
           </div>
-          <div className="bg-linear-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <Clock className="w-4 h-4 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Upcoming
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {upcomingCards}
-            </p>
+            <p className="text-2xl font-bold text-primary">{upcomingCards}</p>
           </div>
-          <div className="bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950/50 dark:to-slate-900/30 p-3 rounded-lg border border-slate-200 dark:border-slate-900">
+          <div className="bg-muted p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <Calendar className="w-4 h-4 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground">
                 Unscheduled
               </span>
             </div>
-            <p className="text-2xl font-bold text-slate-600 dark:text-slate-400">
+            <p className="text-2xl font-bold text-muted-foreground">
               {analytics.noDueDate}
             </p>
           </div>
@@ -212,12 +208,7 @@ export const DueDateAnalyticsCard = ({
                     className={`flex items-center justify-between p-3 rounded-lg border ${item.bgColor} ${item.borderColor} transition-all hover:scale-[1.02]`}
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`p-2 rounded-lg ${item.color.replace(
-                          "bg-",
-                          "bg-opacity-20 bg-"
-                        )}`}
-                      >
+                      <div className={`p-2 rounded-lg ${item.bgColor}`}>
                         <Icon className={`w-5 h-5 ${item.textColor}`} />
                       </div>
                       <div>

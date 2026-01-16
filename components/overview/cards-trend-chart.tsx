@@ -36,7 +36,7 @@ interface CardsTrendChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-background border border-border p-4 rounded-lg shadow-lg">
+      <div className="bg-card border border-border p-4 rounded-lg shadow-lg">
         <p className="font-semibold text-foreground mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
@@ -101,38 +101,34 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
 
         {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-4 pt-4">
-          <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-900">
+          <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Created
               </span>
             </div>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {totalCreated}
-            </p>
+            <p className="text-2xl font-bold text-primary">{totalCreated}</p>
           </div>
-          <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded-lg border border-green-200 dark:border-green-900">
+          <div className="bg-muted p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="w-2 h-2 rounded-full bg-accent-foreground" />
               <span className="text-xs font-medium text-muted-foreground">
                 Total Completed
               </span>
             </div>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-2xl font-bold text-accent-foreground">
               {totalCompleted}
             </p>
           </div>
-          <div className="bg-purple-50 dark:bg-purple-950/50 p-3 rounded-lg border border-purple-200 dark:border-purple-900">
+          <div className="bg-secondary p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+              <TrendingUp className="w-3 h-3 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
                 Completion Rate
               </span>
             </div>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {completionRate}%
-            </p>
+            <p className="text-2xl font-bold text-primary">{completionRate}%</p>
           </div>
         </div>
       </CardHeader>
@@ -148,24 +144,24 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
                 <linearGradient id="colorCreated" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="rgb(59 130 246)"
+                    stopColor="hsl(262 83% 58%)"
                     stopOpacity={0.3}
                   />
                   <stop
                     offset="95%"
-                    stopColor="rgb(59 130 246)"
+                    stopColor="hsl(262 83% 58%)"
                     stopOpacity={0}
                   />
                 </linearGradient>
                 <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="rgb(34 197 94)"
+                    stopColor="hsl(262 80% 50%)"
                     stopOpacity={0.3}
                   />
                   <stop
                     offset="95%"
-                    stopColor="rgb(34 197 94)"
+                    stopColor="hsl(262 80% 50%)"
                     stopOpacity={0}
                   />
                 </linearGradient>
@@ -178,17 +174,17 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
                 >
                   <stop
                     offset="5%"
-                    stopColor="rgb(245 158 11)"
+                    stopColor="hsl(270 8% 46%)"
                     stopOpacity={0.3}
                   />
                   <stop
                     offset="95%"
-                    stopColor="rgb(245 158 11)"
+                    stopColor="hsl(270 8% 46%)"
                     stopOpacity={0}
                   />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 12 }}
@@ -203,7 +199,7 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
               <Area
                 type="monotone"
                 dataKey="created"
-                stroke="rgb(59 130 246)"
+                stroke="hsl(262 83% 58%)"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorCreated)"
@@ -212,7 +208,7 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
               <Area
                 type="monotone"
                 dataKey="completed"
-                stroke="rgb(34 197 94)"
+                stroke="hsl(262 80% 50%)"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorCompleted)"
@@ -221,7 +217,7 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
               <Area
                 type="monotone"
                 dataKey="inProgress"
-                stroke="rgb(245 158 11)"
+                stroke="hsl(270 8% 46%)"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorInProgress)"
@@ -233,7 +229,7 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
               data={data}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 12 }}
@@ -248,27 +244,27 @@ export const CardsTrendChart = ({ data }: CardsTrendChartProps) => {
               <Line
                 type="monotone"
                 dataKey="created"
-                stroke="rgb(59 130 246)"
+                stroke="hsl(262 83% 58%)"
                 strokeWidth={3}
-                dot={{ r: 4, fill: "rgb(59 130 246)" }}
+                dot={{ r: 4, fill: "hsl(262 83% 58%)" }}
                 activeDot={{ r: 6 }}
                 name="Created"
               />
               <Line
                 type="monotone"
                 dataKey="completed"
-                stroke="rgb(34 197 94)"
+                stroke="hsl(262 80% 50%)"
                 strokeWidth={3}
-                dot={{ r: 4, fill: "rgb(34 197 94)" }}
+                dot={{ r: 4, fill: "hsl(262 80% 50%)" }}
                 activeDot={{ r: 6 }}
                 name="Completed"
               />
               <Line
                 type="monotone"
                 dataKey="inProgress"
-                stroke="rgb(245 158 11)"
+                stroke="hsl(270 8% 46%)"
                 strokeWidth={3}
-                dot={{ r: 4, fill: "rgb(245 158 11)" }}
+                dot={{ r: 4, fill: "hsl(270 8% 46%)" }}
                 activeDot={{ r: 6 }}
                 name="In Progress"
               />
