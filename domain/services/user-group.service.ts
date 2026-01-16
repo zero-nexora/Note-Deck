@@ -5,12 +5,12 @@ import {
   FindUserGroupsByWorkspaceInput,
   UpdateUserGroupInput,
 } from "../schemas/user-group.schema";
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { userGroupRepository } from "../repositories/user-group.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { userGroupMemberRepository } from "../repositories/user-group-member.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
-import { AUDIT_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
+import { AUDIT_ACTION, ENTITY_TYPE, PERMISSIONS, ROLE } from "@/lib/constants";
 
 export const userGroupService = {
   create: async (userId: string, data: CreateUserGroupInput) => {
@@ -19,14 +19,12 @@ export const userGroupService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.GROUP_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedName = data.name.trim();
     if (!trimmedName) {
@@ -63,14 +61,11 @@ export const userGroupService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.OBSERVER
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     return group;
   },
@@ -84,14 +79,11 @@ export const userGroupService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      workspace.id,
-      ROLE.OBSERVER
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const userGroups = await userGroupRepository.findByWorkspaceIdWithMembers(
       data.workspaceId
@@ -109,14 +101,12 @@ export const userGroupService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.GROUP_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -170,14 +160,12 @@ export const userGroupService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.GROUP_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     await auditLogRepository.create({
       workspaceId: group.workspaceId,

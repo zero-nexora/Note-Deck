@@ -8,7 +8,6 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const STRIPE_PLANS = {
   free: {
     name: "Free",
-    price: 0,
     priceId: process.env.STRIPE_FREE_PRICE_ID!,
     limits: {
       boards: 10,
@@ -19,7 +18,6 @@ export const STRIPE_PLANS = {
 
   pro: {
     name: "Pro",
-    price: 12,
     priceId: process.env.STRIPE_PRO_PRICE_ID!,
     limits: {
       boards: 100,
@@ -30,7 +28,6 @@ export const STRIPE_PLANS = {
 
   enterprise: {
     name: "Enterprise",
-    price: 40,
     priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID!,
     limits: {
       boards: -1,

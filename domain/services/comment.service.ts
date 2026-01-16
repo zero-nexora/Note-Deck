@@ -7,10 +7,7 @@ import {
   DeleteCommentInput,
   UpdateCommentInput,
 } from "../schemas/comment.schema";
-import {
-  checkBoardPermission,
-  // checkUserGroupPermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   ACTIVITY_ACTION,
   ENTITY_TYPE,
@@ -21,30 +18,18 @@ import {
 
 export const commentService = {
   create: async (userId: string, data: CreateCommentInput) => {
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasBoardRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.ADMIN
-    );
-
-    // const hasCardCommentPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_COMMENT
-    // );
-
-    // if (!hasBoardRoleAccess || !hasCardCommentPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasBoardRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.COMMENT_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedContent = data.content.trim();
     if (!trimmedContent) {
@@ -119,30 +104,18 @@ export const commentService = {
       throw new Error("You can only edit your own comments");
     }
 
-    const card = await cardRepository.findById(comment.cardId);
+    const card = await cardRepository.findByIdWithBoard(comment.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasBoardRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardCommentPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_COMMENT
-    // );
-
-    // if (!hasBoardRoleAccess || !hasCardCommentPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasBoardRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.COMMENT_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -209,21 +182,19 @@ export const commentService = {
       throw new Error("Comment not found");
     }
 
-    const card = await cardRepository.findById(comment.cardId);
+    const card = await cardRepository.findByIdWithBoard(comment.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
     if (comment.userId !== userId) {
-      const hasAdminPermission = await checkBoardPermission(
-        userId,
-        card.boardId,
-        ROLE.ADMIN
-      );
-
-      if (!hasAdminPermission) {
-        throw new Error("You can only delete your own comments");
-      }
+      const allowed = await canUser(userId, {
+        workspaceId: card.board.workspaceId,
+        boardId: card.boardId,
+        boardRole: ROLE.ADMIN,
+        permission: PERMISSIONS.COMMENT_DELETE,
+      });
+      if (!allowed) throw new Error("Permission denied");
     }
 
     await activityRepository.create({

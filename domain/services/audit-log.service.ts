@@ -1,4 +1,4 @@
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   LogWorkspaceActionInput,
   ReadAuditLogsInput,
@@ -17,15 +17,6 @@ export const auditLogService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
-
     const auditLog = await auditLogRepository.create({
       ...data,
       userId,
@@ -40,14 +31,11 @@ export const auditLogService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: workspace.id,
+      workspaceRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const limit = data.limit || DEFAULT_AUDIT_LOG_LIMIT;
     const page = data.page || DEFAULT_PAGE;

@@ -1,7 +1,4 @@
-import {
-  checkBoardPermission,
-  // checkUserGroupPermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { cardRepository } from "../repositories/card.repository";
 import { labelRepository } from "../repositories/label.repository";
 import {
@@ -19,7 +16,7 @@ import {
 
 export const cardLabelService = {
   add: async (userId: string, data: AddCardLabelInput) => {
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -33,25 +30,13 @@ export const cardLabelService = {
       throw new Error("Label does not belong to this board");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardLabelAddPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.boardId,
-    //   PERMISSIONS.CARD_LABEL
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardLabelAddPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_LABEL_ADD,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const existingCardLabel = await cardLabelRepository.findByCardIdAndLabelId(
       data.cardId,
@@ -82,7 +67,7 @@ export const cardLabelService = {
   },
 
   remove: async (userId: string, data: RemoveCardLabelInput) => {
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -92,25 +77,13 @@ export const cardLabelService = {
       throw new Error("Label not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardLabelRemovePermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.boardId,
-    //   PERMISSIONS.CARD_LABEL
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardLabelRemovePermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_LABEL_REMOVE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const existingCardLabel = await cardLabelRepository.findByCardIdAndLabelId(
       data.cardId,

@@ -1,7 +1,4 @@
-import {
-  checkBoardPermission,
-  // checkUserGroupPermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
@@ -20,30 +17,18 @@ import {
 
 export const checklistService = {
   create: async (userId: string, data: CreateChecklistInput) => {
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRolePermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardChecklistPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_CHECKLIST
-    // );
-
-    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRolePermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedTitle = data.title.trim();
     if (!trimmedTitle) {
@@ -81,30 +66,18 @@ export const checklistService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRolePermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardChecklistPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_CHECKLIST
-    // );
-
-    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRolePermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -150,19 +123,18 @@ export const checklistService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRolePermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasWorkspaceRolePermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_REORDER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     if (checklist.position === data.position) {
       return checklist;
@@ -194,30 +166,18 @@ export const checklistService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRolePermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardChecklistPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_CHECKLIST
-    // );
-
-    // if (!hasWorkspaceRolePermission || !hasCardChecklistPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRolePermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     await activityRepository.create({
       boardId: card.boardId,

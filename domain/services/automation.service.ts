@@ -1,7 +1,7 @@
 import { automationRepository } from "../repositories/automation.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   CreateAutomationInput,
   DeleteAutomationInput,
@@ -21,6 +21,7 @@ import {
   lists,
   notifications,
 } from "@/db/schema";
+import { ROLE } from "@/lib/constants";
 
 export const automationService = {
   create: async (userId: string, data: CreateAutomationInput) => {
@@ -29,14 +30,12 @@ export const automationService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      "admin"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedName = data.name.trim();
     if (!trimmedName) {
@@ -77,33 +76,29 @@ export const automationService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      boardId,
-      "observer"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const automations = await automationRepository.findByBoardId(boardId);
     return automations;
   },
 
   update: async (userId: string, id: string, data: UpdateAutomationInput) => {
-    const automation = await automationRepository.findById(id);
+    const automation = await automationRepository.findByIdWithBoard(id);
     if (!automation) {
       throw new Error("Automation not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: automation.board.workspaceId,
+      boardId: automation.boardId,
+      boardRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -166,7 +161,7 @@ export const automationService = {
   },
 
   enable: async (userId: string, data: EnableAutomationInput) => {
-    const automation = await automationRepository.findById(data.id);
+    const automation = await automationRepository.findByIdWithBoard(data.id);
     if (!automation) {
       throw new Error("Automation not found");
     }
@@ -175,14 +170,12 @@ export const automationService = {
       return automation;
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: automation.board.workspaceId,
+      boardId: automation.boardId,
+      boardRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updated = await automationRepository.enable(data.id);
 
@@ -211,7 +204,7 @@ export const automationService = {
   },
 
   disable: async (userId: string, data: DisableAutomationInput) => {
-    const automation = await automationRepository.findById(data.id);
+    const automation = await automationRepository.findByIdWithBoard(data.id);
     if (!automation) {
       throw new Error("Automation not found");
     }
@@ -220,14 +213,12 @@ export const automationService = {
       return automation;
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: automation.board.workspaceId,
+      boardId: automation.boardId,
+      boardRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updated = await automationRepository.disable(data.id);
 
@@ -256,19 +247,17 @@ export const automationService = {
   },
 
   delete: async (userId: string, data: DeleteAutomationInput) => {
-    const automation = await automationRepository.findById(data.id);
+    const automation = await automationRepository.findByIdWithBoard(data.id);
     if (!automation) {
       throw new Error("Automation not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      automation.boardId,
-      "admin"
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: automation.board.workspaceId,
+      boardId: automation.boardId,
+      boardRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const board = await boardRepository.findById(automation.boardId);
 

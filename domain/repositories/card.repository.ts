@@ -9,7 +9,7 @@ export const cardRepository = {
     return card;
   },
 
-  findById: async (cardId: string) => {
+  findByIdWithBoard: async (cardId: string) => {
     return db.query.cards.findFirst({
       where: eq(cards.id, cardId),
       with: {
@@ -31,11 +31,12 @@ export const cardRepository = {
     return Number(result[0].count);
   },
 
-  findByIdWithMembers: async (cardId: string) => {
+  findByIdWithBoardMembers: async (cardId: string) => {
     return db.query.cards.findFirst({
       where: eq(cards.id, cardId),
       with: {
         members: true,
+        board: true,
       },
     });
   },
@@ -56,13 +57,13 @@ export const cardRepository = {
     });
   },
 
-  findByIdWithMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels:
+  findByIdWithBoardMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels:
     async (cardId: string) => {
       return db.query.cards.findFirst({
         where: eq(cards.id, cardId),
         with: {
           // list: true,
-          // board: true,
+          board: true,
           // labels: {
           //   with: {
           //     label: true,

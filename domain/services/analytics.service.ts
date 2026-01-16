@@ -16,7 +16,7 @@ import {
   WorkspaceAnalytics,
   WorkspaceStats,
 } from "../types/analytics.type";
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { boardRepository } from "../repositories/board.repository";
@@ -26,6 +26,7 @@ import { cardMemberRepository } from "../repositories/card-member.repository";
 import { commentRepository } from "../repositories/comment.repository";
 import { labelRepository } from "../repositories/label.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
+import { ROLE } from "@/lib/constants";
 
 export const analyticsService = {
   findBoardActivityHeatmap: async (
@@ -104,12 +105,11 @@ export const analyticsService = {
     userId: string,
     data: GetWorkspaceAnalyticsInput
   ): Promise<WorkspaceAnalytics> => {
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      "observer"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const [totalBoards, totalLists, totalCards, completionRate, activeMembers] =
       await Promise.all([
@@ -130,12 +130,11 @@ export const analyticsService = {
   },
 
   getActivityFeed: async (userId: string, data: GetActivityFeedInput) => {
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      "observer"
-    );
-    if (!hasPermission) throw new Error("Permission denied");
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const activities = await activityRepository.findByWorkspaceId(
       data.workspaceId,
@@ -146,6 +145,12 @@ export const analyticsService = {
   },
 
   getWorkspaceStats: async (workspaceId: string): Promise<WorkspaceStats> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -188,6 +193,12 @@ export const analyticsService = {
     workspaceId: string,
     days: number = 30
   ): Promise<CardsTrend[]> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -239,6 +250,12 @@ export const analyticsService = {
   getBoardsPerformance: async (
     workspaceId: string
   ): Promise<BoardPerformance[]> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const boardsList = await boardRepository.getBoardsByWorkspaceId(
       workspaceId
     );
@@ -291,6 +308,12 @@ export const analyticsService = {
   getMembersProductivity: async (
     workspaceId: string
   ): Promise<MemberProductivity[]> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const members = await workspaceMemberRepository.getMembersByWorkspaceId(
       workspaceId
     );
@@ -339,6 +362,12 @@ export const analyticsService = {
   getLabelsDistribution: async (
     workspaceId: string
   ): Promise<LabelDistribution[]> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const labelData = await labelRepository.getLabelDataByWorkspaceId(
       workspaceId
     );
@@ -364,6 +393,12 @@ export const analyticsService = {
     workspaceId: string,
     days: number = 7
   ): Promise<ActivityTimeline[]> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -388,6 +423,12 @@ export const analyticsService = {
   },
 
   getChecklistStats: async (workspaceId: string): Promise<ChecklistStats> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const checklistsData =
       await checklistRepository.getChecklistDataByWorkspaceId(workspaceId);
 
@@ -414,6 +455,12 @@ export const analyticsService = {
   getDueDateAnalytics: async (
     workspaceId: string
   ): Promise<DueDateAnalytics> => {
+    // const allowed = await canUser(userId, {
+    //   workspaceId: data.workspaceId,
+    //   workspaceRole: ROLE.ADMIN,
+    // });
+    // if (!allowed) throw new Error("Permission denied");
+
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);

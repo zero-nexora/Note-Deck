@@ -9,6 +9,19 @@ export const listRepository = {
     return list;
   },
 
+  findByIdWithBoard: async (listId: string) => {
+    return db.query.lists.findFirst({
+      where: eq(lists.id, listId),
+      with: {
+        board: {
+          columns: {
+            workspaceId: true,
+          },
+        },
+      },
+    });
+  },
+
   findById: async (listId: string) => {
     return db.query.lists.findFirst({
       where: eq(lists.id, listId),

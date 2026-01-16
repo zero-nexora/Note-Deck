@@ -1,4 +1,4 @@
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { userGroupMemberRepository } from "../repositories/user-group-member.repository";
 import { userGroupRepository } from "../repositories/user-group.repository";
 import { userRepository } from "../repositories/user.repository";
@@ -7,7 +7,7 @@ import {
   RemoveGroupMemberInput,
 } from "../schemas/user-group-member.schema";
 import { auditLogRepository } from "../repositories/audit-log.repository";
-import { AUDIT_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
+import { AUDIT_ACTION, ENTITY_TYPE, PERMISSIONS, ROLE } from "@/lib/constants";
 
 export const userGroupMemberService = {
   add: async (userId: string, data: AddGroupMemberInput) => {
@@ -16,14 +16,13 @@ export const userGroupMemberService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.GROUP_MEMBER_ADD,
+    });
+
+    if (!allowed) throw new Error("Permission denied");
 
     const user = await userRepository.findById(data.userId);
     if (!user) {
@@ -63,14 +62,13 @@ export const userGroupMemberService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.GROUP_MEMBER_REMOVE,
+    });
+
+    if (!allowed) throw new Error("Permission denied");
 
     const member = await userGroupMemberRepository.findByGroupIdAndUserId(
       data.groupId,
@@ -101,14 +99,11 @@ export const userGroupMemberService = {
       throw new Error("Group not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      group.workspaceId,
-      ROLE.OBSERVER
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: group.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const members = await userGroupMemberRepository.findByGroupId(groupId);
     return members;

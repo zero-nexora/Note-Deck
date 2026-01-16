@@ -44,17 +44,15 @@ export const stripeService = {
     return session;
   },
 
-  handleSubscriptionCreated: async (session: Stripe.Checkout.Session) => {
-    const workspaceId = session.metadata!.workspaceId;
-    const plan = session.metadata!.plan as Plan;
+  handleCheckoutCompleted: async (session: Stripe.Checkout.Session) => {
+    const workspaceId = session.metadata?.workspaceId;
+    const plan = session.metadata?.plan as Plan;
 
-    if (!workspaceId || !plan) throw new Error("Missing subscription metadata");
+    if (!workspaceId || !plan) throw new Error("Missing metadata");
 
     await workspaceRepository.update(workspaceId, {
-      plan,
       stripeSubscriptionId: session.subscription as string,
-      subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
-      limits: STRIPE_PLANS[plan].limits,
+      subscriptionStatus: SUBSCRIPTION_STATUS.INCOMPLETE,
     });
   },
 
@@ -79,6 +77,50 @@ export const stripeService = {
       stripeSubscriptionId: null,
       subscriptionStatus: SUBSCRIPTION_STATUS.CANCELED,
       limits: STRIPE_PLANS[plan].limits,
+    });
+  },
+
+  handleInvoicePaid: async (invoice: Stripe.Invoice) => {
+    const line = invoice.lines.data.find((l) => l.subscription);
+
+    const subscriptionId =
+      typeof line?.subscription === "string"
+        ? line.subscription
+        : line?.subscription?.id;
+
+    if (!subscriptionId) return;
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+    const workspaceId = subscription.metadata.workspaceId;
+    const plan = subscription.metadata.plan as Plan;
+
+    if (!workspaceId || !plan) throw new Error("Missing metadata");
+
+    await workspaceRepository.update(workspaceId, {
+      plan,
+      subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
+      limits: STRIPE_PLANS[plan].limits,
+    });
+  },
+
+  handleInvoicePaymentFailed: async (invoice: Stripe.Invoice) => {
+    const line = invoice.lines.data.find((l) => l.subscription);
+
+    const subscriptionId =
+      typeof line?.subscription === "string"
+        ? line.subscription
+        : line?.subscription?.id;
+
+    if (!subscriptionId) return;
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const workspaceId = subscription.metadata.workspaceId;
+
+    if (!workspaceId) throw new Error("Missing workspaceId");
+
+    await workspaceRepository.update(workspaceId, {
+      subscriptionStatus: SUBSCRIPTION_STATUS.PAST_DUE,
     });
   },
 

@@ -1,7 +1,7 @@
 import { workspaceMemberRepository } from "../repositories/workspace-member.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { userRepository } from "../repositories/user.repository";
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   AddMemberInput,
   ChangeMemberRoleInput,
@@ -15,6 +15,7 @@ import {
   AUDIT_ACTION,
   DEFAULT_WORKSPACE_MEMBER_ROLE,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 import { STRIPE_PLANS } from "@/lib/stripe";
@@ -46,14 +47,12 @@ export const workspaceMemberService = {
       }
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_MEMBER_ADD
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const user = await userRepository.findById(data.userId);
     if (!user) {
@@ -103,14 +102,12 @@ export const workspaceMemberService = {
       throw new Error("Cannot remove workspace owner");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_MEMBER_REMOVE
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const member = await workspaceMemberRepository.findByWorkspaceIdAndUserId(
       data.workspaceId,
@@ -145,14 +142,13 @@ export const workspaceMemberService = {
       throw new Error("Cannot change owner role");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_MEMBER_ROLE
+    });
+    
+    if (!allowed) throw new Error("Permission denied");
 
     const member = await workspaceMemberRepository.findByWorkspaceIdAndUserId(
       data.workspaceId,
@@ -194,14 +190,12 @@ export const workspaceMemberService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.OBSERVER,
+    });
+
+    if (!allowed) throw new Error("Permission denied");
 
     const members = await workspaceMemberRepository.findByWorkspaceIdWithUser(
       data.workspaceId

@@ -24,7 +24,19 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      await stripeService.handleSubscriptionCreated(session);
+      await stripeService.handleCheckoutCompleted(session);
+      break;
+    }
+
+    case "invoice.paid": {
+      const invoice = event.data.object as Stripe.Invoice;
+      await stripeService.handleInvoicePaid(invoice);
+      break;
+    }
+
+    case "invoice.payment_failed": {
+      const invoice = event.data.object as Stripe.Invoice;
+      await stripeService.handleInvoicePaymentFailed(invoice);
       break;
     }
 

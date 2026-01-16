@@ -1,4 +1,4 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { commentReactionRepository } from "../repositories/comment-reaction.repository";
 import {
   AddCommentReactionInput,
@@ -16,19 +16,17 @@ export const commentReactionService = {
       throw new Error("Comment not found");
     }
 
-    const card = await cardRepository.findById(comment.cardId);
+    const card = await cardRepository.findByIdWithBoard(comment.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.OBSERVER
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedEmoji = data.emoji.trim();
     if (!trimmedEmoji) {
@@ -70,19 +68,17 @@ export const commentReactionService = {
       throw new Error("Comment not found");
     }
 
-    const card = await cardRepository.findById(comment.cardId);
+    const card = await cardRepository.findByIdWithBoard(comment.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.OBSERVER
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedEmoji = data.emoji.trim();
 

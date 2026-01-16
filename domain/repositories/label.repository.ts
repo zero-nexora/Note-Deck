@@ -16,6 +16,19 @@ export const labelRepository = {
     });
   },
 
+  findByIdWithBoard: async (labelId: string) => {
+    return db.query.labels.findFirst({
+      where: eq(labels.id, labelId),
+      with: {
+        board: {
+          columns: {
+            workspaceId: true,
+          },
+        },
+      },
+    });
+  },
+
   findById: async (labelId: string) => {
     return db.query.labels.findFirst({
       where: eq(labels.id, labelId),

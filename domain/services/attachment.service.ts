@@ -1,10 +1,7 @@
 import { attachmentRepository } from "../repositories/attachment.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { cardRepository } from "../repositories/card.repository";
-import {
-  checkBoardPermission,
-  // checkUserGroupPermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   CreateAttachmentInput,
   DeleteAttachmentInput,
@@ -19,30 +16,19 @@ import {
 
 export const attachmentService = {
   create: async (userId: string, data: CreateAttachmentInput) => {
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.ATTACHMENT_CREATE,
+    });
 
-    // const hasCardAddAttachmentPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.board.workspaceId,
-    //   PERMISSIONS.CARD_ATTACHMENT
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardAddAttachmentPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedFileName = data.fileName.trim();
     if (!trimmedFileName) {
@@ -93,31 +79,20 @@ export const attachmentService = {
       throw new Error("Attachment not found");
     }
 
-    const card = await cardRepository.findById(attachment.cardId);
+    const card = await cardRepository.findByIdWithBoard(attachment.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
     if (attachment.userId !== userId) {
-      const hasBoardRoleAccess = await checkBoardPermission(
-        userId,
-        card.boardId,
-        ROLE.ADMIN
-      );
+      const allowed = await canUser(userId, {
+        workspaceId: card.board.workspaceId,
+        boardId: card.boardId,
+        boardRole: ROLE.NORMAL,
+        permission: PERMISSIONS.ATTACHMENT_DELETE,
+      });
 
-      // const hasCardAttachmentPermission = await checkUserGroupPermission(
-      //   userId,
-      //   card.board.workspaceId,
-      //   PERMISSIONS.CARD_ATTACHMENT
-      // );
-
-      // if (!hasBoardRoleAccess || !hasCardAttachmentPermission) {
-      //   throw new Error("You can only delete your own attachments");
-      // }
-
-      if (!hasBoardRoleAccess) {
-        throw new Error("You can only delete your own attachments");
-      }
+      if (!allowed) throw new Error("Permission denied");
     }
 
     await activityRepository.create({

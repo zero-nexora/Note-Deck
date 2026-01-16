@@ -8,7 +8,7 @@ import { boardRepository } from "../repositories/board.repository";
 
 export const elasticsearchService = {
   indexCard: async (cardId: string) => {
-    const card = await cardRepository.findById(cardId);
+    const card = await cardRepository.findByIdWithBoard(cardId);
 
     if (!card) return;
 

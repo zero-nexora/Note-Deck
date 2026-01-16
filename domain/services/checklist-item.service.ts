@@ -1,4 +1,4 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { cardRepository } from "../repositories/card.repository";
 import { checklistItemRepository } from "../repositories/checklist-item.repository";
 import { checklistRepository } from "../repositories/checklist.repository";
@@ -11,7 +11,12 @@ import {
 } from "../schemas/checklist-item.schema";
 import { activityRepository } from "../repositories/activity.repository";
 import { executeAutomations } from "./automation.service";
-import { ACTIVITY_ACTION, ENTITY_TYPE, ROLE } from "@/lib/constants";
+import {
+  ACTIVITY_ACTION,
+  ENTITY_TYPE,
+  PERMISSIONS,
+  ROLE,
+} from "@/lib/constants";
 
 export const checklistItemService = {
   create: async (userId: string, data: CreateChecklistItemInput) => {
@@ -20,19 +25,18 @@ export const checklistItemService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_ITEM_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedText = data.text.trim();
     if (!trimmedText) {
@@ -73,19 +77,18 @@ export const checklistItemService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_ITEM_TOGGLE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     if (item.isCompleted === data.isCompleted) {
       return item;
@@ -153,19 +156,18 @@ export const checklistItemService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_ITEM_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -216,19 +218,18 @@ export const checklistItemService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_ITEM_REORDER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     if (item.position === data.position) {
       return item;
@@ -265,19 +266,18 @@ export const checklistItemService = {
       throw new Error("Checklist not found");
     }
 
-    const card = await cardRepository.findById(checklist.cardId);
+    const card = await cardRepository.findByIdWithBoard(checklist.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CHECKLIST_ITEM_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     await activityRepository.create({
       boardId: card.boardId,

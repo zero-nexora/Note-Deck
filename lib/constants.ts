@@ -249,35 +249,89 @@ export type NotificationType =
   (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE];
 
 export const PERMISSIONS = {
-  WORKSPACE_VIEW: "workspace.view",
-  WORKSPACE_EDIT: "workspace.edit",
-  WORKSPACE_DELETE: "workspace.delete",
-  WORKSPACE_SETTINGS: "workspace.settings",
+  WORKSPACE_UPDATE: "workspace.update",
+  // WORKSPACE_DELETE: "workspace.delete",
+  // WORKSPACE_CHANGE_PLAN: "workspace.change_plan",
+
+  WORKSPACE_MEMBER_ADD: "workspace.member.add",
+  WORKSPACE_MEMBER_REMOVE: "workspace.member.remove",
+  WORKSPACE_MEMBER_ROLE: "workspace.member.role",
+  // WORKSPACE_TRANSFER_OWNERSHIP: "workspace.transfer_ownership",
+
+  WORKSPACE_INVITE_CREATE: "workspace.invite.create",
+  WORKSPACE_INVITE_RESEND: "workspace.invite.resend",
+  WORKSPACE_INVITE_REVOKE: "workspace.invite.revoke",
+  WORKSPACE_INVITE_EXPIRE: "workspace.invite.expire",
+
+  GROUP_CREATE: "group.create",
+  GROUP_UPDATE: "group.update",
+  GROUP_DELETE: "group.delete",
+
+  GROUP_MEMBER_ADD: "group.member.add",
+  GROUP_MEMBER_REMOVE: "group.member.remove",
 
   BOARD_CREATE: "board.create",
-  BOARD_VIEW: "board.view",
-  BOARD_EDIT: "board.edit",
+  BOARD_UPDATE: "board.update",
   BOARD_DELETE: "board.delete",
   BOARD_ARCHIVE: "board.archive",
+  BOARD_RESTORE: "board.restore",
+
+  BOARD_MEMBER_ADD: "board.member.add",
+  BOARD_MEMBER_REMOVE: "board.member.remove",
+  BOARD_MEMBER_ROLE: "board.member.role",
+
+  LIST_CREATE: "list.create",
+  LIST_UPDATE: "list.update",
+  LIST_REORDER: "list.reorder",
+  LIST_ARCHIVE: "list.archive",
+  LIST_RESTORE: "list.restore",
+  LIST_DELETE: "list.delete",
+  LIST_DUPLICATE: "list.duplicate",
 
   CARD_CREATE: "card.create",
-  CARD_VIEW: "card.view",
-  CARD_EDIT: "card.edit",
-  CARD_DELETE: "card.delete",
+  CARD_UPDATE: "card.update",
   CARD_MOVE: "card.move",
-  CARD_ASSIGN: "card.assign",
-  CARD_LABEL: "card.label",
-  CARD_ATTACHMENT: "card.attachment",
-  CARD_CHECKLIST: "card.checklist",
-  CARD_COMMENT: "card.comment",
+  CARD_REORDER: "card.reorder",
+  CARD_ARCHIVE: "card.archive",
+  CARD_RESTORE: "card.restore",
+  CARD_DELETE: "card.delete",
+  CARD_DUPLICATE: "card.duplicate",
 
-  MEMBER_INVITE: "member.invite",
-  MEMBER_REMOVE: "member.remove",
-  MEMBER_ROLE: "member.role",
+  CARD_MEMBER_ADD: "card.member.add",
+  CARD_MEMBER_REMOVE: "card.member.remove",
 
-  ADMIN_AUTOMATION: "admin.automation",
-  ADMIN_INTEGRATION: "admin.integration",
-  ADMIN_BILLING: "admin.billing",
-  ADMIN_AUDIT: "admin.audit",
+  CARD_LABEL_ADD: "card.label.add",
+  CARD_LABEL_REMOVE: "card.label.remove",
+
+  LABEL_CREATE: "label.create",
+  LABEL_UPDATE: "label.update",
+  LABEL_DELETE: "label.delete",
+
+  COMMENT_CREATE: "comment.create",
+  COMMENT_UPDATE: "comment.update",
+  COMMENT_DELETE: "comment.delete",
+
+  CHECKLIST_CREATE: "checklist.create",
+  CHECKLIST_UPDATE: "checklist.update",
+  CHECKLIST_REORDER: "checklist.reorder",
+  CHECKLIST_DELETE: "checklist.delete",
+
+  CHECKLIST_ITEM_CREATE: "checklist.item.create",
+  CHECKLIST_ITEM_TOGGLE: "checklist.item.toggle",
+  CHECKLIST_ITEM_UPDATE: "checklist.item.update",
+  CHECKLIST_ITEM_REORDER: "checklist.item.reorder",
+  CHECKLIST_ITEM_DELETE: "checklist.item.delete",
+
+  ATTACHMENT_CREATE: "attachment.create",
+  ATTACHMENT_DELETE: "attachment.delete",
+
+  AUTOMATION_CREATE: "automation.create",
+  AUTOMATION_UPDATE: "automation.update",
+  AUTOMATION_ENABLE: "automation.enable",
+  AUTOMATION_DISABLE: "automation.disable",
+  AUTOMATION_DELETE: "automation.delete",
+
+  AUDIT_LOG_READ: "audit.read",
 } as const;
+
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

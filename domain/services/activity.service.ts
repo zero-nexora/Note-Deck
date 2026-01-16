@@ -1,4 +1,4 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { boardRepository } from "../repositories/board.repository";
 import {
@@ -15,15 +15,6 @@ export const activityService = {
     const board = await boardRepository.findById(data.boardId);
     if (!board) {
       throw new Error("Board not found");
-    }
-
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
     }
 
     const trimmedAction = data.action.trim();
@@ -53,15 +44,6 @@ export const activityService = {
     const board = await boardRepository.findById(data.boardId);
     if (!board) {
       throw new Error("Board not found");
-    }
-
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
     }
 
     const trimmedAction = data.action.trim();
@@ -97,15 +79,6 @@ export const activityService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
-
     const trimmedCardId = data.cardId.trim();
     if (!trimmedCardId) {
       throw new Error("Card ID cannot be empty");
@@ -126,7 +99,7 @@ export const activityService = {
       throw new Error("Entity ID cannot be empty");
     }
 
-    const card = await cardRepository.findById(data.cardId);
+    const card = await cardRepository.findByIdWithBoard(data.cardId);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -153,52 +126,35 @@ export const activityService = {
       throw new Error("Either boardId or cardId is required");
     }
 
-    if (data.boardId) {
-      const board = await boardRepository.findById(data.boardId);
-      if (!board) {
-        throw new Error("Board not found");
-      }
-
-      const hasPermission = await checkBoardPermission(
-        userId,
-        data.boardId,
-        ROLE.OBSERVER
-      );
-      if (!hasPermission) {
-        throw new Error("Permission denied");
-      }
-    }
-
     if (data.cardId) {
-      const card = await cardRepository.findById(data.cardId);
-      if (!card) {
-        throw new Error("Card not found");
-      }
+      const card = await cardRepository.findByIdWithBoard(data.cardId);
+      if (!card) throw new Error("Card not found");
 
-      const hasPermission = await checkBoardPermission(
-        userId,
-        card.boardId,
-        ROLE.OBSERVER
-      );
-      if (!hasPermission) {
-        throw new Error("Permission denied");
-      }
+      const allowed = await canUser(userId, {
+        workspaceId: card.board.workspaceId,
+        boardId: card.boardId,
+        boardRole: ROLE.OBSERVER,
+      });
+      if (!allowed) throw new Error("Permission denied");
 
-      const activities = await activityRepository.findByCardId(
+      return activityRepository.findByCardId(
         data.cardId,
         data.limit || DEFAULT_LIMIT_ACTIVITY
       );
-      return activities;
     }
 
-    if (data.boardId) {
-      const activities = await activityRepository.findByBoardId(
-        data.boardId,
-        data.limit || DEFAULT_LIMIT_ACTIVITY
-      );
-      return activities;
-    }
+    const board = await boardRepository.findById(data.boardId!);
+    if (!board) throw new Error("Board not found");
 
-    return [];
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      workspaceRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
+
+    return activityRepository.findByBoardId(
+      data.boardId!,
+      data.limit || DEFAULT_LIMIT_ACTIVITY
+    );
   },
 };

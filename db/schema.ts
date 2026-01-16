@@ -685,3 +685,10 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   }),
   user: one(users, { fields: [auditLogs.userId], references: [users.id] }),
 }));
+
+export const automationsRelations = relations(automations, ({ one }) => ({
+  board: one(boards, {
+    fields: [automations.boardId],
+    references: [boards.id],
+  }),
+}));

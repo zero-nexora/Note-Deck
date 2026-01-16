@@ -1,4 +1,4 @@
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { activityRepository } from "../repositories/activity.repository";
 import { auditLogRepository } from "../repositories/audit-log.repository";
 import { boardRepository } from "../repositories/board.repository";
@@ -12,6 +12,7 @@ import {
   ACTIVITY_ACTION,
   AUDIT_ACTION,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -22,14 +23,13 @@ export const labelService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LABEL_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedName = data.name.trim();
     if (!trimmedName) {
@@ -65,19 +65,18 @@ export const labelService = {
   },
 
   update: async (userId: string, labelId: string, data: UpdateLabelInput) => {
-    const label = await labelRepository.findById(labelId);
+    const label = await labelRepository.findByIdWithBoard(labelId);
     if (!label) {
       throw new Error("Label not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      label.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: label.board.workspaceId,
+      boardId: label.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LABEL_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -138,19 +137,18 @@ export const labelService = {
   },
 
   delete: async (userId: string, data: DeleteLabelInput) => {
-    const label = await labelRepository.findById(data.id);
+    const label = await labelRepository.findByIdWithBoard(data.id);
     if (!label) {
       throw new Error("Label not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      label.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: label.board.workspaceId,
+      boardId: label.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.LABEL_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const board = await boardRepository.findById(label.boardId);
 
@@ -187,14 +185,13 @@ export const labelService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.OBSERVER,
+    });
+
+    if (!allowed) throw new Error("Permission denied");
 
     const labels = await labelRepository.findByBoardId(boardId);
 

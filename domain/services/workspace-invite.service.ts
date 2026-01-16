@@ -2,7 +2,7 @@ import { workspaceInviteRepository } from "../repositories/workspace-invite.repo
 import { workspaceMemberRepository } from "../repositories/workspace-member.repository";
 import { workspaceRepository } from "../repositories/workspace.repository";
 import { userRepository } from "../repositories/user.repository";
-import { checkWorkspacePermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   CreateInviteInput,
   ResendInviteInput,
@@ -18,6 +18,7 @@ import {
   AUDIT_ACTION,
   DEFAULT_WORKSPACE_MEMBER_ROLE,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -28,14 +29,12 @@ export const workspaceInviteService = {
       throw new Error("Workspace not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_INVITE_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const normalizedEmail = data.email.toLowerCase().trim();
 
@@ -96,14 +95,11 @@ export const workspaceInviteService = {
   },
 
   listPendingInvites: async (userId: string, data: ListPendingInvitesInput) => {
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      data.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: data.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const invites = await workspaceInviteRepository.findByWorkspaceId(
       data.workspaceId,
@@ -119,14 +115,12 @@ export const workspaceInviteService = {
       throw new Error("Invite not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      invite.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: invite.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_INVITE_RESEND,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     if (invite.acceptedAt) {
       throw new Error("Invite has already been accepted");
@@ -168,14 +162,12 @@ export const workspaceInviteService = {
       throw new Error("Invalid invite token");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      invite.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: invite.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_INVITE_REVOKE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     if (invite.acceptedAt) {
       throw new Error("Invite already accepted");
@@ -261,14 +253,13 @@ export const workspaceInviteService = {
       throw new Error("Invite not found");
     }
 
-    const hasPermission = await checkWorkspacePermission(
-      userId,
-      invite.workspaceId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: invite.workspaceId,
+      workspaceRole: ROLE.ADMIN,
+      permission: PERMISSIONS.WORKSPACE_INVITE_EXPIRE,
+    });
+    
+    if (!allowed) throw new Error("Permission denied");
 
     if (invite.acceptedAt) {
       throw new Error("Invite has already been accepted");

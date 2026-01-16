@@ -1,7 +1,7 @@
 import { listRepository } from "../repositories/list.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
-import { checkBoardPermission } from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   ArchiveListInput,
   CreateListInput,
@@ -22,6 +22,7 @@ import {
   ACTIVITY_ACTION,
   AUDIT_ACTION,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -32,14 +33,13 @@ export const listService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: data.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LIST_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedName = data.name.trim();
     if (!trimmedName) {
@@ -83,19 +83,18 @@ export const listService = {
   },
 
   update: async (userId: string, listId: string, data: UpdateListInput) => {
-    const list = await listRepository.findById(listId);
+    const list = await listRepository.findByIdWithBoard(listId);
     if (!list) {
       throw new Error("List not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: list.board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LIST_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -150,14 +149,13 @@ export const listService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LIST_REORDER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const allLists = await listRepository.findAllByBoardId(data.boardId);
     const boardListIds = new Set(allLists.map((list) => list.id));
@@ -197,7 +195,7 @@ export const listService = {
   },
 
   archive: async (userId: string, data: ArchiveListInput) => {
-    const list = await listRepository.findById(data.id);
+    const list = await listRepository.findByIdWithBoard(data.id);
     if (!list) {
       throw new Error("List not found");
     }
@@ -206,14 +204,13 @@ export const listService = {
       return list;
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: list.board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.LIST_ARCHIVE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updatedList = await listRepository.update(data.id, {
       isArchived: true,
@@ -251,7 +248,7 @@ export const listService = {
   },
 
   restore: async (userId: string, data: RestoreListInput) => {
-    const list = await listRepository.findById(data.id);
+    const list = await listRepository.findByIdWithBoard(data.id);
     if (!list) {
       throw new Error("List not found");
     }
@@ -260,14 +257,13 @@ export const listService = {
       return list;
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: list.board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.LIST_RESTORE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updatedList = await listRepository.update(data.id, {
       isArchived: false,
@@ -298,19 +294,18 @@ export const listService = {
   },
 
   delete: async (userId: string, data: DeleteListInput) => {
-    const list = await listRepository.findById(data.id);
+    const list = await listRepository.findByIdWithBoard(data.id);
     if (!list) {
       throw new Error("List not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: list.board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.LIST_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const board = await boardRepository.findById(list.boardId);
 
@@ -345,14 +340,13 @@ export const listService = {
       throw new Error("List not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      originalList.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: originalList.board.workspaceId,
+      boardId: originalList.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.LIST_DUPLICATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const maxPosition = await listRepository.getMaxPosition(
       originalList.boardId

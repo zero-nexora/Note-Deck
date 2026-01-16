@@ -1,7 +1,4 @@
-import {
-  checkBoardPermission,
-  checkWorkspacePermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import { boardMemberRepository } from "../repositories/board-member.repository";
 import { userRepository } from "../repositories/user.repository";
 import {
@@ -18,6 +15,7 @@ import {
   AUDIT_ACTION,
   DEFAULT_BOARD_MEMBER_ROLE,
   ENTITY_TYPE,
+  PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
 
@@ -28,28 +26,18 @@ export const boardMemberService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
-
     const user = await userRepository.findById(data.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    const isWorkspaceMember = await checkWorkspacePermission(
-      data.userId,
-      board.workspaceId,
-      ROLE.OBSERVER
-    );
-    if (!isWorkspaceMember) {
-      throw new Error("User must be a workspace member first");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.BOARD_MEMBER_ADD,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const existingMember = await boardMemberRepository.findByBoardIdAndUserId(
       data.boardId,
@@ -104,14 +92,13 @@ export const boardMemberService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.BOARD_MEMBER_REMOVE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const member = await boardMemberRepository.findByBoardIdAndUserId(
       data.boardId,
@@ -156,14 +143,13 @@ export const boardMemberService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.ADMIN
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.BOARD_MEMBER_ROLE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const member = await boardMemberRepository.findByBoardIdAndUserId(
       data.boardId,
@@ -220,14 +206,12 @@ export const boardMemberService = {
       throw new Error("Board not found");
     }
 
-    const hasPermission = await checkBoardPermission(
-      userId,
-      data.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasPermission) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: board.id,
+      boardRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const members = await boardMemberRepository.findByBoardId(data.boardId);
     return members;

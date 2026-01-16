@@ -14,18 +14,29 @@ export const automationRepository = {
       ? and(eq(automations.boardId, boardId), eq(automations.isActive, true))
       : eq(automations.boardId, boardId);
 
-    const boardAutomations = await db.query.automations.findMany({
+    return db.query.automations.findMany({
       where: query,
       orderBy: [desc(automations.createdAt)],
     });
-    return boardAutomations;
+  },
+
+  findByIdWithBoard: async (automaitonId: string) => {
+    return db.query.automations.findFirst({
+      where: eq(automations.id, automaitonId),
+      with: {
+        board: {
+          columns: {
+            workspaceId: true,
+          }
+        }
+      }
+    })
   },
 
   findById: async (automationId: string) => {
-    const automation = await db.query.automations.findFirst({
+    return db.query.automations.findFirst({
       where: eq(automations.id, automationId),
     });
-    return automation;
   },
 
   update: async (automationId: string, data: UpdateAutomation) => {

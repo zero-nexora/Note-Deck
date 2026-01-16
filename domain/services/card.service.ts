@@ -3,10 +3,7 @@ import { listRepository } from "../repositories/list.repository";
 import { boardRepository } from "../repositories/board.repository";
 import { activityRepository } from "../repositories/activity.repository";
 import { notificationRepository } from "../repositories/notification.repository";
-import {
-  checkBoardPermission,
-  // checkUserGroupPermission,
-} from "@/lib/check-permissions";
+import { canUser } from "@/lib/check-permissions";
 import {
   ArchiveCardInput,
   CreateCardInput,
@@ -65,25 +62,13 @@ export const cardService = {
       }
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.ADMIN
-    );
-
-    // const hasCardCreatePermission = await checkUserGroupPermission(
-    //   userId,
-    //   list.boardId,
-    //   PERMISSIONS.CARD_CREATE
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardCreatePermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_CREATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const trimmedTitle = data.title.trim();
     if (!trimmedTitle) {
@@ -123,7 +108,7 @@ export const cardService = {
 
   findById: async (userId: string, cardId: string) => {
     const card =
-      await cardRepository.findByIdWithMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels(
+      await cardRepository.findByIdWithBoardMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels(
         cardId
       );
 
@@ -131,54 +116,29 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.ADMIN
-    );
-
-    // const hasCardViewPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.boardId,
-    //   PERMISSIONS.CARD_VIEW
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardViewPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     return card ? card : null;
   },
 
   update: async (userId: string, cardId: string, data: UpdateCardInput) => {
-    const card = await cardRepository.findByIdWithMembers(cardId);
+    const card = await cardRepository.findByIdWithBoardMembers(cardId);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-
-    // const hasCardEditPermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.boardId,
-    //   PERMISSIONS.CARD_EDIT
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardEditPermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_UPDATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updateData = { ...data };
 
@@ -241,7 +201,7 @@ export const cardService = {
   },
 
   move: async (userId: string, data: MoveCardInput) => {
-    const card = await cardRepository.findByIdWithMembers(data.id);
+    const card = await cardRepository.findByIdWithBoardMembers(data.id);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -255,32 +215,20 @@ export const cardService = {
       throw new Error("List not found");
     }
 
-    const hasWorkspaceRoleAccessSource = await checkBoardPermission(
-      userId,
-      sourceList.boardId,
-      ROLE.NORMAL
-    );
-    const hasWorkspaceRoleAccessDestination = await checkBoardPermission(
-      userId,
-      destinationList.boardId,
-      ROLE.NORMAL
-    );
+    const allowedSource = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_MOVE,
+    });
 
-    // const hasCardMovePermission = await checkUserGroupPermission(
-    //   userId,
-    //   sourceList.boardId,
-    //   PERMISSIONS.CARD_MOVE
-    // );
+    const allowedDestination = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.NORMAL,
+    });
 
-    // if (
-    //   !hasWorkspaceRoleAccessSource ||
-    //   !hasWorkspaceRoleAccessDestination ||
-    //   !hasCardMovePermission
-    // ) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccessSource || !hasWorkspaceRoleAccessDestination) {
+    if (!allowedSource || !allowedDestination) {
       throw new Error("Permission denied");
     }
 
@@ -349,19 +297,18 @@ export const cardService = {
   },
 
   reorders: async (userId: string, data: ReorderCardsInput) => {
-    const list = await listRepository.findById(data.listId);
+    const list = await listRepository.findByIdWithBoard(data.listId);
     if (!list) {
       throw new Error("List not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      list.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: list.board.workspaceId,
+      boardId: list.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_REORDER,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const allCards = await cardRepository.findAllByListId(data.listId);
     const listCardIds = new Set(allCards.map((card) => card.id));
@@ -389,7 +336,7 @@ export const cardService = {
   },
 
   archive: async (userId: string, data: ArchiveCardInput) => {
-    const card = await cardRepository.findById(data.id);
+    const card = await cardRepository.findByIdWithBoard(data.id);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -398,14 +345,13 @@ export const cardService = {
       return card;
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.CARD_ARCHIVE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updatedCard = await cardRepository.update(data.id, {
       isArchived: true,
@@ -425,7 +371,7 @@ export const cardService = {
   },
 
   restore: async (userId: string, data: RestoreCardInput) => {
-    const card = await cardRepository.findById(data.id);
+    const card = await cardRepository.findByIdWithBoard(data.id);
     if (!card) {
       throw new Error("Card not found");
     }
@@ -434,14 +380,13 @@ export const cardService = {
       return card;
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.CARD_RESTORE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const updatedCard = await cardRepository.update(data.id, {
       isArchived: false,
@@ -461,30 +406,18 @@ export const cardService = {
   },
 
   delete: async (userId: string, data: DeleteCardInput) => {
-    const card = await cardRepository.findById(data.id);
+    const card = await cardRepository.findByIdWithBoard(data.id);
     if (!card) {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      card.boardId,
-      ROLE.ADMIN
-    );
-
-    // const hasCardDeletePermission = await checkUserGroupPermission(
-    //   userId,
-    //   card.boardId,
-    //   PERMISSIONS.CARD_DELETE
-    // );
-
-    // if (!hasWorkspaceRoleAccess || !hasCardDeletePermission) {
-    //   throw new Error("Permission denied");
-    // }
-
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: card.board.workspaceId,
+      boardId: card.boardId,
+      boardRole: ROLE.ADMIN,
+      permission: PERMISSIONS.CARD_DELETE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const board = await boardRepository.findById(card.boardId);
 
@@ -520,14 +453,13 @@ export const cardService = {
       throw new Error("Card not found");
     }
 
-    const hasWorkspaceRoleAccess = await checkBoardPermission(
-      userId,
-      originalCard.boardId,
-      ROLE.NORMAL
-    );
-    if (!hasWorkspaceRoleAccess) {
-      throw new Error("Permission denied");
-    }
+    const allowed = await canUser(userId, {
+      workspaceId: originalCard.board.workspaceId,
+      boardId: originalCard.boardId,
+      boardRole: ROLE.NORMAL,
+      permission: PERMISSIONS.CARD_DUPLICATE,
+    });
+    if (!allowed) throw new Error("Permission denied");
 
     const maxPosition = await cardRepository.getMaxPosition(
       originalCard.listId
