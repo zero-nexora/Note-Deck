@@ -66,7 +66,7 @@ export const BoardCardItemComments = ({
         { ...createdComment, reactions: [], replies: [] },
       ]);
 
-      realtimeUtils.broadcastCommentAdded({
+      realtimeUtils?.broadcastCommentAdded({
         cardId,
         commentId: createdComment.id,
       });
@@ -91,7 +91,7 @@ export const BoardCardItemComments = ({
         { ...createdReply, reactions: [], replies: [] },
       ]);
 
-      realtimeUtils.broadcastCommentAdded({
+      realtimeUtils?.broadcastCommentAdded({
         cardId,
         commentId: createdReply.id,
       });
@@ -109,17 +109,17 @@ export const BoardCardItemComments = ({
   const handleUpdateComment = async (id: string) => {
     if (!editText.trim()) return;
 
+    setComments((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, content: editText.trim() } : c)),
+    );
+
     const updated = await updateComment(id, { content: editText.trim() });
 
     if (updated) {
-      setComments((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, content: editText.trim() } : c))
-      );
-
-      realtimeUtils.broadcastCardUpdated({
+      realtimeUtils?.broadcastCommentUpdated({
         cardId,
-        field: "coverImage",
-        value: "comment_updated",
+        commentId: id,
+        content: editText.trim(),
       });
     }
 
@@ -128,13 +128,13 @@ export const BoardCardItemComments = ({
   };
 
   const handleDeleteComment = async (id: string) => {
-    await deleteComment({ id });
     setComments((prev) => prev.filter((c) => c.id !== id));
 
-    realtimeUtils.broadcastCardUpdated({
+    await deleteComment({ id });
+
+    realtimeUtils?.broadcastCommentDeleted({
       cardId,
-      field: "coverImage",
-      value: "comment_deleted",
+      commentId: id,
     });
   };
 
@@ -145,7 +145,6 @@ export const BoardCardItemComments = ({
     const existing = comment.reactions?.find((r) => r.emoji === emoji);
 
     if (existing) {
-      await removeReaction({ commentId, emoji });
       setComments((prev) =>
         prev.map((c) =>
           c.id === commentId
@@ -153,9 +152,16 @@ export const BoardCardItemComments = ({
                 ...c,
                 reactions: c.reactions?.filter((r) => r.emoji !== emoji) || [],
               }
-            : c
-        )
+            : c,
+        ),
       );
+
+      await removeReaction({ commentId, emoji });
+
+      realtimeUtils?.broadcastCommentReactionRemoved({
+        commentId,
+        reaction: emoji,
+      });
     } else {
       const newReaction = await addReaction({ commentId, emoji });
       if (newReaction) {
@@ -169,17 +175,16 @@ export const BoardCardItemComments = ({
                     { ...newReaction, emoji },
                   ],
                 }
-              : c
-          )
+              : c,
+          ),
         );
+
+        realtimeUtils?.broadcastCommentReactionAdded({
+          commentId,
+          reaction: emoji,
+        });
       }
     }
-
-    realtimeUtils.broadcastCardUpdated({
-      cardId,
-      field: "coverImage",
-      value: "reaction_toggled",
-    });
 
     setPickerOpenFor(null);
   };
@@ -289,7 +294,7 @@ export const BoardCardItemComments = ({
                         </div>
                       </TooltipContent>
                     </Tooltip>
-                  )
+                  ),
                 )}
               </TooltipProvider>
 
@@ -300,7 +305,7 @@ export const BoardCardItemComments = ({
                   className="h-7 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   onClick={() =>
                     setPickerOpenFor(
-                      pickerOpenFor === comment.id ? null : comment.id
+                      pickerOpenFor === comment.id ? null : comment.id,
                     )
                   }
                 >

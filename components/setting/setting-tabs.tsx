@@ -14,8 +14,8 @@ interface SettingTapsProps {
 
 export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="space-y-2">
+    <div className="space-y-6">
+      <div className="space-y-1">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
           <Settings className="h-8 w-8 text-primary" />
           Settings
@@ -26,7 +26,7 @@ export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-muted p-1">
+        <TabsList className="grid w-full grid-cols-4 bg-muted p-1 gap-4">
           <TabsTrigger
             value="profile"
             className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"

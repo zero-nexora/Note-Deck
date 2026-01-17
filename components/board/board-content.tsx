@@ -1,13 +1,22 @@
 "use client";
+
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useBoardDragDropRealtime } from "@/hooks/use-board-drag-drop-realtime";
 import {
   DndContext,
   PointerSensor,
+  KeyboardSensor,
+  TouchSensor,
+  MouseSensor,
   useSensor,
   useSensors,
-  closestCorners,
+  MeasuringStrategy,
+  pointerWithin,
+  rectIntersection,
+  closestCenter,
+  CollisionDetection,
 } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { BoardLists } from "./board-lists";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
@@ -17,6 +26,16 @@ interface BoardContentProps {
   board: BoardWithListLabelsAndMembers;
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
+
+const collisionDetection: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args);
+  if (pointer.length > 0) return pointer;
+
+  const rect = rectIntersection(args);
+  if (rect.length > 0) return rect;
+
+  return closestCenter(args);
+};
 
 export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
   const {
@@ -29,12 +48,21 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
   } = useBoardDragDropRealtime({ board, realtimeUtils });
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  };
 
   const updatedBoard = {
     ...board,
@@ -45,10 +73,16 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
     <ScrollArea className="flex-1 bg-background">
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        measuring={measuring}
+        autoScroll={{
+          enabled: true,
+          threshold: { x: 0.2, y: 0.2 },
+          acceleration: 10,
+        }}
       >
         <div className="h-full">
           <BoardLists board={updatedBoard} realtimeUtils={realtimeUtils} />
@@ -60,6 +94,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
           activeList={activeList}
         />
       </DndContext>
+
       <ScrollBar orientation="horizontal" className="bg-muted" />
     </ScrollArea>
   );

@@ -11,7 +11,7 @@ const CancelPage = () => {
   const workspaceId = params.workspaceId;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="flex items-center justify-center p-6 bg-background">
       <div className="text-center space-y-8 max-w-md">
         <div className="flex justify-center">
           <div className="rounded-full bg-destructive/10 p-8 border-2 border-destructive/20">

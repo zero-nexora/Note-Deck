@@ -34,6 +34,7 @@ import { WorkspaceMemberWithUser } from "@/domain/types/workspace-member.type";
 import { listPendingWorkspaceInvitesAction } from "@/domain/actions/workspace-invite.action";
 import { workspacePendingInvite } from "@/domain/types/workspace-invite.type";
 import { WorkspacePendingInviteList } from "@/components/overview/workspace-pending-invite-list";
+import { LayoutDashboard } from "lucide-react";
 
 interface OverviewPageProps {
   params: Promise<{ workspaceId: string }>;
@@ -80,7 +81,7 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
   const checklistStats =
     unwrapActionResult<ChecklistStats>(checklistStatsResult);
   const dueDateAnalytics = unwrapActionResult<DueDateAnalytics>(
-    dueDateAnalyticsResult
+    dueDateAnalyticsResult,
   );
   const workspaceMembers =
     unwrapActionResult<WorkspaceMemberWithUser[]>(listWorkspaceMembersResult) ||
@@ -88,14 +89,15 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
 
   const workspacePendingInvites =
     unwrapActionResult<workspacePendingInvite[]>(
-      listPendingWorkspaceInvitesResult
+      listPendingWorkspaceInvitesResult,
     ) || [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <LayoutDashboard className="h-8 w-8 text-primary" />
             Workspace Overview
           </h1>
           <p className="text-muted-foreground">

@@ -1,6 +1,6 @@
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useLabel } from "@/hooks/use-label";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { HexColorPicker } from "react-colorful";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit2, Plus, X, Check, Tag } from "lucide-react";
@@ -24,15 +24,18 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Loading } from "../common/loading";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardHeaderLabelsDetailProps {
   boardId: string;
   boardLabels: BoardWithListLabelsAndMembers["labels"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardHeaderLabelsDetail = ({
   boardId,
   boardLabels: initialLabels,
+  realtimeUtils,
 }: BoardHeaderLabelsDetailProps) => {
   const [labels, setLabels] = useState(initialLabels);
   const [editingLabel, setEditingLabel] = useState<
@@ -41,6 +44,29 @@ export const BoardHeaderLabelsDetail = ({
   const [isCreating, setIsCreating] = useState(false);
 
   const { createLabel, deleteLabel, updateLabel } = useLabel();
+
+  useEffect(() => {
+    setLabels(initialLabels);
+  }, [initialLabels]);
+
+  const displayLabels = useMemo(() => {
+    return labels.map((label) => {
+      const optimisticName = realtimeUtils?.getLabelOptimisticValue(
+        label.id,
+        "name",
+      );
+      const optimisticColor = realtimeUtils?.getLabelOptimisticValue(
+        label.id,
+        "color",
+      );
+
+      return {
+        ...label,
+        name: optimisticName ?? label.name,
+        color: optimisticColor ?? label.color,
+      };
+    });
+  }, [labels, realtimeUtils]);
 
   const createForm = useForm<CreateLabelInput>({
     resolver: zodResolver(CreateLabelSchema),
@@ -61,17 +87,27 @@ export const BoardHeaderLabelsDetail = ({
 
   useEffect(() => {
     if (editingLabel) {
+      const optimisticName = realtimeUtils?.getLabelOptimisticValue(
+        editingLabel.id,
+        "name",
+      );
+      const optimisticColor = realtimeUtils?.getLabelOptimisticValue(
+        editingLabel.id,
+        "color",
+      );
+
       editForm.reset({
-        name: editingLabel.name || "",
-        color: editingLabel.color,
+        name: optimisticName ?? editingLabel.name ?? "",
+        color: optimisticColor ?? editingLabel.color,
       });
     }
-  }, [editingLabel, editForm]);
+  }, [editingLabel, editForm, realtimeUtils]);
 
   const handleCreate = async (values: CreateLabelInput) => {
     const newLabel = await createLabel(values);
     if (newLabel) {
       setLabels((prev) => [...prev, newLabel]);
+      realtimeUtils?.broadcastLabelCreated({ labelId: newLabel.id });
     }
     createForm.reset({ boardId, name: "", color: "#3b82f6" });
     setIsCreating(false);
@@ -79,26 +115,46 @@ export const BoardHeaderLabelsDetail = ({
 
   const handleUpdate = async (values: UpdateLabelInput) => {
     if (!editingLabel) return;
-    await updateLabel(editingLabel.id, values);
+
     setLabels((prev) =>
-      prev.map((l) => (l.id === editingLabel.id ? { ...l, ...values } : l))
+      prev.map((l) => (l.id === editingLabel.id ? { ...l, ...values } : l)),
     );
+
+    await updateLabel(editingLabel.id, values);
+
+    if (values.name !== undefined && values.name !== editingLabel.name) {
+      realtimeUtils?.broadcastLabelUpdated({
+        labelId: editingLabel.id,
+        field: "name",
+        value: values.name,
+      });
+    }
+    if (values.color !== undefined && values.color !== editingLabel.color) {
+      realtimeUtils?.broadcastLabelUpdated({
+        labelId: editingLabel.id,
+        field: "color",
+        value: values.color,
+      });
+    }
+
     setEditingLabel(null);
     editForm.reset();
   };
 
   const handleDelete = async (id: string) => {
-    await deleteLabel({ id });
     setLabels((prev) => prev.filter((l) => l.id !== id));
+
+    await deleteLabel({ id });
+
+    realtimeUtils?.broadcastLabelDeleted({ labelId: id });
+
     if (editingLabel?.id === id) {
       setEditingLabel(null);
       editForm.reset();
     }
   };
 
-  const startEditing = (
-    label: BoardWithListLabelsAndMembers["labels"][0]
-  ) => {
+  const startEditing = (label: BoardWithListLabelsAndMembers["labels"][0]) => {
     setEditingLabel(label);
     setIsCreating(false);
   };
@@ -119,12 +175,12 @@ export const BoardHeaderLabelsDetail = ({
             <Tag className="h-5 w-5 text-primary" />
           </div>
           <h3 className="text-lg font-semibold text-foreground">Labels</h3>
-          {labels.length > 0 && (
+          {displayLabels.length > 0 && (
             <Badge
               variant="secondary"
               className="bg-secondary text-secondary-foreground"
             >
-              {labels.length}
+              {displayLabels.length}
             </Badge>
           )}
         </div>
@@ -150,7 +206,7 @@ export const BoardHeaderLabelsDetail = ({
       </div>
 
       <div className="space-y-3">
-        {labels.map((label) => (
+        {displayLabels.map((label) => (
           <div key={label.id}>
             {editingLabel?.id === label.id ? (
               <Card className="p-4 bg-card border-border">
@@ -256,7 +312,7 @@ export const BoardHeaderLabelsDetail = ({
         ))}
       </div>
 
-      {labels.length === 0 && !isCreating && (
+      {displayLabels.length === 0 && !isCreating && (
         <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
             <Tag className="h-8 w-8 text-muted-foreground" />

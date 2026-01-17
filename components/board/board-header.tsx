@@ -9,13 +9,19 @@ import { BoardHeaderLabels } from "./board-header-labels";
 import { BoardHeaderMembers } from "./board-header-members";
 import { BoardInviteMember } from "./board-invite-member";
 import { Button } from "../ui/button";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardHeaderProps {
   board: BoardWithListLabelsAndMembers;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
-export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
+export const BoardHeader = ({
+  board,
+  workspaceMembers,
+  realtimeUtils,
+}: BoardHeaderProps) => {
   return (
     <header className="shrink-0 border-b border-border bg-card">
       <div className="flex items-center justify-between px-6 py-4">
@@ -24,11 +30,16 @@ export const BoardHeader = ({ board, workspaceMembers }: BoardHeaderProps) => {
             boardId={board.id}
             boardName={board.name}
             boardDescription={board.description}
+            realtimeUtils={realtimeUtils}
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <BoardHeaderLabels boardId={board.id} boardLabels={board.labels} />
+          <BoardHeaderLabels
+            boardId={board.id}
+            boardLabels={board.labels}
+            realtimeUtils={realtimeUtils}
+          />
 
           <BoardHeaderMembers boardMembers={board.members} boardId={board.id} />
 

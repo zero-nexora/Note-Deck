@@ -23,7 +23,7 @@ export const BoardLists = ({ board, realtimeUtils }: BoardListsProps) => {
         items={sortedLists.map((l) => l.id)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-start">
           {sortedLists.map((list) => (
             <BoardListItem
               key={list.id}

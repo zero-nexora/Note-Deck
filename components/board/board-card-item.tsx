@@ -9,7 +9,7 @@ import { BoardCardContent } from "./board-card-content";
 import { useSheet } from "@/stores/sheet-store";
 import { BoardCardItemDetail } from "./board-card-item-detail";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useCard } from "@/hooks/use-card";
 import { useConfirm } from "@/stores/confirm-store";
 import { Copy, Trash2, User } from "lucide-react";
@@ -36,6 +36,33 @@ export const BoardCardItem = ({
   const draggingUser = realtimeUtils?.getUserDraggingCard(card.id);
   const canDrag = realtimeUtils?.canDragCard(card.id) ?? true;
 
+  const displayCard = useMemo(() => {
+    const optimisticTitle = realtimeUtils?.getCardOptimisticValue(
+      card.id,
+      "title",
+    );
+    const optimisticDescription = realtimeUtils?.getCardOptimisticValue(
+      card.id,
+      "description",
+    );
+    const optimisticDueDate = realtimeUtils?.getCardOptimisticValue(
+      card.id,
+      "dueDate",
+    );
+    const optimisticCoverImage = realtimeUtils?.getCardOptimisticValue(
+      card.id,
+      "coverImage",
+    );
+
+    return {
+      ...card,
+      title: optimisticTitle ?? card.title,
+      description: optimisticDescription ?? card.description,
+      dueDate: optimisticDueDate ?? card.dueDate,
+      coverImage: optimisticCoverImage ?? card.coverImage,
+    };
+  }, [card, realtimeUtils]);
+
   const {
     attributes,
     listeners,
@@ -47,7 +74,7 @@ export const BoardCardItem = ({
     id: card.id,
     data: {
       type: "card",
-      card,
+      card: displayCard,
     },
     disabled: !canDrag,
   });
@@ -61,9 +88,9 @@ export const BoardCardItem = ({
     if (!isOpen) {
       realtimeUtils?.setEditingCard(null);
     }
-  }, [isOpen]);
+  }, [isOpen, realtimeUtils]);
 
-  const hasCover = !!card.coverImage;
+  const hasCover = !!displayCard.coverImage;
 
   const handleViewDetailCard = () => {
     if (isDraggingByOthers) return;
@@ -85,11 +112,14 @@ export const BoardCardItem = ({
   };
 
   const handleDuplicate = async () => {
-    await duplicateCard({ id: card.id });
-    realtimeUtils?.broadcastCardDuplicate({
-      sourceCardId: card.id,
-      listId: card.listId,
-    });
+    const result = await duplicateCard({ id: card.id });
+    if (result?.id) {
+      realtimeUtils?.broadcastCardDuplicated({
+        sourceCardId: card.id,
+        newCardId: result.id,
+        listId: card.listId,
+      });
+    }
   };
 
   const handleDelete = () => {
@@ -133,7 +163,7 @@ export const BoardCardItem = ({
           !isDraggingByOthers &&
           "cursor-grab hover:border-primary/50 hover:shadow-md active:cursor-grabbing",
         isDragging && "opacity-50",
-        isDraggingByOthers && "cursor-not-allowed opacity-60"
+        isDraggingByOthers && "cursor-not-allowed opacity-60",
       )}
       onClick={handleViewDetailCard}
     >
@@ -160,10 +190,13 @@ export const BoardCardItem = ({
       )}
 
       {hasCover && (
-        <BoardCardCover coverImage={card.coverImage} title={card.title} />
+        <BoardCardCover
+          coverImage={displayCard.coverImage}
+          title={displayCard.title}
+        />
       )}
 
-      <BoardCardContent card={card} hasCover={hasCover} />
+      <BoardCardContent card={displayCard} hasCover={hasCover} />
     </div>
   );
 };

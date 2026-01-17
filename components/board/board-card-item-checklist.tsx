@@ -53,10 +53,9 @@ export const BoardCardItemChecklists = ({
     if (newChecklist) {
       setChecklists((prev) => [...prev, { ...newChecklist, items: [] }]);
 
-      realtimeUtils.broadcastCardUpdated({
+      realtimeUtils.broadcastChecklistCreated({
         cardId,
-        field: "coverImage",
-        value: "checklist_added",
+        checklistId: newChecklist.id,
       });
     }
     createChecklistForm.reset();
@@ -64,31 +63,30 @@ export const BoardCardItemChecklists = ({
   };
 
   const handleDeleteChecklist = async (id: string) => {
-    await deleteChecklist({ id });
     setChecklists((prev) => prev.filter((cl) => cl.id !== id));
 
-    realtimeUtils.broadcastCardUpdated({
-      cardId,
-      field: "coverImage",
-      value: "checklist_deleted",
+    await deleteChecklist({ id });
+
+    realtimeUtils.broadcastChecklistDeleted({
+      checklistId: id,
     });
   };
 
   const handleToggleItem = async (id: string, isCompleted: boolean) => {
-    await toggleChecklistItem({ id, isCompleted });
     setChecklists((prev) =>
       prev.map((cl) => ({
         ...cl,
         items: cl.items.map((item) =>
-          item.id === id ? { ...item, isCompleted } : item
+          item.id === id ? { ...item, isCompleted } : item,
         ),
-      }))
+      })),
     );
 
-    realtimeUtils.broadcastCardUpdated({
-      cardId,
-      field: "coverImage",
-      value: "checklist_item_toggled",
+    await toggleChecklistItem({ id, isCompleted });
+
+    realtimeUtils.broadcastChecklistItemToggled({
+      itemId: id,
+      checked: isCompleted,
     });
   };
 
@@ -101,14 +99,13 @@ export const BoardCardItemChecklists = ({
     if (newItem) {
       setChecklists((prev) =>
         prev.map((cl) =>
-          cl.id === checklistId ? { ...cl, items: [...cl.items, newItem] } : cl
-        )
+          cl.id === checklistId ? { ...cl, items: [...cl.items, newItem] } : cl,
+        ),
       );
 
-      realtimeUtils.broadcastCardUpdated({
-        cardId,
-        field: "coverImage",
-        value: "checklist_item_added",
+      realtimeUtils.broadcastChecklistItemCreated({
+        checklistId,
+        itemId: newItem.id,
       });
     }
     setNewItemText("");
@@ -116,18 +113,17 @@ export const BoardCardItemChecklists = ({
   };
 
   const handleDeleteItem = async (id: string) => {
-    await deleteChecklistItem({ id });
     setChecklists((prev) =>
       prev.map((cl) => ({
         ...cl,
         items: cl.items.filter((item) => item.id !== id),
-      }))
+      })),
     );
 
-    realtimeUtils.broadcastCardUpdated({
-      cardId,
-      field: "coverImage",
-      value: "checklist_item_deleted",
+    await deleteChecklistItem({ id });
+
+    realtimeUtils.broadcastChecklistItemDeleted({
+      itemId: id,
     });
   };
 
@@ -189,7 +185,7 @@ export const BoardCardItemChecklists = ({
                           if (e.key === "Enter") {
                             e.preventDefault();
                             createChecklistForm.handleSubmit(
-                              handleCreateChecklist
+                              handleCreateChecklist,
                             )();
                           }
                           if (e.key === "Escape") {
@@ -206,7 +202,7 @@ export const BoardCardItemChecklists = ({
                 type="button"
                 size="sm"
                 onClick={createChecklistForm.handleSubmit(
-                  handleCreateChecklist
+                  handleCreateChecklist,
                 )}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
@@ -221,7 +217,7 @@ export const BoardCardItemChecklists = ({
       <div className="p-4 space-y-6">
         {checklists.map((checklist) => {
           const completedCount = checklist.items.filter(
-            (i) => i.isCompleted
+            (i) => i.isCompleted,
           ).length;
           const totalCount = checklist.items.length;
           const progress =
@@ -279,7 +275,7 @@ export const BoardCardItemChecklists = ({
                           "flex-1 text-sm",
                           item.isCompleted
                             ? "line-through text-muted-foreground"
-                            : "text-foreground"
+                            : "text-foreground",
                         )}
                       >
                         {item.text}

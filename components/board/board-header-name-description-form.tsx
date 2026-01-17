@@ -18,17 +18,20 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Loading } from "../common/loading";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardHeaderNameDescriptionFormProps {
   boardId: string;
   boardName: string;
   boardDescription: string | null;
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardHeaderNameDescriptionForm = ({
   boardId,
   boardName,
   boardDescription,
+  realtimeUtils,
 }: BoardHeaderNameDescriptionFormProps) => {
   const { updateBoard } = useBoard();
   const { close } = useModal();
@@ -42,7 +45,26 @@ export const BoardHeaderNameDescriptionForm = ({
   });
 
   const handleSubmit = async (values: UpdateBoardInput) => {
+    // Update server
     await updateBoard(boardId, values);
+
+    // Broadcast updates
+    if (values.name !== undefined && values.name !== boardName) {
+      realtimeUtils?.broadcastBoardUpdated({
+        field: "title",
+        value: values.name,
+      });
+    }
+    if (
+      values.description !== undefined &&
+      values.description !== boardDescription
+    ) {
+      realtimeUtils?.broadcastBoardUpdated({
+        field: "description",
+        value: values.description,
+      });
+    }
+
     close();
   };
 

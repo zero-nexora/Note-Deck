@@ -85,6 +85,7 @@ export const listWorkspaceMembersAction = async (input: ListMembersInput) => {
       return error(message);
     }
     const members = await workspaceMemberService.list(user.id, parsed.data);
+    
     return success("", members);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");

@@ -9,6 +9,9 @@ import { BoardListHeader } from "./board-list-header";
 import { BoardListCards } from "./board-list-cards";
 import { BoardListFooter } from "./board-list-footer";
 import { cn } from "@/lib/utils";
+import { useModal } from "@/stores/modal-store";
+import { BoardListItemUpdateForm } from "./board-list-item-update-form";
+import { useMemo } from "react";
 
 interface BoardListItemProps {
   list: BoardWithListLabelsAndMembers["lists"][number];
@@ -23,12 +26,24 @@ export const BoardListItem = ({
   boardMembers = [],
   realtimeUtils,
 }: BoardListItemProps) => {
-  const { open } = useConfirm();
+  const { open: openConfirm } = useConfirm();
+  const { open: openModal } = useModal();
   const { deleteList, duplicateList } = useList();
 
   const isDraggingByOthers = realtimeUtils?.isDraggingListByOthers(list.id);
   const draggingUser = realtimeUtils?.getUserDraggingList(list.id);
   const canDrag = realtimeUtils?.canDragList(list.id) ?? true;
+
+  const displayList = useMemo(() => {
+    const optimisticName = realtimeUtils?.getListOptimisticValue(
+      list.id,
+      "title",
+    );
+    return {
+      ...list,
+      name: optimisticName ?? list.name,
+    };
+  }, [list, realtimeUtils]);
 
   const {
     attributes,
@@ -41,7 +56,7 @@ export const BoardListItem = ({
     id: list.id,
     data: {
       type: "list",
-      list,
+      list: displayList,
     },
     disabled: !canDrag,
   });
@@ -51,8 +66,8 @@ export const BoardListItem = ({
     transition,
   };
 
-  const handleDeleteList = async () => {
-    open({
+  const handleDeleteList = () => {
+    openConfirm({
       title: "Delete list",
       description: "Are you sure you want to delete this list?",
       onConfirm: async () => {
@@ -62,14 +77,32 @@ export const BoardListItem = ({
     });
   };
 
-  const handleDuplicateList = async () => {
-    open({
+  const handleDuplicateList = () => {
+    openConfirm({
       title: "Duplicate list",
       description: "Are you sure you want to duplicate this list?",
       onConfirm: async () => {
-        await duplicateList({ id: list.id });
-        realtimeUtils?.broadcastListDuplicate({ sourceListId: list.id });
+        const result = await duplicateList({ id: list.id });
+        if (result?.id) {
+          realtimeUtils?.broadcastListDuplicated({
+            sourceListId: list.id,
+            newListId: result.id,
+          });
+        }
       },
+    });
+  };
+
+  const handleUpdateList = () => {
+    openModal({
+      title: "Update list",
+      description: "Update your list details",
+      children: (
+        <BoardListItemUpdateForm
+          list={displayList}
+          realtimeUtils={realtimeUtils}
+        />
+      ),
     });
   };
 
@@ -80,7 +113,7 @@ export const BoardListItem = ({
       className={cn(
         "w-[320px] shrink-0 flex flex-col rounded-lg bg-card border shadow-sm relative",
         isDragging && "opacity-50 cursor-grabbing",
-        isDraggingByOthers && "opacity-60"
+        isDraggingByOthers && "opacity-60",
       )}
     >
       {/* List Dragging Badge */}
@@ -95,25 +128,26 @@ export const BoardListItem = ({
       )}
 
       <BoardListHeader
-        list={list}
+        list={displayList}
         dragHandleProps={{
           attributes,
           listeners: canDrag ? listeners : {},
         }}
         onDelete={handleDeleteList}
         onDuplicate={handleDuplicateList}
+        onEdit={handleUpdateList}
       />
 
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
         <BoardListCards
           boardMembers={boardMembers}
           boardLabels={boardLabels}
-          list={list}
+          list={displayList}
           realtimeUtils={realtimeUtils}
         />
       </div>
 
-      <BoardListFooter list={list} realtimeUtils={realtimeUtils} />
+      <BoardListFooter list={displayList} realtimeUtils={realtimeUtils} />
     </div>
   );
 };

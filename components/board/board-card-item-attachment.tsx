@@ -42,10 +42,9 @@ export const BoardCardItemAttachments = ({
     if (newAttachment) {
       setAttachments((prev) => [...prev, { ...newAttachment }]);
 
-      realtimeUtils.broadcastCardUpdated({
+      realtimeUtils.broadcastAttachmentCreated({
         cardId,
-        field: "coverImage",
-        value: "attachment_added",
+        attachmentId: newAttachment.id,
       });
     }
 
@@ -53,13 +52,12 @@ export const BoardCardItemAttachments = ({
   };
 
   const handleDeleteAttachment = async (id: string) => {
-    await deleteAttachment({ id });
     setAttachments((prev) => prev.filter((a) => a.id !== id));
 
-    realtimeUtils.broadcastCardUpdated({
-      cardId,
-      field: "coverImage",
-      value: "attachment_deleted",
+    await deleteAttachment({ id });
+
+    realtimeUtils.broadcastAttachmentDeleted({
+      attachmentId: id,
     });
   };
 

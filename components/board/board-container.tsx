@@ -10,6 +10,7 @@ import { ClientSideSuspense } from "@liveblocks/react";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { LiveCursors } from "./live-cursors";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
+import { useCallback, useRef } from "react";
 
 interface BoardContainerProps {
   board: BoardWithListLabelsAndMembers;
@@ -23,19 +24,45 @@ const BoardContainerInner = ({
   workspaceMembers,
 }: BoardContainerProps) => {
   const router = useRouter();
+
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const lastRefreshRef = useRef<number>(0);
+  const REFRESH_DEBOUNCE = 300;
+
+  const handleBoardUpdate = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastRefresh = now - lastRefreshRef.current;
+
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    if (timeSinceLastRefresh < REFRESH_DEBOUNCE) {
+      refreshTimeoutRef.current = setTimeout(() => {
+        lastRefreshRef.current = Date.now();
+        router.refresh();
+      }, REFRESH_DEBOUNCE);
+    } else {
+      lastRefreshRef.current = now;
+      router.refresh();
+    }
+  }, [router]);
+
   const realtimeUtils = useBoardRealtime({
     board,
     user,
-    onBoardUpdate: () => {
-      router.refresh();
-    },
+    onBoardUpdate: handleBoardUpdate,
   });
 
   return (
     <div className="relative h-screen bg-background">
       <LiveCursors />
       <div className="flex flex-col h-full gap-4">
-        <BoardHeader board={board} workspaceMembers={workspaceMembers} />
+        <BoardHeader
+          board={board}
+          workspaceMembers={workspaceMembers}
+          realtimeUtils={realtimeUtils}
+        />
         <BoardContent board={board} realtimeUtils={realtimeUtils} />
       </div>
     </div>
@@ -48,6 +75,7 @@ export const BoardContainer = ({
   workspaceMembers,
 }: BoardContainerProps) => {
   const userColor = generateUserColor(user.id);
+
   return (
     <RoomProvider
       id={board.id}

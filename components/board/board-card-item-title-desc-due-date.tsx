@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,46 +40,65 @@ interface BoardCardItemTitleDescDueDateProps {
 
 export const BoardCardItemTitleDescDueDate = ({
   cardId,
-  title,
-  description,
-  dueDate,
+  title: initialTitle,
+  description: initialDescription,
+  dueDate: initialDueDate,
   realtimeUtils,
 }: BoardCardItemTitleDescDueDateProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const { updateCard } = useCard();
 
+  const displayTitle = useMemo(() => {
+    return (
+      realtimeUtils?.getCardOptimisticValue(cardId, "title") ?? initialTitle
+    );
+  }, [cardId, initialTitle, realtimeUtils]);
+
+  const displayDescription = useMemo(() => {
+    return (
+      realtimeUtils?.getCardOptimisticValue(cardId, "description") ??
+      initialDescription
+    );
+  }, [cardId, initialDescription, realtimeUtils]);
+
+  const displayDueDate = useMemo(() => {
+    return (
+      realtimeUtils?.getCardOptimisticValue(cardId, "dueDate") ?? initialDueDate
+    );
+  }, [cardId, initialDueDate, realtimeUtils]);
+
   const form = useForm<UpdateCardInput>({
     resolver: zodResolver(UpdateCardSchema),
     defaultValues: {
-      title,
-      description: description ?? "",
-      dueDate: dueDate ?? undefined,
+      title: displayTitle,
+      description: displayDescription ?? "",
+      dueDate: displayDueDate ?? undefined,
     },
   });
 
   useEffect(() => {
     form.reset({
-      title,
-      description: description ?? "",
-      dueDate: dueDate ?? undefined,
+      title: displayTitle,
+      description: displayDescription ?? "",
+      dueDate: displayDueDate ?? undefined,
     });
-  }, [title, description, dueDate, form]);
+  }, [displayTitle, displayDescription, displayDueDate, form]);
 
   const handleSubmit = async (values: UpdateCardInput) => {
     const updateData: UpdateCardInput = {};
 
-    if (values.title !== title) updateData.title = values.title;
-    if (values.description !== (description ?? "")) {
+    if (values.title !== displayTitle) updateData.title = values.title;
+    if (values.description !== (displayDescription ?? "")) {
       updateData.description = values.description || undefined;
     }
-    if (values.dueDate !== dueDate) updateData.dueDate = values.dueDate;
+    if (values.dueDate !== displayDueDate) updateData.dueDate = values.dueDate;
 
     if (Object.keys(updateData).length > 0) {
       const card = await updateCard(cardId, updateData);
 
       if (card) {
         form.reset({
-          title: card.title ?? title,
+          title: card.title ?? displayTitle,
           description: card.description ?? undefined,
           dueDate: card.dueDate ?? undefined,
         });
@@ -92,6 +111,7 @@ export const BoardCardItemTitleDescDueDate = ({
           ) {
             realtimeUtils.broadcastCardUpdated({
               cardId,
+              listId: card.listId,
               field: field as "title" | "description" | "dueDate",
               value,
             });
@@ -116,7 +136,7 @@ export const BoardCardItemTitleDescDueDate = ({
         <div>
           <div className="flex items-start justify-between gap-4 mb-4">
             <h2 className="text-2xl font-bold text-foreground flex-1">
-              {form.getValues("title")}
+              {displayTitle}
             </h2>
             <Button
               size="icon"
@@ -129,7 +149,7 @@ export const BoardCardItemTitleDescDueDate = ({
           </div>
         </div>
 
-        {dueDate && (
+        {displayDueDate && (
           <Card className="px-4 bg-card border-border">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -140,7 +160,7 @@ export const BoardCardItemTitleDescDueDate = ({
                   Due Date
                 </span>
                 <span className="text-base font-semibold text-foreground">
-                  {format(new Date(form.getValues("dueDate") as Date), "PPP")}
+                  {format(new Date(displayDueDate), "PPP")}
                 </span>
               </div>
             </div>
@@ -151,10 +171,10 @@ export const BoardCardItemTitleDescDueDate = ({
           <h3 className="text-base font-semibold text-foreground">
             Description
           </h3>
-          {description ? (
+          {displayDescription ? (
             <Card className="px-4 bg-card border-border">
               <p className="text-sm text-foreground whitespace-pre-wrap">
-                {form.getValues("description")}
+                {displayDescription}
               </p>
             </Card>
           ) : (
@@ -243,7 +263,7 @@ export const BoardCardItemTitleDescDueDate = ({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal border-border hover:bg-accent hover:text-accent-foreground",
-                          !field.value && "text-muted-foreground"
+                          !field.value && "text-muted-foreground",
                         )}
                         disabled={isLoading}
                       >

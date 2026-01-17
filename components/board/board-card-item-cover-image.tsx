@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ImageIcon, Plus, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,12 @@ export const BoardCardItemCoverImage = ({
 
   const { updateCard } = useCard();
 
+  const displayCoverImage = useMemo(() => {
+    return (
+      realtimeUtils?.getCardOptimisticValue(cardId, "coverImage") ?? coverImage
+    );
+  }, [cardId, coverImage, realtimeUtils]);
+
   useEffect(() => {
     setCoverImage(initialCoverImage);
   }, [initialCoverImage]);
@@ -32,6 +38,8 @@ export const BoardCardItemCoverImage = ({
   const handleAddCover = async (imageUrl: string) => {
     setIsUpdating(true);
     try {
+      setCoverImage(imageUrl);
+
       const updatedCard = await updateCard(cardId, {
         coverImage: imageUrl,
       });
@@ -41,6 +49,7 @@ export const BoardCardItemCoverImage = ({
 
         realtimeUtils.broadcastCardUpdated({
           cardId,
+          listId: updatedCard.listId,
           field: "coverImage",
           value: updatedCard.coverImage,
         });
@@ -49,6 +58,7 @@ export const BoardCardItemCoverImage = ({
       setIsAdding(false);
     } catch (error) {
       console.error("Failed to update cover image:", error);
+      setCoverImage(initialCoverImage);
     } finally {
       setIsUpdating(false);
     }
@@ -57,6 +67,8 @@ export const BoardCardItemCoverImage = ({
   const handleRemoveCover = async () => {
     setIsUpdating(true);
     try {
+      setCoverImage(null);
+
       const updatedCard = await updateCard(cardId, {
         coverImage: undefined,
       });
@@ -66,12 +78,14 @@ export const BoardCardItemCoverImage = ({
 
         realtimeUtils.broadcastCardUpdated({
           cardId,
+          listId: updatedCard.listId,
           field: "coverImage",
           value: null,
         });
       }
     } catch (error) {
       console.error("Failed to remove cover image:", error);
+      setCoverImage(initialCoverImage);
     } finally {
       setIsUpdating(false);
     }
@@ -87,7 +101,7 @@ export const BoardCardItemCoverImage = ({
           <h3 className="text-base font-semibold text-foreground">
             Cover Image
           </h3>
-          {coverImage && (
+          {displayCoverImage && (
             <Badge
               variant="secondary"
               className="bg-secondary text-secondary-foreground"
@@ -96,7 +110,7 @@ export const BoardCardItemCoverImage = ({
             </Badge>
           )}
         </div>
-        {!coverImage && (
+        {!displayCoverImage && (
           <Button
             size="sm"
             variant="ghost"
@@ -129,11 +143,11 @@ export const BoardCardItemCoverImage = ({
         </div>
       )}
 
-      {coverImage && (
+      {displayCoverImage && (
         <div className="p-4 space-y-4">
           <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
             <Image
-              src={coverImage}
+              src={displayCoverImage}
               alt="Card cover"
               fill
               className="object-cover"
@@ -166,7 +180,7 @@ export const BoardCardItemCoverImage = ({
         </div>
       )}
 
-      {!coverImage && !isAdding && (
+      {!displayCoverImage && !isAdding && (
         <div className="flex flex-col items-center justify-center py-12 text-center px-4">
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-3">
             <ImageIcon className="h-8 w-8 text-muted-foreground" />

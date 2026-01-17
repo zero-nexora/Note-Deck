@@ -41,7 +41,7 @@ const SuccessPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="flex items-center justify-center p-6 bg-background">
       <div className="text-center space-y-8 max-w-md">
         <div className="flex justify-center">
           <div className="relative">

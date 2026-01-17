@@ -5,15 +5,18 @@ import { BoardHeaderLabelsDetail } from "./board-header-labels-detail";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { Tag } from "lucide-react";
 import { Button } from "../ui/button";
+import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardHeaderLabelsProps {
   boardId: string;
   boardLabels: BoardWithListLabelsAndMembers["labels"];
+  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardHeaderLabels = ({
   boardLabels,
   boardId,
+  realtimeUtils,
 }: BoardHeaderLabelsProps) => {
   const { open } = useModal();
 
@@ -22,7 +25,11 @@ export const BoardHeaderLabels = ({
       title: "Labels",
       description: "Manage board labels and colors",
       children: (
-        <BoardHeaderLabelsDetail boardId={boardId} boardLabels={boardLabels} />
+        <BoardHeaderLabelsDetail
+          boardId={boardId}
+          boardLabels={boardLabels}
+          realtimeUtils={realtimeUtils}
+        />
       ),
     });
   };

@@ -13,7 +13,7 @@ import { useCard } from "./use-card";
 interface UseBoardDragDropRealtimeProps {
   board: BoardWithListLabelsAndMembers;
   realtimeUtils: ReturnType<
-    typeof import("./use-board-realtime")["useBoardRealtime"]
+    (typeof import("./use-board-realtime"))["useBoardRealtime"]
   >;
 }
 
@@ -58,12 +58,10 @@ export function useBoardDragDropRealtime({
       const type = active.data.current?.type as DragType;
 
       if (type === "card" && !realtimeUtils.canDragCard(active.id as string)) {
-        console.log("Cannot drag card - being dragged by another user");
         return;
       }
 
       if (type === "list" && !realtimeUtils.canDragList(active.id as string)) {
-        console.log("Cannot drag list - being dragged by another user");
         return;
       }
 
@@ -72,7 +70,7 @@ export function useBoardDragDropRealtime({
 
       if (type === "card") {
         const sourceList = board.lists.find((list) =>
-          list.cards.some((c) => c.id === active.id)
+          list.cards.some((c) => c.id === active.id),
         );
         setOriginalSourceListId(sourceList?.id ?? null);
         realtimeUtils.setDraggingCard(active.id as string);
@@ -81,7 +79,7 @@ export function useBoardDragDropRealtime({
         realtimeUtils.setDraggingList(active.id as string);
       }
     },
-    [board.lists, realtimeUtils]
+    [board.lists, realtimeUtils],
   );
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
@@ -147,7 +145,7 @@ export function useBoardDragDropRealtime({
         sourceList.cards = arrayMove(
           sourceList.cards,
           sourceCardIndex,
-          insertIndex
+          insertIndex,
         );
       } else {
         sourceList.cards.splice(sourceCardIndex, 1);
@@ -215,7 +213,7 @@ export function useBoardDragDropRealtime({
             newLists.map((list, idx) => ({
               ...list,
               position: idx + 1,
-            }))
+            })),
           );
 
           const result = await reorderLists({
@@ -226,7 +224,8 @@ export function useBoardDragDropRealtime({
           if (result) {
             realtimeUtils.broadcastListMoved({
               listId: active.id as string,
-              position: newIndex + 1,
+              oldPosition: oldIndex + 1,
+              newPosition: newIndex + 1,
             });
           } else {
             setLists(board.lists);
@@ -242,9 +241,13 @@ export function useBoardDragDropRealtime({
       }
 
       let currentDestListId = "";
+      let finalPosition = 0;
+
       for (const list of lists) {
-        if (list.cards.some((c) => c.id === active.id)) {
+        const cardIndex = list.cards.findIndex((c) => c.id === active.id);
+        if (cardIndex !== -1) {
           currentDestListId = list.id;
+          finalPosition = list.cards[cardIndex].position;
           break;
         }
       }
@@ -273,15 +276,12 @@ export function useBoardDragDropRealtime({
           });
 
           if (result) {
-            const movedCard = destList.cards.find((c) => c.id === active.id);
-            if (movedCard) {
-              realtimeUtils.broadcastCardMoved({
-                cardId: active.id as string,
-                sourceListId: currentDestListId,
-                destinationListId: currentDestListId,
-                position: movedCard.position,
-              });
-            }
+            realtimeUtils.broadcastCardReordered({
+              listId: currentDestListId,
+              cardId: active.id as string,
+              oldPosition: 0,
+              newPosition: finalPosition,
+            });
           } else {
             setLists(board.lists);
           }
@@ -310,12 +310,12 @@ export function useBoardDragDropRealtime({
           });
 
           if (result) {
-            const movedCard = destList.cards.find((c) => c.id === active.id);
             realtimeUtils.broadcastCardMoved({
               cardId: active.id as string,
               sourceListId: originalSourceListId,
               destinationListId: currentDestListId,
-              position: movedCard?.position || 0,
+              sourcePosition: 0,
+              destinationPosition: finalPosition,
             });
           } else {
             setLists(board.lists);
@@ -336,7 +336,7 @@ export function useBoardDragDropRealtime({
       reorderCards,
       reorderLists,
       realtimeUtils,
-    ]
+    ],
   );
 
   return {

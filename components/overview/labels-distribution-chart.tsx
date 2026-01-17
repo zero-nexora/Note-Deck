@@ -82,14 +82,36 @@ export const LabelsDistributionChart = ({
   const [chartType, setChartType] = useState<"pie" | "donut">("donut");
 
   const total = data.reduce((sum, item) => sum + item.cardsCount, 0);
-  const mostUsedLabel = data.reduce((prev, current) =>
-    prev.cardsCount > current.cardsCount ? prev : current
+
+  const mostUsedLabel = data.reduce<LabelDistribution | null>(
+    (prev, current) => {
+      if (!prev) return current;
+      return prev.cardsCount > current.cardsCount ? prev : current;
+    },
+    null,
   );
 
   const chartData = data.map((item) => ({
     ...item,
-    percent: ((item.cardsCount / total) * 100).toFixed(1),
+    percent: total === 0 ? "0" : ((item.cardsCount / total) * 100).toFixed(1),
   }));
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+            <Tag className="w-6 h-6 text-primary" />
+            Labels Distribution
+          </CardTitle>
+          <CardDescription>Card categorization by labels</CardDescription>
+        </CardHeader>
+        <CardContent className="text-center text-muted-foreground py-12">
+          No data to display
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -128,7 +150,6 @@ export const LabelsDistributionChart = ({
           </div>
         </div>
 
-        {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-4 pt-4">
           <div className="bg-accent p-3 rounded-lg border border-border">
             <div className="flex items-center gap-2 mb-1">
@@ -156,7 +177,7 @@ export const LabelsDistributionChart = ({
               </span>
             </div>
             <p className="text-lg font-bold text-primary truncate">
-              {mostUsedLabel.labelName}
+              {mostUsedLabel ? mostUsedLabel.labelName : "—"}
             </p>
           </div>
         </div>
@@ -189,13 +210,11 @@ export const LabelsDistributionChart = ({
                 />
               ))}
             </Pie>
-
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="circle" />
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Labels List */}
         <div className="mt-6 space-y-3">
           <h4 className="font-semibold text-foreground">Label Details</h4>
           <div className="grid gap-2">
@@ -218,7 +237,7 @@ export const LabelsDistributionChart = ({
                     {label.cardsCount} cards
                   </span>
                   <span className="font-semibold text-primary min-w-[50px] text-right">
-                    {isNaN(Number(label.percent)) ? 0 : label.percent}%
+                    {label.percent}%
                   </span>
                 </div>
               </div>

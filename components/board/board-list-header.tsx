@@ -2,7 +2,7 @@
 
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { ActionsMenu, ActionItem } from "../common/actions-menu";
-import { GripVertical, Copy, Trash2 } from "lucide-react";
+import { GripVertical, Copy, Trash2, Pencil } from "lucide-react";
 import { DraggableAttributes } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { Button } from "../ui/button";
@@ -15,6 +15,7 @@ interface BoardListHeaderProps {
   };
   onDelete: () => void;
   onDuplicate: () => void;
+  onEdit: () => void;
 }
 
 export const BoardListHeader = ({
@@ -22,8 +23,14 @@ export const BoardListHeader = ({
   dragHandleProps,
   onDelete,
   onDuplicate,
+  onEdit,
 }: BoardListHeaderProps) => {
   const actions: ActionItem[] = [
+    {
+      label: "Edit list",
+      icon: Pencil,
+      onClick: onEdit,
+    },
     {
       label: "Duplicate list",
       icon: Copy,
