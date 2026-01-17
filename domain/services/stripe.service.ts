@@ -1,5 +1,5 @@
 import { workspaceRepository } from "../repositories/workspace.repository";
-import { stripe, STRIPE_PLANS } from "@/lib/stripe";
+import { getStripe, STRIPE_PLANS } from "@/lib/stripe";
 import Stripe from "stripe";
 import { db } from "@/db";
 import { workspaces } from "@/db/schema";
@@ -16,6 +16,8 @@ export const stripeService = {
   create: async (data: CreateSubscriptionInput) => {
     const workspace = await workspaceRepository.findById(data.workspaceId);
     const plan = data.plan;
+
+    const stripe = getStripe();
 
     let customerId = workspace?.stripeCustomerId;
     if (!customerId) {
@@ -81,6 +83,7 @@ export const stripeService = {
   },
 
   handleInvoicePaymentSucceeded: async (invoice: Stripe.Invoice) => {
+    const stripe = getStripe();
     const line = invoice.lines.data.find((l) => l.subscription !== null);
 
     if (!line || !line.subscription) return;
@@ -109,6 +112,8 @@ export const stripeService = {
   },
 
   handleInvoicePaymentFailed: async (invoice: Stripe.Invoice) => {
+    const stripe = getStripe();
+
     const line = invoice.lines.data.find((l) => l.subscription);
 
     const subscriptionId =
@@ -129,6 +134,8 @@ export const stripeService = {
   },
 
   getCustomerPortalUrl: async (workspaceId: string) => {
+    const stripe = getStripe();
+
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace?.stripeCustomerId)
       throw new Error("Workspace does not have a Stripe Customer ID");

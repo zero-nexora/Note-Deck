@@ -1,5 +1,5 @@
 import { stripeService } from "@/domain/services/stripe.service";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 
@@ -8,13 +8,15 @@ export async function POST(request: Request) {
   const headersList = await headers();
   const signature = headersList.get("stripe-signature")!;
 
+  const stripe = getStripe();
+
   let event;
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET!,
     );
   } catch (err) {
     console.error("Error verifying Stripe webhook signature:", err);

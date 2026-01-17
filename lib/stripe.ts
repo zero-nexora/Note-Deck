@@ -1,9 +1,22 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-11-17.clover",
-  typescript: true,
-});
+let _stripe: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  if (_stripe) return _stripe;
+
+  const secret = process.env.STRIPE_SECRET_KEY;
+  if (!secret) {
+    throw new Error("STRIPE_SECRET_KEY is missing");
+  }
+
+  _stripe = new Stripe(secret, {
+    apiVersion: "2025-11-17.clover",
+    typescript: true,
+  });
+
+  return _stripe;
+}
 
 export const STRIPE_PLANS = {
   free: {

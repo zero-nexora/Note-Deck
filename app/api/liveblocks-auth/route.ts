@@ -1,16 +1,20 @@
 import { getCurrentUser } from "@/lib/session";
 import { Liveblocks } from "@liveblocks/node";
 
-const liveblocks = new Liveblocks({
-  secret: process.env.LIVEBLOCKS_SECRET_KEY!,
-});
-
 export async function POST(request: Request) {
+  if (!process.env.LIVEBLOCKS_SECRET_KEY) {
+    return new Response("Server misconfigured", { status: 500 });
+  }
+
   const user = await getCurrentUser();
 
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
+
+  const liveblocks = new Liveblocks({
+    secret: process.env.LIVEBLOCKS_SECRET_KEY,
+  });
 
   const session = liveblocks.prepareSession(user.id, {
     userInfo: {
