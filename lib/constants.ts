@@ -63,6 +63,12 @@ export const PLAN = {
 
 export type Plan = (typeof PLAN)[keyof typeof PLAN];
 
+export const PLAN_HIERARCHY: Record<Plan, number> = {
+  free: 0,
+  pro: 1,
+  enterprise: 2,
+};
+
 export const UPGRADE_PLAN = {
   PRO: "pro",
   ENTERPRISE: "enterprise",

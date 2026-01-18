@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { Plan } from "./constants";
 
 let _stripe: Stripe | null = null;
 
@@ -48,4 +49,10 @@ export const STRIPE_PLANS = {
       membersPerWorkspace: -1,
     },
   },
+} as const;
+
+export const PLAN_HIERARCHY: Record<Plan, number> = {
+  free: 0,
+  pro: 1,
+  enterprise: 2,
 } as const;

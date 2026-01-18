@@ -41,13 +41,13 @@ export const MoveCardSchema = z.object({
     z.object({
       id: z.string().uuid({ message: "Invalid UUID for id" }),
       position: z.number().int(),
-    })
+    }),
   ),
   destinationOrders: z.array(
     z.object({
       id: z.string().uuid({ message: "Invalid UUID for id" }),
       position: z.number().int(),
-    })
+    }),
   ),
 });
 
@@ -57,8 +57,12 @@ export const ReorderCardsSchema = z.object({
     z.object({
       id: z.string().uuid({ message: "Invalid UUID for id" }),
       position: z.number().int(),
-    })
+    }),
   ),
+});
+
+export const FindLimitCardByBoardIdSchema = z.object({
+  boardId: z.string().min(1, "Board id is required"),
 });
 
 export type CreateCardInput = z.infer<typeof CreateCardSchema>;
@@ -69,3 +73,6 @@ export type RestoreCardInput = z.infer<typeof RestoreCardSchema>;
 export type DuplicateCardInput = z.infer<typeof DuplicateCardSchema>;
 export type MoveCardInput = z.infer<typeof MoveCardSchema>;
 export type ReorderCardsInput = z.infer<typeof ReorderCardsSchema>;
+export type FindLimitCardByBoardIdInput = z.infer<
+  typeof FindLimitCardByBoardIdSchema
+>;

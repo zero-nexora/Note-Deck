@@ -5,14 +5,22 @@ import { NotificationsTab } from "./notification-tab";
 import { SecurityTab } from "./security-tab";
 import { BillingTab } from "./billing-tab";
 import { UserSession } from "@/domain/types/user.type";
-import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
+import {
+  WorkspaceWithLimits,
+  WorkspaceWithOwnerMembers,
+} from "@/domain/types/workspace.type";
 
 interface SettingTapsProps {
   workspace: WorkspaceWithOwnerMembers;
   user: UserSession;
+  workspaceLimits: WorkspaceWithLimits | null;
 }
 
-export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
+export const SettingTabs = ({
+  user,
+  workspace,
+  workspaceLimits,
+}: SettingTapsProps) => {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -67,7 +75,7 @@ export const SettingTabs = ({ user, workspace }: SettingTapsProps) => {
           <SecurityTab user={user} />
         </TabsContent>
         <TabsContent value="billing">
-          <BillingTab workspace={workspace} />
+          <BillingTab workspaceLimits={workspaceLimits} workspace={workspace} />
         </TabsContent>
       </Tabs>
     </div>

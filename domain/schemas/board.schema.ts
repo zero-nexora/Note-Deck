@@ -23,8 +23,20 @@ export const RestoreBoardSchema = z.object({
   id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
+export const FindBoardByIdSchema = z.object({
+  boardId: z.string().min(1, "Invalid UUID for board id"),
+});
+
+export const FindBoardsByWorkspaceIdSchema = z.object({
+  workspaceId: z.string().min(1, "Invalid UUID for workspace id"),
+});
+
 export type CreateBoardInput = z.infer<typeof CreateBoardSchema>;
 export type UpdateBoardInput = z.infer<typeof UpdateBoardSchema>;
 export type DeleteBoardInput = z.infer<typeof DeleteBoardSchema>;
 export type ArchiveBoardInput = z.infer<typeof ArchiveBoardSchema>;
 export type RestoreBoardInput = z.infer<typeof RestoreBoardSchema>;
+export type FindBoardByIdInput = z.infer<typeof FindBoardByIdSchema>;
+export type FindBoardsByWorkspaceIdInput = z.infer<
+  typeof FindBoardsByWorkspaceIdSchema
+>;

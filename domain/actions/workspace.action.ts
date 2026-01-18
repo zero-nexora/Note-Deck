@@ -7,6 +7,8 @@ import {
   CreateWorkspaceSchema,
   DeleteWorkspaceInput,
   DeleteWorkspaceSchema,
+  FindLimitByIdInput,
+  FindLimitByIdSchema,
   FindWorkspaceByIdInput,
   FindWorkspaceByIdSchema,
   UpdateWorkspaceNameInput,
@@ -37,7 +39,7 @@ export const createWorkspaceAction = async (input: CreateWorkspaceInput) => {
 };
 
 export const findWorkspaceByIdAction = async (
-  input: FindWorkspaceByIdInput
+  input: FindWorkspaceByIdInput,
 ) => {
   try {
     const user = await requireAuth();
@@ -62,7 +64,7 @@ export const findWorkspacesByUserAction = async () => {
 
 export const updateWorkspaceNameAction = async (
   workspaceId: string,
-  input: UpdateWorkspaceNameInput
+  input: UpdateWorkspaceNameInput,
 ) => {
   try {
     const user = await requireAuth();
@@ -76,7 +78,7 @@ export const updateWorkspaceNameAction = async (
     const workspace = await workspaceService.updateName(
       user.id,
       workspaceId,
-      parsed.data
+      parsed.data,
     );
     return success("Workspace name updated successfully", workspace);
   } catch (err: any) {
@@ -86,7 +88,7 @@ export const updateWorkspaceNameAction = async (
 
 export const changeWorkspacePlanAction = async (
   workspaceId: string,
-  input: ChangePlanInput
+  input: ChangePlanInput,
 ) => {
   try {
     const user = await requireAuth();
@@ -95,7 +97,7 @@ export const changeWorkspacePlanAction = async (
     const workspace = await workspaceService.changePlan(
       user.id,
       workspaceId,
-      parsed.data
+      parsed.data,
     );
     return success("Workspace plan changed successfully", workspace);
   } catch (err: any) {
@@ -110,6 +112,24 @@ export const deleteWorkspaceAction = async (input: DeleteWorkspaceInput) => {
     if (!parsed.success) return error("Invalid workspace id");
     await workspaceService.delete(user.id, parsed.data);
     return success("Workspace deleted successfully");
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
+export const findWorkspaceLimitAction = async (input: FindLimitByIdInput) => {
+  try {
+    const user = await requireAuth();
+
+    const parsed = FindLimitByIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid workspace id");
+
+    const data = await workspaceService.findLimitByWorkspaceId(
+      user.id,
+      parsed.data,
+    );
+
+    return success("", data);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }

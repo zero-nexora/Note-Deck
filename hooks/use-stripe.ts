@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  checkStripeCheckoutSessionAction,
   createStripeCheckoutAction,
   getStripeCustomerPortalAction,
 } from "@/domain/actions/stripe.action";
@@ -24,8 +25,20 @@ export function useStripe() {
     }
   };
 
+  const checkCheckoutSession = async (sessionId: string) => {
+    const result = await checkStripeCheckoutSessionAction({ sessionId });
+
+    if (!result.success) {
+      toast.error(result.message);
+      return false;
+    }
+
+    return result.data?.valid === true;
+  };
+
   return {
     checkout,
     openCustomerPortal,
+    checkCheckoutSession,
   };
 }

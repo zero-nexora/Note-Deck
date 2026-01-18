@@ -9,6 +9,7 @@ import {
   CreateCardInput,
   DeleteCardInput,
   DuplicateCardInput,
+  FindLimitCardByBoardIdInput,
   MoveCardInput,
   ReorderCardsInput,
   RestoreCardInput,
@@ -28,6 +29,7 @@ import {
   ROLE,
 } from "@/lib/constants";
 import { STRIPE_PLANS } from "@/lib/stripe";
+import { workspaceRepository } from "../repositories/workspace.repository";
 
 export const cardService = {
   create: async (userId: string, data: CreateCardInput) => {
@@ -52,12 +54,12 @@ export const cardService = {
 
     if (cardLimit !== -1) {
       const currentCardCount = await cardRepository.countByBoardId(
-        list.boardId
+        list.boardId,
       );
 
       if (currentCardCount >= cardLimit) {
         throw new Error(
-          `Card limit reached for ${plan.name} plan (${cardLimit} cards per board)`
+          `Card limit reached for ${plan.name} plan (${cardLimit} cards per board)`,
         );
       }
     }
@@ -109,7 +111,7 @@ export const cardService = {
   findById: async (userId: string, cardId: string) => {
     const card =
       await cardRepository.findByIdWithBoardMembersChecklistsCommentsAttachmentsActivitiesAndCardLabels(
-        cardId
+        cardId,
       );
 
     if (!card) {
@@ -124,6 +126,37 @@ export const cardService = {
     if (!allowed) throw new Error("Permission denied");
 
     return card ? card : null;
+  },
+
+  findLimitByBoardId: async (
+    userId: string,
+    data: FindLimitCardByBoardIdInput,
+  ) => {
+    const board = await boardRepository.findById(data.boardId);
+    if (!board) throw new Error("Board not found");
+
+    const workspace = await workspaceRepository.findById(board.workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const allowed = await canUser(userId, {
+      workspaceId: workspace.id,
+      workspaceRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
+
+    const cardsUsed = await cardRepository.getTotalCardsByBoardId(board.id);
+
+    const cardLimit = STRIPE_PLANS[workspace.plan].limits.cardsPerBoard;
+
+    return {
+      boardId: board.id,
+      limits: {
+        cards: cardLimit,
+      },
+      usage: {
+        cards: cardsUsed,
+      },
+    };
   },
 
   update: async (userId: string, cardId: string, data: UpdateCardInput) => {
@@ -208,7 +241,7 @@ export const cardService = {
 
     const sourceList = await listRepository.findById(data.sourceListId);
     const destinationList = await listRepository.findById(
-      data.destinationListId
+      data.destinationListId,
     );
 
     if (!sourceList || !destinationList) {
@@ -238,7 +271,7 @@ export const cardService = {
       if (data.destinationOrders.length > 0) {
         await cardRepository.reorders(
           data.destinationListId,
-          data.destinationOrders
+          data.destinationOrders,
         );
       }
     } else {
@@ -253,7 +286,7 @@ export const cardService = {
       if (data.destinationOrders.length > 0) {
         await cardRepository.reorders(
           data.destinationListId,
-          data.destinationOrders
+          data.destinationOrders,
         );
       }
 
@@ -316,7 +349,7 @@ export const cardService = {
     for (const order of data.orders) {
       if (!listCardIds.has(order.id)) {
         throw new Error(
-          `Card ${order.id} does not belong to list ${data.listId}`
+          `Card ${order.id} does not belong to list ${data.listId}`,
         );
       }
     }
@@ -447,7 +480,7 @@ export const cardService = {
   duplicate: async (userId: string, data: DuplicateCardInput) => {
     const originalCard =
       await cardRepository.findByIdWithBoardCardLabelsChecklistsAttachments(
-        data.id
+        data.id,
       );
     if (!originalCard) {
       throw new Error("Card not found");
@@ -462,7 +495,7 @@ export const cardService = {
     if (!allowed) throw new Error("Permission denied");
 
     const maxPosition = await cardRepository.getMaxPosition(
-      originalCard.listId
+      originalCard.listId,
     );
 
     const newCard = await cardRepository.create({

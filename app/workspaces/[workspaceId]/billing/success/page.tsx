@@ -1,18 +1,44 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { useEffect } from "react";
-import { CheckCircle, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useStripe } from "@/hooks/use-stripe";
 
 const SuccessPage = () => {
   const params = useParams<{ workspaceId: string }>();
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const { checkCheckoutSession } = useStripe();
 
   const workspaceId = params.workspaceId;
+  const sessionId = searchParams.get("session_id");
+
+  const [valid, setValid] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    if (!sessionId) {
+      router.replace(`/workspaces/${workspaceId}`);
+      return;
+    }
+
+    checkCheckoutSession(sessionId).then((isValid) => {
+      if (!isValid) {
+        router.replace(`/workspaces/${workspaceId}`);
+        return;
+      }
+
+      setValid(true);
+      setChecked(true);
+    });
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!valid) return;
+
     const duration = 3000;
     const end = Date.now() + duration;
 
@@ -24,6 +50,7 @@ const SuccessPage = () => {
         origin: { x: 0 },
         colors: ["#8b5cf6", "#a78bfa", "#c4b5fd"],
       });
+
       confetti({
         particleCount: 2,
         angle: 120,
@@ -38,44 +65,23 @@ const SuccessPage = () => {
     };
 
     frame();
-  }, []);
+  }, [valid]);
+
+  if (!checked) return null;
 
   return (
-    <div className="flex items-center justify-center p-6 bg-background">
-      <div className="text-center space-y-8 max-w-md">
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse" />
-            <div className="relative rounded-full bg-primary/10 p-8 border-2 border-primary/30">
-              <CheckCircle className="w-20 h-20 text-primary" />
-            </div>
-          </div>
-        </div>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="text-center space-y-6">
+        <CheckCircle className="mx-auto h-16 w-16 text-primary" />
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-4xl font-bold text-foreground">
-              Payment Successful!
-            </h1>
-            <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-          </div>
-          <p className="text-base text-muted-foreground">
-            Your subscription has been activated successfully.
-          </p>
-          <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-            <p className="text-sm text-foreground font-medium">
-              Thank you for upgrading! You now have access to all premium
-              features.
-            </p>
-          </div>
-        </div>
+        <h1 className="text-2xl font-semibold">Payment successful</h1>
 
-        <Button
-          onClick={() => router.replace(`/workspaces/${workspaceId}`)}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-          size="lg"
-        >
-          Go to Dashboard
+        <p className="text-sm text-muted-foreground">
+          Your subscription has been activated.
+        </p>
+
+        <Button onClick={() => router.replace(`/workspaces/${workspaceId}/overview`)}>
+          Go to workspace
         </Button>
       </div>
     </div>

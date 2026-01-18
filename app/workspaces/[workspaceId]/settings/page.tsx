@@ -1,4 +1,7 @@
-import { findWorkspaceByIdAction } from "@/domain/actions/workspace.action";
+import {
+  findWorkspaceByIdAction,
+  findWorkspaceLimitAction,
+} from "@/domain/actions/workspace.action";
 import { SettingTabs } from "@/components/setting/setting-tabs";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { requireAuth } from "@/lib/session";
@@ -10,17 +13,31 @@ interface SettingsPageProps {
 
 const SettingPage = async ({ params }: SettingsPageProps) => {
   const { workspaceId } = await params;
-  const user = await requireAuth();
 
-  const workspace = unwrapActionResult<WorkspaceWithOwnerMembers>(
-    await findWorkspaceByIdAction({
-      workspaceId,
-    })
-  );
+  const userPromise = requireAuth();
+  const workspacePromise = findWorkspaceByIdAction({ workspaceId });
+  const workspaceLimitPromise = findWorkspaceLimitAction({ workspaceId });
 
+  const [user, workspaceResult, workspaceLimitResult] = await Promise.all([
+    userPromise,
+    workspacePromise,
+    workspaceLimitPromise,
+  ]);
+
+  const workspace =
+    unwrapActionResult<WorkspaceWithOwnerMembers>(workspaceResult);
   if (!workspace) return null;
 
-  return <SettingTabs workspace={workspace} user={user} />;
+  const workspaceLimits = unwrapActionResult(workspaceLimitResult);
+  if (!workspaceLimits) return null;
+
+  return (
+    <SettingTabs
+      workspace={workspace}
+      user={user}
+      workspaceLimits={workspaceLimits}
+    />
+  );
 };
 
 export default SettingPage;

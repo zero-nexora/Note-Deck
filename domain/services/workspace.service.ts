@@ -6,6 +6,7 @@ import {
   ChangePlanInput,
   CreateWorkspaceInput,
   DeleteWorkspaceInput,
+  FindLimitByIdInput,
   FindWorkspaceByIdInput,
   UpdateWorkspaceNameInput,
 } from "../schemas/workspace.schema";
@@ -18,6 +19,7 @@ import {
   PERMISSIONS,
   ROLE,
 } from "@/lib/constants";
+import { boardRepository } from "../repositories/board.repository";
 
 export const workspaceService = {
   create: async (userId: string, data: CreateWorkspaceInput) => {
@@ -51,14 +53,14 @@ export const workspaceService = {
 
   findById: async (userId: string, data: FindWorkspaceByIdInput) => {
     const workspace = await workspaceRepository.findByIdWithOwnerAndMembers(
-      data.workspaceId
+      data.workspaceId,
     );
 
     if (!workspace) throw new Error("Workspace not found");
 
     const allowed = await canUser(userId, {
       workspaceId: workspace.id,
-      workspaceRole: ROLE.OBSERVER
+      workspaceRole: ROLE.OBSERVER,
     });
 
     if (!allowed) throw new Error("Permission denied");
@@ -78,7 +80,7 @@ export const workspaceService = {
   updateName: async (
     userId: string,
     workspaceId: string,
-    data: UpdateWorkspaceNameInput
+    data: UpdateWorkspaceNameInput,
   ) => {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
@@ -86,7 +88,7 @@ export const workspaceService = {
     const allowed = await canUser(userId, {
       workspaceId: workspace.id,
       workspaceRole: ROLE.ADMIN,
-      permission: PERMISSIONS.WORKSPACE_UPDATE
+      permission: PERMISSIONS.WORKSPACE_UPDATE,
     });
 
     if (!allowed) throw new Error("Permission denied");
@@ -114,7 +116,7 @@ export const workspaceService = {
   changePlan: async (
     userId: string,
     workspaceId: string,
-    data: ChangePlanInput
+    data: ChangePlanInput,
   ) => {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) throw new Error("Workspace not found");
@@ -170,5 +172,32 @@ export const workspaceService = {
     });
 
     await workspaceRepository.delete(data.id);
+  },
+
+  findLimitByWorkspaceId: async (userId: string, data: FindLimitByIdInput) => {
+    const workspace = await workspaceRepository.findById(data.workspaceId);
+    if (!workspace) throw new Error("Workspace not found");
+
+    const allowed = await canUser(userId, {
+      workspaceId: workspace.id,
+      workspaceRole: ROLE.OBSERVER,
+    });
+    if (!allowed) throw new Error("Permission denied");
+
+    const limits = STRIPE_PLANS[workspace.plan].limits;
+
+    const [totalBoards, totalMembers] = await Promise.all([
+      boardRepository.getTotalBoardsByWorkspaceId(workspace.id),
+      workspaceMemberRepository.getTotalMembersByWorkspaceId(workspace.id),
+    ]);
+
+    return {
+      plan: workspace.plan,
+      limits,
+      usage: {
+        boards: totalBoards,
+        members: totalMembers,
+      },
+    };
   },
 };

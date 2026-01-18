@@ -6,4 +6,9 @@ export const CreateSubscriptionSchema = z.object({
   plan: z.nativeEnum(UPGRADE_PLAN),
 });
 
+export const CheckSessionSchema = z.object({
+  sessionId: z.string().min(1),
+});
+
 export type CreateSubscriptionInput = z.infer<typeof CreateSubscriptionSchema>;
+export type CheckSessionInput = z.infer<typeof CheckSessionSchema>;

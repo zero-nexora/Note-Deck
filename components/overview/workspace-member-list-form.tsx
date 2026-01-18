@@ -8,13 +8,16 @@ import { useSession } from "next-auth/react";
 import { ActionItem, ActionsMenu } from "../common/actions-menu";
 import { getInitials } from "@/lib/utils";
 import { useState } from "react";
+import { WorkspaceWithLimits } from "@/domain/types/workspace.type";
 
 interface WorkspaceMemberListProps {
   workspaceMembers: WorkspaceMemberWithUser[];
+  workspaceLimits: WorkspaceWithLimits | null;
 }
 
 export const WorkspaceMemberListForm = ({
   workspaceMembers: initialMembers,
+  workspaceLimits,
 }: WorkspaceMemberListProps) => {
   const { data: session } = useSession();
   const { open } = useConfirm();
@@ -68,7 +71,7 @@ export const WorkspaceMemberListForm = ({
   const handleChangeRole = (
     memberId: string,
     workspaceId: string,
-    newRole: "admin" | "normal" | "observer"
+    newRole: "admin" | "normal" | "observer",
   ) => {
     open({
       title: "Change member role",
@@ -83,8 +86,10 @@ export const WorkspaceMemberListForm = ({
         if (result) {
           setMembers((prevMembers) =>
             prevMembers.map((member) =>
-              member.userId === memberId ? { ...member, role: newRole } : member
-            )
+              member.userId === memberId
+                ? { ...member, role: newRole }
+                : member,
+            ),
           );
         }
       },
@@ -94,7 +99,7 @@ export const WorkspaceMemberListForm = ({
   const handleRemoveMember = (
     memberId: string,
     workspaceId: string,
-    memberName: string
+    memberName: string,
   ) => {
     open({
       title: "Remove member",
@@ -107,7 +112,7 @@ export const WorkspaceMemberListForm = ({
         });
 
         setMembers((prevMembers) =>
-          prevMembers.filter((member) => member.userId !== memberId)
+          prevMembers.filter((member) => member.userId !== memberId),
         );
       },
     });
@@ -116,7 +121,7 @@ export const WorkspaceMemberListForm = ({
   const handleTransferOwnership = (
     memberId: string,
     workspaceId: string,
-    memberName: string
+    memberName: string,
   ) => {
     open({
       title: "Transfer ownership",
@@ -137,7 +142,7 @@ export const WorkspaceMemberListForm = ({
               return { ...member, role: "normal" as const };
             }
             return member;
-          })
+          }),
         );
       },
     });
@@ -153,7 +158,7 @@ export const WorkspaceMemberListForm = ({
         await leaveWorkspace({ workspaceId });
 
         setMembers((prevMembers) =>
-          prevMembers.filter((member) => member.userId !== currentUserId)
+          prevMembers.filter((member) => member.userId !== currentUserId),
         );
       },
     });
@@ -204,7 +209,7 @@ export const WorkspaceMemberListForm = ({
             handleTransferOwnership(
               member.userId,
               member.workspaceId,
-              member.user.name || "this user"
+              member.user.name || "this user",
             ),
           separator: true,
         },
@@ -215,7 +220,7 @@ export const WorkspaceMemberListForm = ({
             handleRemoveMember(
               member.userId,
               member.workspaceId,
-              member.user.name || "this user"
+              member.user.name || "this user",
             ),
           variant: "destructive",
           separator: true,
@@ -235,6 +240,18 @@ export const WorkspaceMemberListForm = ({
             {members.length} {members.length === 1 ? "member" : "members"}
           </p>
         </div>
+        {workspaceLimits && (
+          <div className="flex items-center gap-2 text-sm">
+            <Badge variant="outline" className="font-normal">
+              {workspaceLimits.limits.membersPerWorkspace === -1
+                ? "Unlimited"
+                : `${workspaceLimits.usage.members}/${workspaceLimits.limits.membersPerWorkspace}`}
+            </Badge>
+            <Badge variant="secondary" className="capitalize">
+              {workspaceLimits.plan}
+            </Badge>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">

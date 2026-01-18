@@ -14,6 +14,8 @@ import {
   ArchiveBoardInput,
   CreateBoardInput,
   DeleteBoardInput,
+  FindBoardByIdInput,
+  FindBoardsByWorkspaceIdInput,
   RestoreBoardInput,
   UpdateBoardInput,
 } from "../schemas/board.schema";
@@ -46,12 +48,12 @@ export const boardService = {
 
     if (boardLimit !== -1) {
       const currentBoardCount = await boardRepository.countByWorkspaceId(
-        data.workspaceId
+        data.workspaceId,
       );
 
       if (currentBoardCount >= boardLimit) {
         throw new Error(
-          `Board limit reached for ${plan.name} plan (${boardLimit} boards)`
+          `Board limit reached for ${plan.name} plan (${boardLimit} boards)`,
         );
       }
     }
@@ -95,9 +97,11 @@ export const boardService = {
     return board;
   },
 
-  findById: async (userId: string, boardId: string) => {
+  findById: async (userId: string, data: FindBoardByIdInput) => {
     const board =
-      await boardRepository.findByIdWithWorkspaceMembersListsAndLabels(boardId);
+      await boardRepository.findByIdWithWorkspaceMembersListsAndLabels(
+        data.boardId,
+      );
     if (!board) {
       throw new Error("Board not found");
     }
@@ -112,14 +116,17 @@ export const boardService = {
     return board;
   },
 
-  findByWorkspaceId: async (userId: string, workspaceId: string) => {
-    const workspace = await workspaceRepository.findById(workspaceId);
+  findByWorkspaceId: async (
+    userId: string,
+    data: FindBoardsByWorkspaceIdInput,
+  ) => {
+    const workspace = await workspaceRepository.findById(data.workspaceId);
     if (!workspace) {
       throw new Error("Workspace not found");
     }
 
     const boards = await boardRepository.findByWorkspaceIdWithMembers(
-      workspaceId
+      workspace.id,
     );
 
     const result = [];

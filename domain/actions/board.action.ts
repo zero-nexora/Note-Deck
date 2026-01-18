@@ -11,6 +11,10 @@ import {
   RestoreBoardSchema,
   DeleteBoardInput,
   DeleteBoardSchema,
+  FindBoardByIdInput,
+  FindBoardByIdSchema,
+  FindBoardsByWorkspaceIdInput,
+  FindBoardsByWorkspaceIdSchema,
 } from "@/domain/schemas/board.schema";
 import { boardService } from "@/domain/services/board.service";
 import { requireAuth } from "@/lib/session";
@@ -34,20 +38,31 @@ export const createBoardAction = async (input: CreateBoardInput) => {
   }
 };
 
-export const findBoardByIdAction = async (boardId: string) => {
+export const findBoardByIdAction = async (input: FindBoardByIdInput) => {
   try {
     const user = await requireAuth();
-    const board = await boardService.findById(user.id, boardId);
+
+    const parsed = FindBoardByIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid board id");
+
+    const board = await boardService.findById(user.id, parsed.data);
     return success("", board);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
   }
 };
 
-export const findBoardsByWorkspaceIdAction = async (workspaceId: string) => {
+export const findBoardsByWorkspaceIdAction = async (
+  input: FindBoardsByWorkspaceIdInput,
+) => {
   try {
     const user = await requireAuth();
-    const boards = await boardService.findByWorkspaceId(user.id, workspaceId);
+
+    const parsed = FindBoardsByWorkspaceIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid workspace id");
+
+    const boards = await boardService.findByWorkspaceId(user.id, parsed.data);
+
     return success("", boards);
   } catch (err: any) {
     return error(err.message ?? "Something went wrong");
@@ -56,7 +71,7 @@ export const findBoardsByWorkspaceIdAction = async (workspaceId: string) => {
 
 export const updateBoardAction = async (
   boardId: string,
-  input: UpdateBoardInput
+  input: UpdateBoardInput,
 ) => {
   try {
     const user = await requireAuth();

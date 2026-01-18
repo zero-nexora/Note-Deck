@@ -94,7 +94,10 @@ export const Sidebar = ({ workspaces, workspaceId }: SidebarProps) => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-semibold text-sm mr-2">
                   <span>{ws.name.charAt(0).toUpperCase()}</span>
                 </div>
-                <span className="font-medium">{ws.name}</span>
+                <div className="text-xs text-muted-foreground flex flex-col">
+                  <span className="text-foreground font-medium">{ws.name}</span>
+                  {ws?.plan} plan
+                </div>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator className="bg-border" />

@@ -15,18 +15,19 @@ interface AutomationsPageProps {
 const AutomationsPage = async ({ params }: AutomationsPageProps) => {
   const { boardId } = await params;
 
-  const automations = unwrapActionResult<AutomationDetails[]>(
-    await findAutomationsByBoardIdAction(boardId)
-  );
-  if (!automations) return null;
+  const [automationsResult, boardMembersResult, labelsResult] =
+    await Promise.all([
+      findAutomationsByBoardIdAction(boardId),
+      listBoardMembersAction({ boardId }),
+      findLabelsByBoardIdAction(boardId),
+    ]);
 
-  const boardMembers = unwrapActionResult(
-    await listBoardMembersAction({ boardId })
-  );
-  if (!boardMembers) return null;
+  const automations =
+    unwrapActionResult<AutomationDetails[]>(automationsResult);
+  const boardMembers = unwrapActionResult(boardMembersResult);
+  const labels = unwrapActionResult(labelsResult);
 
-  const labels = unwrapActionResult(await findLabelsByBoardIdAction(boardId));
-  if (!labels) return null;
+  if (!automations || !boardMembers || !labels) return null;
 
   return (
     <div className="space-y-6">
@@ -40,6 +41,7 @@ const AutomationsPage = async ({ params }: AutomationsPageProps) => {
             Automate your workflow with custom triggers and actions
           </p>
         </div>
+
         <CreateAutomation
           boardId={boardId}
           labels={labels}
@@ -48,6 +50,7 @@ const AutomationsPage = async ({ params }: AutomationsPageProps) => {
       </div>
 
       <AutomaitonStats automation={automations} />
+
       <AutomationList
         boardMembers={boardMembers}
         labels={labels}

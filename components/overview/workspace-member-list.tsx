@@ -5,13 +5,16 @@ import { Button } from "../ui/button";
 import { useModal } from "@/stores/modal-store";
 import { Users } from "lucide-react";
 import { WorkspaceMemberListForm } from "./workspace-member-list-form";
+import { WorkspaceWithLimits } from "@/domain/types/workspace.type";
 
 interface WorkspaceMemberListProps {
   workspaceMembers: WorkspaceMemberWithUser[];
+  workspaceLimits: WorkspaceWithLimits | null;
 }
 
 export const WorkspaceMemberList = ({
   workspaceMembers,
+  workspaceLimits,
 }: WorkspaceMemberListProps) => {
   const { open } = useModal();
 
@@ -19,7 +22,12 @@ export const WorkspaceMemberList = ({
     open({
       title: "Workspace Members",
       description: "View and manage workspace members",
-      children: <WorkspaceMemberListForm workspaceMembers={workspaceMembers} />,
+      children: (
+        <WorkspaceMemberListForm
+          workspaceLimits={workspaceLimits}
+          workspaceMembers={workspaceMembers}
+        />
+      ),
     });
   };
 

@@ -5,6 +5,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const formatPrice = (price: number) => {
+  if (price === 0) return "Free";
+  return `$${price}/month`;
+};
+
 export const getInitials = (user: any) => {
   if (user.name) {
     return user.name
@@ -37,7 +42,7 @@ export function getModernLabelStyle(
     bgAlpha?: number;
     borderAlpha?: number;
     textAlpha?: number;
-  }
+  },
 ): LabelStyle {
   const { bgAlpha = 0.18, borderAlpha = 0.45, textAlpha = 0.9 } = options || {};
 

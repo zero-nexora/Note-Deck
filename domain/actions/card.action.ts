@@ -17,6 +17,8 @@ import {
   ReorderCardsSchema,
   DuplicateCardInput,
   DuplicateCardSchema,
+  FindLimitCardByBoardIdInput,
+  FindLimitCardByBoardIdSchema,
 } from "@/domain/schemas/card.schema";
 import { cardService } from "@/domain/services/card.service";
 import { error, success } from "@/lib/response";
@@ -165,5 +167,22 @@ export const duplicateCardAction = async (input: DuplicateCardInput) => {
     return success("Card duplicated successfully", card);
   } catch (e: any) {
     return error(e.message ?? "Something went wrong");
+  }
+};
+
+export const findLimitCardByBoardIdAction = async (
+  input: FindLimitCardByBoardIdInput,
+) => {
+  try {
+    const user = await requireAuth();
+
+    const parsed = FindLimitCardByBoardIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid board id");
+
+    const data = await cardService.findLimitByBoardId(user.id, parsed.data);
+
+    return success("", data);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
   }
 };

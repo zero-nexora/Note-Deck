@@ -35,6 +35,8 @@ import { listPendingWorkspaceInvitesAction } from "@/domain/actions/workspace-in
 import { workspacePendingInvite } from "@/domain/types/workspace-invite.type";
 import { WorkspacePendingInviteList } from "@/components/overview/workspace-pending-invite-list";
 import { LayoutDashboard } from "lucide-react";
+import { findWorkspaceLimitAction } from "@/domain/actions/workspace.action";
+import { WorkspaceWithLimits } from "@/domain/types/workspace.type";
 
 interface OverviewPageProps {
   params: Promise<{ workspaceId: string }>;
@@ -54,6 +56,7 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
     dueDateAnalyticsResult,
     listWorkspaceMembersResult,
     listPendingWorkspaceInvitesResult,
+    findWorkspaceLimitResult,
   ] = await Promise.all([
     getWorkspaceStatsAction({ workspaceId }),
     getCardsTrendAction({ workspaceId }),
@@ -65,6 +68,7 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
     getDueDateAnalyticsAction({ workspaceId }),
     listWorkspaceMembersAction({ workspaceId }),
     listPendingWorkspaceInvitesAction({ workspaceId }),
+    findWorkspaceLimitAction({ workspaceId }),
   ]);
 
   const workspaceStats =
@@ -92,6 +96,10 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
       listPendingWorkspaceInvitesResult,
     ) || [];
 
+  const workspaceLimits = unwrapActionResult<WorkspaceWithLimits>(
+    findWorkspaceLimitResult,
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -105,7 +113,10 @@ const OverviewPage = async ({ params }: OverviewPageProps) => {
           </p>
         </div>
         <div className="flex gap-4">
-          <WorkspaceMemberList workspaceMembers={workspaceMembers} />
+          <WorkspaceMemberList
+            workspaceLimits={workspaceLimits}
+            workspaceMembers={workspaceMembers}
+          />
           <WorkspacePendingInviteList
             workspacePendingInvite={workspacePendingInvites}
           />

@@ -5,5 +5,12 @@ export type Workspace = typeof workspaces.$inferSelect;
 export type NewWorkspace = typeof workspaces.$inferInsert;
 export type UpdateWorkspace = Partial<NewWorkspace>;
 
-export type WorkspaceWithMember = Awaited<ReturnType<typeof workspaceService.findByUserId>>[number]
-export type WorkspaceWithOwnerMembers = Awaited<ReturnType<typeof workspaceService.findById>>
+export type WorkspaceWithMember = Awaited<
+  ReturnType<typeof workspaceService.findByUserId>
+>[number];
+export type WorkspaceWithOwnerMembers = Awaited<
+  ReturnType<typeof workspaceService.findById>
+>;
+export type WorkspaceWithLimits = Awaited<
+  ReturnType<typeof workspaceService.findLimitByWorkspaceId>
+>;

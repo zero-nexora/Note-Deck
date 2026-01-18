@@ -10,23 +10,27 @@ import { BoardHeaderMembers } from "./board-header-members";
 import { BoardInviteMember } from "./board-invite-member";
 import { Button } from "../ui/button";
 import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import { LimitCardsPerBoard } from "@/domain/types/card.type";
 
 interface BoardHeaderProps {
   board: BoardWithListLabelsAndMembers;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
   realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  limitCardsPerBoard: LimitCardsPerBoard | null;
 }
 
 export const BoardHeader = ({
   board,
   workspaceMembers,
   realtimeUtils,
+  limitCardsPerBoard,
 }: BoardHeaderProps) => {
   return (
     <header className="shrink-0 border-b border-border bg-card">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           <BoardHeaderNameDescription
+            limitCardsPerBoard={limitCardsPerBoard}
             boardId={board.id}
             boardName={board.name}
             boardDescription={board.description}

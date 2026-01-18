@@ -22,6 +22,10 @@ export const DeleteWorkspaceSchema = z.object({
   id: z.string().uuid({ message: "Invalid UUID for id" }),
 });
 
+export const FindLimitByIdSchema = z.object({
+  workspaceId: z.string().uuid({ message: "Invalid UUID for workspaceId" }),
+});
+
 export type CreateWorkspaceInput = z.infer<typeof CreateWorkspaceSchema>;
 export type UpdateWorkspaceNameInput = z.infer<
   typeof UpdateWorkspaceNameSchema
@@ -29,3 +33,4 @@ export type UpdateWorkspaceNameInput = z.infer<
 export type FindWorkspaceByIdInput = z.infer<typeof FindWorkspaceByIdSchema>;
 export type ChangePlanInput = z.infer<typeof ChangePlanSchema>;
 export type DeleteWorkspaceInput = z.infer<typeof DeleteWorkspaceSchema>;
+export type FindLimitByIdInput = z.infer<typeof FindLimitByIdSchema>;

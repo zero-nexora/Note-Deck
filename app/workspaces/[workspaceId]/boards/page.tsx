@@ -1,8 +1,10 @@
 import { findBoardsByWorkspaceIdAction } from "@/domain/actions/board.action";
+import { findWorkspaceLimitAction } from "@/domain/actions/workspace.action";
 import { BoardList } from "@/components/board/board-list";
 import { BoardWithMember } from "@/domain/types/board.type";
 import { unwrapActionResult } from "@/lib/response";
 import { Kanban } from "lucide-react";
+import { WorkspaceWithLimits } from "@/domain/types/workspace.type";
 
 interface BoardsPageProps {
   params: Promise<{ workspaceId: string }>;
@@ -11,9 +13,13 @@ interface BoardsPageProps {
 const BoardsPage = async ({ params }: BoardsPageProps) => {
   const { workspaceId } = await params;
 
-  const boards = unwrapActionResult<BoardWithMember[]>(
-    await findBoardsByWorkspaceIdAction(workspaceId),
-  );
+  const [boardsResult, limitResult] = await Promise.all([
+    findBoardsByWorkspaceIdAction({ workspaceId }),
+    findWorkspaceLimitAction({ workspaceId }),
+  ]);
+
+  const boards = unwrapActionResult<BoardWithMember[]>(boardsResult);
+  const workspaceLimits = unwrapActionResult<WorkspaceWithLimits>(limitResult);
 
   if (!boards) return null;
 
@@ -28,7 +34,12 @@ const BoardsPage = async ({ params }: BoardsPageProps) => {
           Manage all boards in this workspace.
         </p>
       </div>
-      <BoardList boards={boards} workspaceId={workspaceId} />
+
+      <BoardList
+        boards={boards}
+        workspaceId={workspaceId}
+        workspaceLimits={workspaceLimits}
+      />
     </div>
   );
 };

@@ -11,17 +11,20 @@ import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { LiveCursors } from "./live-cursors";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
 import { useCallback, useRef } from "react";
+import { LimitCardsPerBoard } from "@/domain/types/card.type";
 
 interface BoardContainerProps {
   board: BoardWithListLabelsAndMembers;
   user: User;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
+  limitCardsPerBoard: LimitCardsPerBoard | null;
 }
 
 const BoardContainerInner = ({
   board,
   user,
   workspaceMembers,
+  limitCardsPerBoard,
 }: BoardContainerProps) => {
   const router = useRouter();
 
@@ -59,6 +62,7 @@ const BoardContainerInner = ({
       <LiveCursors />
       <div className="flex flex-col h-full gap-4">
         <BoardHeader
+          limitCardsPerBoard={limitCardsPerBoard}
           board={board}
           workspaceMembers={workspaceMembers}
           realtimeUtils={realtimeUtils}
@@ -73,6 +77,7 @@ export const BoardContainer = ({
   board,
   user,
   workspaceMembers,
+  limitCardsPerBoard,
 }: BoardContainerProps) => {
   const userColor = generateUserColor(user.id);
 
@@ -95,6 +100,7 @@ export const BoardContainer = ({
       <ClientSideSuspense fallback={<BoardLoading />}>
         {() => (
           <BoardContainerInner
+            limitCardsPerBoard={limitCardsPerBoard}
             board={board}
             user={user}
             workspaceMembers={workspaceMembers}

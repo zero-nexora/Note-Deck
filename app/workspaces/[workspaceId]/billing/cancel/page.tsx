@@ -11,33 +11,18 @@ const CancelPage = () => {
   const workspaceId = params.workspaceId;
 
   return (
-    <div className="flex items-center justify-center p-6 bg-background">
-      <div className="text-center space-y-8 max-w-md">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-destructive/10 p-8 border-2 border-destructive/20">
-            <XCircle className="w-20 h-20 text-destructive" />
-          </div>
-        </div>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="text-center space-y-6">
+        <XCircle className="mx-auto h-16 w-16 text-destructive" />
 
-        <div className="space-y-3">
-          <h1 className="text-4xl font-bold text-foreground">
-            Payment Cancelled
-          </h1>
-          <p className="text-base text-muted-foreground">
-            Your payment was cancelled and no charges were made.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Don&apos;t worry, you can try again anytime you&apos;re ready.
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold">Payment cancelled</h1>
 
-        <Button
-          onClick={() => router.replace(`/workspaces/${workspaceId}`)}
-          variant="default"
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-          size="lg"
-        >
-          Back to Dashboard
+        <p className="text-sm text-muted-foreground">
+          Your payment was cancelled. No charges were made.
+        </p>
+
+        <Button onClick={() => router.replace(`/workspaces/${workspaceId}/overview`)}>
+          Back to workspace
         </Button>
       </div>
     </div>

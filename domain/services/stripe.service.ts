@@ -1,5 +1,5 @@
 import { workspaceRepository } from "../repositories/workspace.repository";
-import { getStripe, STRIPE_PLANS } from "@/lib/stripe";
+import { getStripe, PLAN_HIERARCHY, STRIPE_PLANS } from "@/lib/stripe";
 import Stripe from "stripe";
 import { db } from "@/db";
 import { workspaces } from "@/db/schema";
@@ -10,12 +10,24 @@ import {
   SUBSCRIPTION_STATUS,
   SubscriptionStatus,
 } from "@/lib/constants";
-import { CreateSubscriptionInput } from "../schemas/stripe.schema";
+import {
+  CheckSessionInput,
+  CreateSubscriptionInput,
+} from "../schemas/stripe.schema";
 
 export const stripeService = {
   create: async (data: CreateSubscriptionInput) => {
     const workspace = await workspaceRepository.findById(data.workspaceId);
     const plan = data.plan;
+
+    if (
+      workspace?.plan &&
+      PLAN_HIERARCHY[workspace.plan] > PLAN_HIERARCHY[plan]
+    ) {
+      throw new Error(
+        `Cannot downgrade from ${workspace.plan} to ${plan}. Please cancel your current subscription first.`,
+      );
+    }
 
     const stripe = getStripe();
 
@@ -37,10 +49,18 @@ export const stripeService = {
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: STRIPE_PLANS[plan].priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${data.workspaceId}/billing/success`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${data.workspaceId}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/workspaces/${data.workspaceId}/billing/cancel`,
-      metadata: { workspaceId: data.workspaceId, plan },
-      subscription_data: { metadata: { workspaceId: data.workspaceId, plan } },
+      metadata: {
+        workspaceId: data.workspaceId,
+        plan,
+      },
+      subscription_data: {
+        metadata: {
+          workspaceId: data.workspaceId,
+          plan,
+        },
+      },
     });
 
     return session;
@@ -104,6 +124,16 @@ export const stripeService = {
       throw new Error("Missing subscription metadata");
     }
 
+    const workspace = await workspaceRepository.findById(workspaceId);
+
+    if (
+      workspace?.plan &&
+      PLAN_HIERARCHY[workspace.plan] > PLAN_HIERARCHY[plan]
+    ) {
+      await stripe.subscriptions.cancel(subscriptionId);
+      return;
+    }
+
     await workspaceRepository.update(workspaceId, {
       plan,
       subscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
@@ -146,5 +176,17 @@ export const stripeService = {
     });
 
     return session.url;
+  },
+
+  checkSession: async (data: CheckSessionInput): Promise<boolean> => {
+    const stripe = getStripe();
+
+    try {
+      const session = await stripe.checkout.sessions.retrieve(data.sessionId);
+
+      return session.mode === "subscription" && session.status === "complete";
+    } catch {
+      return false;
+    }
   },
 };
