@@ -2,42 +2,49 @@
 
 import { useModal } from "@/stores/modal-store";
 import { BoardHeaderNameDescriptionForm } from "./board-header-name-description-form";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { useMemo } from "react";
 import { LimitCardsPerBoard } from "@/domain/types/card.type";
 import { Badge } from "../ui/badge";
 import { FileText } from "lucide-react";
+import { User } from "@/domain/types/user.type";
+import { useBoardRealtimeBoard } from "@/hooks/use-board-realtime-board";
 
 interface BoardHeaderNameDescriptionProps {
   boardId: string;
   boardName: string;
   boardDescription: string | null;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
   limitCardsPerBoard: LimitCardsPerBoard | null;
+  user: User;
 }
 
 export const BoardHeaderNameDescription = ({
   boardId,
   boardName,
   boardDescription,
-  realtimeUtils,
   limitCardsPerBoard,
+  user,
 }: BoardHeaderNameDescriptionProps) => {
   const { open } = useModal();
+  const { getBoardValue, broadcastBoardUpdated } = useBoardRealtimeBoard({
+    user,
+  });
 
   const displayName = useMemo(() => {
-    return (
-      realtimeUtils?.getBoardOptimisticValue("title") ??
-      realtimeUtils?.getBoardOptimisticValue("name") ??
-      boardName
-    );
-  }, [boardName, realtimeUtils]);
+    return getBoardValue("name") ?? boardName;
+  }, [boardName, getBoardValue]);
 
   const displayDescription = useMemo(() => {
-    return (
-      realtimeUtils?.getBoardOptimisticValue("description") ?? boardDescription
-    );
-  }, [boardDescription, realtimeUtils]);
+    return getBoardValue("description") ?? boardDescription;
+  }, [boardDescription, getBoardValue]);
+
+  const handleBoardUpdated = (updates: {
+    name: string | undefined;
+    description: string | undefined;
+  }) => {
+    broadcastBoardUpdated({
+      updates,
+    });
+  };
 
   const handleEdit = () => {
     open({
@@ -48,7 +55,7 @@ export const BoardHeaderNameDescription = ({
           boardId={boardId}
           boardName={displayName}
           boardDescription={displayDescription}
-          realtimeUtils={realtimeUtils}
+          onBoardUpdated={handleBoardUpdated}
         />
       ),
     });

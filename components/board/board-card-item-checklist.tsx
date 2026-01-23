@@ -11,7 +11,6 @@ import {
   CreateChecklistSchema,
 } from "@/domain/schemas/checklist.schema";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -22,13 +21,11 @@ import { cn } from "@/lib/utils";
 interface BoardCardItemChecklistsProps {
   cardId: string;
   cardChecklists: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["checklists"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemChecklists = ({
   cardId,
   cardChecklists: initialChecklists = [],
-  realtimeUtils,
 }: BoardCardItemChecklistsProps) => {
   const [checklists, setChecklists] = useState(initialChecklists);
   const [addingChecklist, setAddingChecklist] = useState(false);
@@ -51,12 +48,8 @@ export const BoardCardItemChecklists = ({
   const handleCreateChecklist = async (values: CreateChecklistInput) => {
     const newChecklist = await createChecklist(values);
     if (newChecklist) {
-      setChecklists((prev) => [...prev, { ...newChecklist, items: [] }]);
-
-      realtimeUtils.broadcastChecklistCreated({
-        cardId,
-        checklistId: newChecklist.id,
-      });
+      const checklist = { ...newChecklist, items: [] };
+      setChecklists((prev) => [...prev, checklist]);
     }
     createChecklistForm.reset();
     setAddingChecklist(false);
@@ -66,10 +59,6 @@ export const BoardCardItemChecklists = ({
     setChecklists((prev) => prev.filter((cl) => cl.id !== id));
 
     await deleteChecklist({ id });
-
-    realtimeUtils.broadcastChecklistDeleted({
-      checklistId: id,
-    });
   };
 
   const handleToggleItem = async (id: string, isCompleted: boolean) => {
@@ -83,11 +72,6 @@ export const BoardCardItemChecklists = ({
     );
 
     await toggleChecklistItem({ id, isCompleted });
-
-    realtimeUtils.broadcastChecklistItemToggled({
-      itemId: id,
-      checked: isCompleted,
-    });
   };
 
   const handleAddItem = async (checklistId: string) => {
@@ -102,11 +86,6 @@ export const BoardCardItemChecklists = ({
           cl.id === checklistId ? { ...cl, items: [...cl.items, newItem] } : cl,
         ),
       );
-
-      realtimeUtils.broadcastChecklistItemCreated({
-        checklistId,
-        itemId: newItem.id,
-      });
     }
     setNewItemText("");
     setAddingItemTo(null);
@@ -121,10 +100,6 @@ export const BoardCardItemChecklists = ({
     );
 
     await deleteChecklistItem({ id });
-
-    realtimeUtils.broadcastChecklistItemDeleted({
-      itemId: id,
-    });
   };
 
   return (

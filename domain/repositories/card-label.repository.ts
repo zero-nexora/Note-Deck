@@ -4,6 +4,23 @@ import { and, eq } from "drizzle-orm";
 import { NewCardLabel } from "../types/card-label.type";
 
 export const cardLabelRepository = {
+  addWithLabel: async (data: NewCardLabel) => {
+    const [insert] = await db
+      .insert(cardLabels)
+      .values(data)
+      .returning({ cardId: cardLabels.cardId, labelId: cardLabels.labelId });
+
+    return db.query.cardLabels.findFirst({
+      where: and(
+        eq(cardLabels.cardId, insert.cardId),
+        eq(cardLabels.labelId, insert.labelId),
+      ),
+      with: {
+        label: true,
+      },
+    });
+  },
+
   add: async (data: NewCardLabel) => {
     const [label] = await db.insert(cardLabels).values(data).returning();
 
@@ -32,7 +49,7 @@ export const cardLabelRepository = {
     return db.query.cardLabels.findFirst({
       where: and(
         eq(cardLabels.cardId, cardId),
-        eq(cardLabels.labelId, labelId)
+        eq(cardLabels.labelId, labelId),
       ),
     });
   },
@@ -41,7 +58,7 @@ export const cardLabelRepository = {
     await db
       .delete(cardLabels)
       .where(
-        and(eq(cardLabels.cardId, cardId), eq(cardLabels.labelId, labelId))
+        and(eq(cardLabels.cardId, cardId), eq(cardLabels.labelId, labelId)),
       );
   },
 };

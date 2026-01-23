@@ -48,11 +48,13 @@ export const listService = {
 
     const maxPosition = await listRepository.getMaxPosition(data.boardId);
 
-    const list = await listRepository.create({
+    const list = await listRepository.createWithCard({
       ...data,
       name: trimmedName,
       position: maxPosition + 1,
     });
+
+    if (!list) throw new Error("Fail to create list")
 
     await activityRepository.create({
       boardId: board.id,
@@ -163,7 +165,7 @@ export const listService = {
     for (const order of data.orders) {
       if (!boardListIds.has(order.id)) {
         throw new Error(
-          `List ${order.id} does not belong to board ${data.boardId}`
+          `List ${order.id} does not belong to board ${data.boardId}`,
         );
       }
     }
@@ -334,7 +336,7 @@ export const listService = {
 
   duplicate: async (userId: string, data: DuplicateListInput) => {
     const originalList = await listRepository.findListWithCardsAndBoard(
-      data.id
+      data.id,
     );
     if (!originalList) {
       throw new Error("List not found");
@@ -349,7 +351,7 @@ export const listService = {
     if (!allowed) throw new Error("Permission denied");
 
     const maxPosition = await listRepository.getMaxPosition(
-      originalList.boardId
+      originalList.boardId,
     );
 
     const newList = await listRepository.create({
@@ -408,6 +410,8 @@ export const listService = {
         });
       }
     }
+    
+    const listWithCards = await listRepository.findByIdWithCards(newList.id);
 
     await activityRepository.create({
       boardId: originalList.boardId,
@@ -437,6 +441,7 @@ export const listService = {
       },
     });
 
-    return newList;
+
+    return listWithCards;
   },
 };

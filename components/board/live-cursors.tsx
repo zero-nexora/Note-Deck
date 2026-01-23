@@ -1,6 +1,6 @@
 "use client";
 
-import { useOthers } from "@/lib/liveblocks";
+import { useBoardRealtimePresence } from "@/hooks/use-board-realtime-presence";
 import { memo } from "react";
 
 const Cursor = memo(
@@ -51,27 +51,25 @@ const Cursor = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 Cursor.displayName = "Cursor";
 
 export const LiveCursors = () => {
-  const others = useOthers();
+  const { otherUsers } = useBoardRealtimePresence();
 
   return (
     <>
-      {others.map((other) => {
-        if (!other.presence.cursor) return null;
-        const color = other.presence.user.color;
-        const name = other.presence.user.name;
+      {otherUsers.map((other) => {
+        if (!other.cursor) return null;
         return (
           <Cursor
             key={other.connectionId}
-            x={other.presence.cursor.x}
-            y={other.presence.cursor.y}
-            color={color}
-            name={name}
+            x={other.cursor.x}
+            y={other.cursor.y}
+            color={other.user.color}
+            name={other.user.name}
           />
         );
       })}

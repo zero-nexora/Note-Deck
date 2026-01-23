@@ -4,6 +4,54 @@ import { boards, cards } from "@/db/schema";
 import { and, asc, count, eq, gte, isNull, lte, sql } from "drizzle-orm";
 
 export const cardRepository = {
+  createWithMembersCardLabels: async (data: NewCard) => {
+    const [insert] = await db
+      .insert(cards)
+      .values(data)
+      .returning({ id: cards.id });
+
+    return db.query.cards.findFirst({
+      where: eq(cards.id, insert.id),
+      extras: {
+        attachmentsCount: sql<number>`
+        (
+          select count(*) 
+          from attachments 
+          where attachments.card_id = ${cards.id}
+        )
+      `.as("attachmentsCount"),
+        commentsCount: sql<number>`
+        (
+          select count(*) 
+          from comments 
+          where comments.card_id = ${cards.id}
+            and comments.parent_id is null
+        )
+      `.as("commentsCount"),
+        checklistsCount: sql<number>`
+        (
+          select count(*) 
+          from checklists
+          where checklists.card_id = ${cards.id}
+        )
+      `.as("checklistsCount"),
+      },
+      with: {
+        members: {
+          with: {
+            user: true,
+          },
+        },
+
+        cardLabels: {
+          with: {
+            label: true,
+          },
+        },
+      },
+    });
+  },
+
   create: async (data: NewCard) => {
     const [card] = await db.insert(cards).values(data).returning();
     return card;
@@ -146,7 +194,7 @@ export const cardRepository = {
 
   reorders: async (
     listId: string,
-    orders: { id: string; position: number }[]
+    orders: { id: string; position: number }[],
   ) => {
     await db.transaction(async (tx) => {
       for (const { id, position } of orders) {
@@ -161,7 +209,7 @@ export const cardRepository = {
   moveToList: async (
     cardId: string,
     destinationListId: string,
-    boardId: string
+    boardId: string,
   ) => {
     return db
       .update(cards)
@@ -187,7 +235,7 @@ export const cardRepository = {
       .from(cards)
       .innerJoin(boards, eq(cards.boardId, boards.id))
       .where(
-        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, false))
+        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, false)),
       );
     return result.count;
   },
@@ -198,7 +246,7 @@ export const cardRepository = {
       .from(cards)
       .innerJoin(boards, eq(cards.boardId, boards.id))
       .where(
-        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, true))
+        and(eq(boards.workspaceId, workspaceId), eq(cards.isArchived, true)),
       );
     return result.count;
   },
@@ -212,29 +260,32 @@ export const cardRepository = {
         and(
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
-          lte(cards.dueDate, now)
-        )
+          lte(cards.dueDate, now),
+        ),
       );
     return result.count;
   },
 
   getCardsCreatedSinceByWorkspaceId: async (
     workspaceId: string,
-    fromDate: Date
+    fromDate: Date,
   ) => {
     const [result] = await db
       .select({ count: count() })
       .from(cards)
       .innerJoin(boards, eq(cards.boardId, boards.id))
       .where(
-        and(eq(boards.workspaceId, workspaceId), gte(cards.createdAt, fromDate))
+        and(
+          eq(boards.workspaceId, workspaceId),
+          gte(cards.createdAt, fromDate),
+        ),
       );
     return result.count;
   },
 
   getCardsCreatedByWorkspaceIdAndDate: async (
     workspaceId: string,
-    startDate: Date
+    startDate: Date,
   ) => {
     return await db
       .select({
@@ -246,8 +297,8 @@ export const cardRepository = {
       .where(
         and(
           eq(boards.workspaceId, workspaceId),
-          gte(cards.createdAt, startDate)
-        )
+          gte(cards.createdAt, startDate),
+        ),
       )
       .groupBy(sql`DATE(${cards.createdAt})`)
       .orderBy(sql`DATE(${cards.createdAt})`);
@@ -255,7 +306,7 @@ export const cardRepository = {
 
   getCardsCompletedByWorkspaceIdAndDate: async (
     workspaceId: string,
-    startDate: Date
+    startDate: Date,
   ) => {
     return await db
       .select({
@@ -268,8 +319,8 @@ export const cardRepository = {
         and(
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, true),
-          gte(cards.updatedAt, startDate)
-        )
+          gte(cards.updatedAt, startDate),
+        ),
       )
       .groupBy(sql`DATE(${cards.updatedAt})`)
       .orderBy(sql`DATE(${cards.updatedAt})`);
@@ -299,8 +350,8 @@ export const cardRepository = {
         and(
           eq(cards.boardId, boardId),
           eq(cards.isArchived, false),
-          lte(cards.dueDate, now)
-        )
+          lte(cards.dueDate, now),
+        ),
       );
     return res.count;
   },
@@ -322,8 +373,8 @@ export const cardRepository = {
         and(
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
-          lte(cards.dueDate, today)
-        )
+          lte(cards.dueDate, today),
+        ),
       );
   },
 
@@ -336,15 +387,15 @@ export const cardRepository = {
         and(
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
-          sql`DATE(${cards.dueDate}) = DATE(${today})`
-        )
+          sql`DATE(${cards.dueDate}) = DATE(${today})`,
+        ),
       );
   },
 
   getDueThisWeekCardsCount: async (
     workspaceId: string,
     today: Date,
-    weekFromNow: Date
+    weekFromNow: Date,
   ) => {
     return await db
       .select({ count: count() })
@@ -355,15 +406,15 @@ export const cardRepository = {
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
           gte(cards.dueDate, today),
-          lte(cards.dueDate, weekFromNow)
-        )
+          lte(cards.dueDate, weekFromNow),
+        ),
       );
   },
 
   getDueThisMonthCardsCount: async (
     workspaceId: string,
     today: Date,
-    monthFromNow: Date
+    monthFromNow: Date,
   ) => {
     return await db
       .select({ count: count() })
@@ -374,8 +425,8 @@ export const cardRepository = {
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
           gte(cards.dueDate, today),
-          lte(cards.dueDate, monthFromNow)
-        )
+          lte(cards.dueDate, monthFromNow),
+        ),
       );
   },
 
@@ -388,8 +439,8 @@ export const cardRepository = {
         and(
           eq(boards.workspaceId, workspaceId),
           eq(cards.isArchived, false),
-          sql`${cards.dueDate} IS NULL`
-        )
+          sql`${cards.dueDate} IS NULL`,
+        ),
       );
   },
 };

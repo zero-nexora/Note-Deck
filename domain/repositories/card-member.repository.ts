@@ -4,6 +4,22 @@ import { and, count, eq } from "drizzle-orm";
 import { AddCardMemberInput } from "../schemas/card-member.schema";
 
 export const cardMemberRepository = {
+  addWithUser: async (data: AddCardMemberInput) => {
+    const [insert] = await db
+      .insert(cardMembers)
+      .values(data)
+      .returning({ cardId: cardMembers.cardId, userId: cardMembers.userId });
+
+    return db.query.cardMembers.findFirst({
+      where: and(
+        eq(cardMembers.cardId, insert.cardId),
+        eq(cardMembers.userId, insert.userId),
+      ),
+      with: {
+        user: true,
+      },
+    });
+  },
   add: async (data: AddCardMemberInput) => {
     const [member] = await db.insert(cardMembers).values(data).returning();
 
@@ -14,7 +30,7 @@ export const cardMemberRepository = {
     return db.query.cardMembers.findFirst({
       where: and(
         eq(cardMembers.cardId, cardId),
-        eq(cardMembers.userId, userId)
+        eq(cardMembers.userId, userId),
       ),
     });
   },
@@ -23,7 +39,7 @@ export const cardMemberRepository = {
     await db
       .delete(cardMembers)
       .where(
-        and(eq(cardMembers.cardId, cardId), eq(cardMembers.userId, userId))
+        and(eq(cardMembers.cardId, cardId), eq(cardMembers.userId, userId)),
       );
   },
 
@@ -37,8 +53,8 @@ export const cardMemberRepository = {
         and(
           eq(cardMembers.userId, userId),
           eq(boards.workspaceId, workspaceId),
-          eq(cards.isArchived, false)
-        )
+          eq(cards.isArchived, false),
+        ),
       );
     return res.count;
   },
@@ -53,8 +69,8 @@ export const cardMemberRepository = {
         and(
           eq(cardMembers.userId, userId),
           eq(boards.workspaceId, workspaceId),
-          eq(cards.isArchived, true)
-        )
+          eq(cards.isArchived, true),
+        ),
       );
     return res.count;
   },

@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Calendar, Paperclip, MessageCircle, CheckSquare } from "lucide-react";
+import {
+  Calendar,
+  Paperclip,
+  MessageCircle,
+  CheckSquare,
+  Trello,
+} from "lucide-react";
 
 interface Checklist {
   done: number;
@@ -137,9 +143,12 @@ export const BoardShowcase = () => {
           transition={FADE_IN_UP.transition}
           className="text-center mb-16"
         >
-          <span className="text-sm font-semibold text-primary uppercase tracking-wider">
-            Powerful UI
-          </span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Trello className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              Visual Boards
+            </span>
+          </div>
           <h2 className="text-heading mt-4 mb-6">
             Intuitive boards designed for{" "}
             <span className="gradient-text">productivity</span>

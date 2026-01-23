@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, Users } from "lucide-react";
 
 interface Testimonial {
   name: string;
@@ -67,10 +67,13 @@ export const TestimonialsSection = () => {
           transition={FADE_IN_UP.transition}
           className="text-center mb-16"
         >
-          <span className="text-sm font-semibold text-primary uppercase tracking-wider">
-            Testimonials
-          </span>
-          <h2 className="text-heading mt-4 mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              Trusted by Teams
+            </span>
+          </div>
+          <h2 className="text-heading mt-4 my-6">
             Loved by <span className="gradient-text">thousands of teams</span>
           </h2>
           <p className="text-subheading max-w-2xl mx-auto">

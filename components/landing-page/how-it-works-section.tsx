@@ -2,7 +2,14 @@
 
 import { easeInOut, motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { UserPlus, Layout, Users, Rocket, LucideIcon } from "lucide-react";
+import {
+  UserPlus,
+  Layout,
+  Users,
+  Rocket,
+  LucideIcon,
+  Route,
+} from "lucide-react";
 
 interface Step {
   icon: LucideIcon;
@@ -95,8 +102,13 @@ export const HowItWorkSection = () => {
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
-          <span className="badge badge-primary mb-4">How It Works</span>
-          <h2 className="text-heading mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Route className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              How It Works
+            </span>
+          </div>
+          <h2 className="text-heading mt-6 mb-3">
             Get Started in <span className="gradient-text">Minutes</span>
           </h2>
           <p className="text-subheading max-w-2xl mx-auto">

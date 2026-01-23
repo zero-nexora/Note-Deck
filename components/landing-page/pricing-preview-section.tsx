@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles } from "lucide-react";
+import { Check, CreditCard, Sparkles } from "lucide-react";
 
 interface PricingPlan {
   name: string;
@@ -80,8 +80,13 @@ export const PricingPreviewSection = () => {
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-16"
         >
-          <span className="badge badge-primary mb-4">Pricing</span>
-          <h2 className="text-heading mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <CreditCard className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              Simple Pricing
+            </span>
+          </div>
+          <h2 className="text-heading my-4">
             Simple, Transparent <span className="gradient-text">Pricing</span>
           </h2>
           <p className="text-subheading max-w-2xl mx-auto">

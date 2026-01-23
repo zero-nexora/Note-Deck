@@ -127,6 +127,7 @@ export const boardService = {
 
     const boards = await boardRepository.findByWorkspaceIdWithMembers(
       workspace.id,
+      true,
     );
 
     const result = [];

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { ImageIcon, Plus, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,30 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { useCard } from "@/hooks/use-card";
 import { ImageAttachmentPicker } from "../common/image-attachment-picker";
 import Image from "next/image";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemCoverImageProps {
   cardId: string;
   coverImage: string | null;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemCoverImage = ({
   cardId,
   coverImage: initialCoverImage,
-  realtimeUtils,
 }: BoardCardItemCoverImageProps) => {
   const [coverImage, setCoverImage] = useState(initialCoverImage);
   const [isAdding, setIsAdding] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const { updateCard } = useCard();
-
-  const displayCoverImage = useMemo(() => {
-    return (
-      realtimeUtils?.getCardOptimisticValue(cardId, "coverImage") ?? coverImage
-    );
-  }, [cardId, coverImage, realtimeUtils]);
 
   useEffect(() => {
     setCoverImage(initialCoverImage);
@@ -38,27 +29,17 @@ export const BoardCardItemCoverImage = ({
   const handleAddCover = async (imageUrl: string) => {
     setIsUpdating(true);
     try {
-      setCoverImage(imageUrl);
-
       const updatedCard = await updateCard(cardId, {
         coverImage: imageUrl,
       });
 
       if (updatedCard) {
         setCoverImage(updatedCard.coverImage);
-
-        realtimeUtils.broadcastCardUpdated({
-          cardId,
-          listId: updatedCard.listId,
-          field: "coverImage",
-          value: updatedCard.coverImage,
-        });
       }
 
       setIsAdding(false);
     } catch (error) {
       console.error("Failed to update cover image:", error);
-      setCoverImage(initialCoverImage);
     } finally {
       setIsUpdating(false);
     }
@@ -67,25 +48,15 @@ export const BoardCardItemCoverImage = ({
   const handleRemoveCover = async () => {
     setIsUpdating(true);
     try {
-      setCoverImage(null);
-
       const updatedCard = await updateCard(cardId, {
         coverImage: undefined,
       });
 
       if (updatedCard) {
         setCoverImage(null);
-
-        realtimeUtils.broadcastCardUpdated({
-          cardId,
-          listId: updatedCard.listId,
-          field: "coverImage",
-          value: null,
-        });
       }
     } catch (error) {
       console.error("Failed to remove cover image:", error);
-      setCoverImage(initialCoverImage);
     } finally {
       setIsUpdating(false);
     }
@@ -101,7 +72,7 @@ export const BoardCardItemCoverImage = ({
           <h3 className="text-base font-semibold text-foreground">
             Cover Image
           </h3>
-          {displayCoverImage && (
+          {coverImage && (
             <Badge
               variant="secondary"
               className="bg-secondary text-secondary-foreground"
@@ -110,7 +81,7 @@ export const BoardCardItemCoverImage = ({
             </Badge>
           )}
         </div>
-        {!displayCoverImage && (
+        {!coverImage && (
           <Button
             size="sm"
             variant="ghost"
@@ -143,11 +114,11 @@ export const BoardCardItemCoverImage = ({
         </div>
       )}
 
-      {displayCoverImage && (
+      {coverImage && (
         <div className="p-4 space-y-4">
           <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
             <Image
-              src={displayCoverImage}
+              src={coverImage}
               alt="Card cover"
               fill
               className="object-cover"
@@ -180,7 +151,7 @@ export const BoardCardItemCoverImage = ({
         </div>
       )}
 
-      {!displayCoverImage && !isAdding && (
+      {!coverImage && !isAdding && (
         <div className="flex flex-col items-center justify-center py-12 text-center px-4">
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-3">
             <ImageIcon className="h-8 w-8 text-muted-foreground" />

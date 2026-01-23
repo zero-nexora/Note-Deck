@@ -4,6 +4,20 @@ import { boards, cards, checklistItems, checklists } from "@/db/schema";
 import { count, eq, sql } from "drizzle-orm";
 
 export const checklistRepository = {
+  createWithItem: async (data: NewChecklist) => {
+    const [inserted] = await db
+      .insert(checklists)
+      .values(data)
+      .returning({ id: checklists.id });
+
+    return db.query.checklists.findFirst({
+      where: eq(checklists.id, inserted.id),
+      with: {
+        items: true,
+      }
+    });
+  },
+
   create: async (data: NewChecklist) => {
     const [checklist] = await db.insert(checklists).values(data).returning();
 

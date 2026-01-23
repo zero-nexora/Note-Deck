@@ -5,23 +5,22 @@ import { Card } from "@/components/ui/card";
 import { Users, Plus, X } from "lucide-react";
 import { useCardMember } from "@/hooks/use-card-member";
 import { Badge } from "@/components/ui/badge";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardCardItemMembersProps {
   cardId: string;
   cardMembers: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["members"];
   boardMembers: BoardWithListLabelsAndMembers["members"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemMembers = ({
   cardId,
   cardMembers: initialCardMembers = [],
   boardMembers = [],
-  realtimeUtils,
 }: BoardCardItemMembersProps) => {
+  const { open } = useConfirm();
   const [cardMembers, setCardMembers] = useState(initialCardMembers);
   const [isAdding, setIsAdding] = useState(false);
   const { addCardMember, removeCardMember } = useCardMember();
@@ -34,39 +33,42 @@ export const BoardCardItemMembers = ({
 
   const handleToggleMember = async (userId: string) => {
     const isAssigned = assignedUserIds.has(userId);
+    const member = boardMembers.find((m) => m.user.id === userId);
 
-    if (isAssigned) {
-      await removeCardMember({ cardId, userId });
-      setCardMembers((prev) => prev.filter((m) => m.user.id !== userId));
+    open({
+      title: isAssigned ? "Remove member from card?" : "Add member to card?",
+      description: isAssigned
+        ? `Are you sure you want to remove ${member?.user.name ?? "this member"} from this card?`
+        : `Do you want to add ${member?.user.name ?? "this member"} to this card?`,
 
-      realtimeUtils.broadcastMemberUnassigned({
-        cardId,
-        memberId: userId,
-      });
-    } else {
-      const newMembership = await addCardMember({ cardId, userId });
-      if (newMembership) {
-        const boardMember = boardMembers.find((m) => m.user.id === userId);
-        if (boardMember) {
-          setCardMembers((prev) => [
-            ...prev,
-            {
-              id: newMembership.id,
-              createdAt: newMembership.createdAt,
-              cardId: newMembership.cardId,
-              userId: newMembership.userId,
-              user: boardMember.user,
-            },
-          ]);
+      onConfirm: async () => {
+        if (isAssigned) {
+          await removeCardMember({ cardId, userId });
 
-          realtimeUtils.broadcastMemberAssigned({
-            cardId,
-            memberId: userId,
-          });
+          setCardMembers((prev) => prev.filter((m) => m.user.id !== userId));
+        } else {
+          const newMembership = await addCardMember({ cardId, userId });
+
+          if (newMembership) {
+            const boardMember = boardMembers.find((m) => m.user.id === userId);
+
+            if (boardMember) {
+              const cardMember = {
+                id: newMembership.id,
+                createdAt: newMembership.createdAt,
+                cardId: newMembership.cardId,
+                userId: newMembership.userId,
+                user: boardMember.user,
+              };
+
+              setCardMembers((prev) => [...prev, cardMember]);
+            }
+          }
+
+          setIsAdding(false);
         }
-      }
-      setIsAdding(false);
-    }
+      },
+    });
   };
 
   return (
@@ -131,16 +133,15 @@ export const BoardCardItemMembers = ({
       )}
 
       {isAdding && (
-        <div className="p-4 space-y-2 border-t border-border bg-muted/30">
+        <div className="p-4 space-y-2 border-t border-border ">
           {boardMembers
             .filter((m) => !assignedUserIds.has(m.user.id))
             .map((member) => (
               <Button
                 key={member.id}
                 variant="outline"
-                size="sm"
                 onClick={() => handleToggleMember(member.user.id)}
-                className="w-full justify-start gap-3 border-border hover:bg-accent hover:text-accent-foreground"
+                className="w-full justify-start gap-3 border-border hover:bg-accent hover:text-accent-foreground py-6"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={member.user.image ?? undefined} />

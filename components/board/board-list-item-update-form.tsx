@@ -19,16 +19,15 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Loading } from "../common/loading";
 import { useModal } from "@/stores/modal-store";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardListItemUpdateFormProps {
   list: BoardWithListLabelsAndMembers["lists"][number];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  onUpdate: (listId: string, data: { name: string }) => void;
 }
 
 export const BoardListItemUpdateForm = ({
   list,
-  realtimeUtils,
+  onUpdate,
 }: BoardListItemUpdateFormProps) => {
   const { updateList } = useList();
   const { close } = useModal();
@@ -43,14 +42,10 @@ export const BoardListItemUpdateForm = ({
   const isLoading = form.formState.isSubmitting;
 
   const handleSubmit = async (values: UpdateListInput) => {
-    await updateList(list.id, values);
+    const result = await updateList(list.id, values);
 
-    if (values.name !== undefined && values.name !== list.name) {
-      realtimeUtils?.broadcastListUpdated({
-        listId: list.id,
-        field: "title",
-        value: values.name,
-      });
+    if (result && values.name !== undefined && values.name !== list.name) {
+      onUpdate(list.id, { name: values.name });
     }
 
     form.reset();

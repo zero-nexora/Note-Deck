@@ -19,12 +19,13 @@ import {
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { BoardLists } from "./board-lists";
 import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { BoardOverlay } from "./board-overlay";
+import { useBoardRealtimePresence } from "@/hooks/use-board-realtime-presence";
+import { User } from "@/domain/types/user.type";
 
 interface BoardContentProps {
   board: BoardWithListLabelsAndMembers;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  user: User;
 }
 
 const collisionDetection: CollisionDetection = (args) => {
@@ -37,7 +38,9 @@ const collisionDetection: CollisionDetection = (args) => {
   return closestCenter(args);
 };
 
-export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
+export const BoardContent = ({ board, user }: BoardContentProps) => {
+  const realtimePresence = useBoardRealtimePresence();
+
   const {
     lists,
     activeCard,
@@ -45,7 +48,11 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-  } = useBoardDragDropRealtime({ board, realtimeUtils });
+  } = useBoardDragDropRealtime({
+    board,
+    realtimeUtils: realtimePresence,
+    user,
+  });
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -55,7 +62,7 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const measuring = {
@@ -85,13 +92,13 @@ export const BoardContent = ({ board, realtimeUtils }: BoardContentProps) => {
         }}
       >
         <div className="h-full">
-          <BoardLists board={updatedBoard} realtimeUtils={realtimeUtils} />
+          <BoardLists board={updatedBoard} user={user} />
         </div>
 
         <BoardOverlay
-          realtimeUtils={realtimeUtils}
           activeCard={activeCard}
           activeList={activeList}
+          user={user}
         />
       </DndContext>
 

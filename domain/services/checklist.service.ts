@@ -37,11 +37,13 @@ export const checklistService = {
 
     const maxPosition = await checklistRepository.getMaxPosition(data.cardId);
 
-    const checklist = await checklistRepository.create({
+    const checklist = await checklistRepository.createWithItem({
       ...data,
       title: trimmedTitle,
       position: maxPosition + 1,
     });
+
+    if (!checklist) throw new Error("Fail create checklist")
 
     await activityRepository.create({
       boardId: card.boardId,

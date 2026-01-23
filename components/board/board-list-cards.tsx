@@ -8,20 +8,22 @@ import {
 import { BoardCardItem } from "./board-card-item";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import { User } from "@/domain/types/user.type";
+import { useMemo } from "react";
+import { useBoardRealtimeCards } from "@/hooks/use-board-realtime-cards";
 
 interface BoardListCardsProps {
   list: BoardWithListLabelsAndMembers["lists"][number];
   boardMembers: BoardWithListLabelsAndMembers["members"];
   boardLabels: BoardWithListLabelsAndMembers["labels"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  user: User;
 }
 
 export const BoardListCards = ({
   list,
   boardMembers,
   boardLabels,
-  realtimeUtils,
+  user,
 }: BoardListCardsProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: list.id,
@@ -31,14 +33,22 @@ export const BoardListCards = ({
     },
   });
 
-  const sortedCards = [...list.cards].sort((a, b) => a.position - b.position);
+  const { isCardDeleted } = useBoardRealtimeCards({ user });
+
+  const visibleCards = useMemo(() => {
+    return list.cards.filter((card) => !isCardDeleted(card.id));
+  }, [list.cards, isCardDeleted]);
+
+  const sortedCards = useMemo(() => {
+    return [...visibleCards].sort((a, b) => a.position - b.position);
+  }, [visibleCards]);
 
   return (
-    <div ref={setNodeRef} className="p-2">
+    <div ref={setNodeRef}>
       <div
         className={cn(
-          "space-y-2 min-h-[100px] rounded-lg transition-colors",
-          isOver && "bg-primary/5"
+          "space-y-2 min-h-[100px] rounded-lg transition-colors p-2",
+          isOver && "bg-primary/5",
         )}
       >
         <SortableContext
@@ -51,7 +61,7 @@ export const BoardListCards = ({
               boardLabels={boardLabels}
               key={card.id}
               card={card}
-              realtimeUtils={realtimeUtils}
+              user={user}
             />
           ))}
         </SortableContext>

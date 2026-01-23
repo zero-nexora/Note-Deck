@@ -8,60 +8,46 @@ import { BoardCardCover } from "./board-card-cover";
 import { BoardCardContent } from "./board-card-content";
 import { useSheet } from "@/stores/sheet-store";
 import { BoardCardItemDetail } from "./board-card-item-detail";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useCard } from "@/hooks/use-card";
 import { useConfirm } from "@/stores/confirm-store";
-import { Copy, Trash2, User } from "lucide-react";
+import { Archive, Copy, RotateCcw, Trash2 } from "lucide-react";
 import { ActionsMenu } from "../common/actions-menu";
+import { useBoardRealtimePresence } from "@/hooks/use-board-realtime-presence";
+import { useBoardRealtimeCards } from "@/hooks/use-board-realtime-cards";
+import { User } from "@/domain/types/user.type";
+import {
+  CardDraggingIndicator,
+  CardEditingIndicator,
+} from "./card-dragging-indicator";
 
 interface BoardCardItemProps {
   card: BoardWithListLabelsAndMembers["lists"][number]["cards"][number];
   boardMembers: BoardWithListLabelsAndMembers["members"];
   boardLabels: BoardWithListLabelsAndMembers["labels"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  user: User;
 }
 
 export const BoardCardItem = ({
   card,
   boardMembers = [],
   boardLabels = [],
-  realtimeUtils,
+  user,
 }: BoardCardItemProps) => {
   const { open, isOpen } = useSheet();
-  const { deleteCard, duplicateCard } = useCard();
+  const { deleteCard, duplicateCard, archiveCard, restoreCard } = useCard();
   const { open: openConfirm } = useConfirm();
 
-  const isDraggingByOthers = realtimeUtils?.isDraggingCardByOthers(card.id);
-  const draggingUser = realtimeUtils?.getUserDraggingCard(card.id);
-  const canDrag = realtimeUtils?.canDragCard(card.id) ?? true;
+  const realtimePresence = useBoardRealtimePresence();
+  const {
+    broadcastCardDeleted,
+    broadcastCardArchived,
+    broadcastCardRestored,
+    broadcastCardDuplicated,
+  } = useBoardRealtimeCards({ user });
 
-  const displayCard = useMemo(() => {
-    const optimisticTitle = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "title",
-    );
-    const optimisticDescription = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "description",
-    );
-    const optimisticDueDate = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "dueDate",
-    );
-    const optimisticCoverImage = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "coverImage",
-    );
-
-    return {
-      ...card,
-      title: optimisticTitle ?? card.title,
-      description: optimisticDescription ?? card.description,
-      dueDate: optimisticDueDate ?? card.dueDate,
-      coverImage: optimisticCoverImage ?? card.coverImage,
-    };
-  }, [card, realtimeUtils]);
+  const isDraggingByOthers = realtimePresence.isDraggingCardByOthers(card.id);
+  const canDrag = realtimePresence.canDragCard(card.id);
 
   const {
     attributes,
@@ -74,7 +60,7 @@ export const BoardCardItem = ({
     id: card.id,
     data: {
       type: "card",
-      card: displayCard,
+      card,
     },
     disabled: !canDrag,
   });
@@ -86,26 +72,25 @@ export const BoardCardItem = ({
 
   useEffect(() => {
     if (!isOpen) {
-      realtimeUtils?.setEditingCard(null);
+      realtimePresence.setEditingCard(null);
     }
-  }, [isOpen, realtimeUtils]);
+  }, [isOpen, realtimePresence]);
 
-  const hasCover = !!displayCard.coverImage;
+  const hasCover = !!card.coverImage;
 
   const handleViewDetailCard = () => {
     if (isDraggingByOthers) return;
 
-    realtimeUtils?.setEditingCard(card.id);
+    realtimePresence.setEditingCard(card.id);
 
     open({
       title: "Card Details",
-      description: "",
+      description: "Detailed information for this card",
       children: (
         <BoardCardItemDetail
           boardMembers={boardMembers}
           boardLabels={boardLabels}
           cardId={card.id}
-          realtimeUtils={realtimeUtils}
         />
       ),
     });
@@ -113,12 +98,8 @@ export const BoardCardItem = ({
 
   const handleDuplicate = async () => {
     const result = await duplicateCard({ id: card.id });
-    if (result?.id) {
-      realtimeUtils?.broadcastCardDuplicated({
-        sourceCardId: card.id,
-        newCardId: result.id,
-        listId: card.listId,
-      });
+    if (result) {
+      broadcastCardDuplicated(result);
     }
   };
 
@@ -128,13 +109,26 @@ export const BoardCardItem = ({
       description: "Are you sure you want to delete this card?",
       variant: "destructive",
       onConfirm: async () => {
-        await deleteCard({ id: card.id });
-        realtimeUtils?.broadcastCardDeleted({
-          cardId: card.id,
-          listId: card.listId,
-        });
+        const result = await deleteCard({ id: card.id });
+        if (result) {
+          broadcastCardDeleted(card.id, card.listId);
+        }
       },
     });
+  };
+
+  const handleArchive = async () => {
+    const result = await archiveCard({ id: card.id });
+    if (result) {
+      broadcastCardArchived(card.id, card.listId);
+    }
+  };
+
+  const handleRestore = async () => {
+    const result = await restoreCard({ id: card.id });
+    if (result) {
+      broadcastCardRestored(card.id, card.listId);
+    }
   };
 
   const actions = [
@@ -144,10 +138,16 @@ export const BoardCardItem = ({
       onClick: handleDuplicate,
     },
     {
+      label: card.isArchived ? "Restore" : "Archive",
+      icon: card.isArchived ? RotateCcw : Archive,
+      onClick: card.isArchived ? handleRestore : handleArchive,
+    },
+    {
       label: "Delete",
       icon: Trash2,
       variant: "destructive" as const,
       onClick: handleDelete,
+      separator: true,
     },
   ];
 
@@ -167,15 +167,15 @@ export const BoardCardItem = ({
       )}
       onClick={handleViewDetailCard}
     >
-      {isDraggingByOthers && draggingUser && (
-        <div
-          className="absolute -top-2 left-2 z-20 px-2.5 py-1 rounded-md text-xs font-medium text-white shadow-md flex items-center gap-1.5"
-          style={{ backgroundColor: draggingUser.user.color }}
-        >
-          <User className="h-3 w-3" />
-          <span>{draggingUser.user.name}</span>
-        </div>
-      )}
+      <CardDraggingIndicator
+        cardId={card.id}
+        realtimePresence={realtimePresence}
+      />
+
+      <CardEditingIndicator
+        cardId={card.id}
+        realtimePresence={realtimePresence}
+      />
 
       {!isDraggingByOthers && (
         <div
@@ -190,13 +190,10 @@ export const BoardCardItem = ({
       )}
 
       {hasCover && (
-        <BoardCardCover
-          coverImage={displayCard.coverImage}
-          title={displayCard.title}
-        />
+        <BoardCardCover coverImage={card.coverImage} title={card.title} />
       )}
 
-      <BoardCardContent card={displayCard} hasCover={hasCover} />
+      <BoardCardContent card={card} hasCover={hasCover} />
     </div>
   );
 };

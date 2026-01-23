@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 import { BoardCardItem } from "./board-card-item";
 import { BoardListItem } from "./board-list-item";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import { User } from "@/domain/types/user.type";
 
 interface BoardOverlayProps {
   activeCard:
@@ -16,13 +16,13 @@ interface BoardOverlayProps {
     | null
     | undefined;
   activeList: BoardWithListLabelsAndMembers["lists"][number] | null | undefined;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  user: User;
 }
 
 export const BoardOverlay = ({
   activeCard,
   activeList,
-  realtimeUtils,
+  user,
 }: BoardOverlayProps) => {
   const dropAnimationConfig: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
@@ -57,10 +57,10 @@ export const BoardOverlay = ({
           className="rounded-lg"
         >
           <BoardCardItem
-            realtimeUtils={realtimeUtils}
             boardMembers={[]}
             boardLabels={[]}
             card={activeCard}
+            user={user}
           />
         </div>
       ) : activeList ? (
@@ -76,10 +76,10 @@ export const BoardOverlay = ({
           className="rounded-lg"
         >
           <BoardListItem
-            realtimeUtils={realtimeUtils}
             boardMembers={[]}
             boardLabels={[]}
             list={activeList}
+            user={user}
           />
         </div>
       ) : null}

@@ -32,7 +32,7 @@ const CTA_FEATURES = [
 export const CTASection = () => {
   return (
     <section className="section-padding px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/8 to-primary/5" />
+      <div className="absolute inset-0 bg-linear-to-b from-primary/5 via-primary/8 to-primary/5" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/10 blur-3xl" />
 
       <div className="max-w-4xl mx-auto relative">
@@ -50,8 +50,12 @@ export const CTASection = () => {
             transition={FADE_IN_SCALE.transition}
             className="badge badge-primary inline-flex items-center gap-2 mb-6"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Free forever plan available</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                Get Started Today
+              </span>
+            </div>
           </motion.div>
 
           <h2 className="text-display mb-6">

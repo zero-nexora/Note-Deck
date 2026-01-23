@@ -10,9 +10,9 @@ const WorkspacesPage = async () => {
   const workspaces = (result.success ? result.data : []) as Workspace[];
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative h-screen bg-background overflow-auto">
       <PageBackground />
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+      <div className="relative z-10 flex items-center justify-center h-full p-6">
         <div className="w-full max-w-4xl space-y-8">
           <WorkspaceHeader />
           <WorkspaceList workspaces={workspaces} />

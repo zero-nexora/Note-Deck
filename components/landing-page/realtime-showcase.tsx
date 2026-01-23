@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MousePointer2, Move, Type, LucideIcon } from "lucide-react";
+import { MousePointer2, Move, Type, LucideIcon, Activity } from "lucide-react";
 
 interface RealtimeFeature {
   icon: LucideIcon;
@@ -128,9 +128,12 @@ const RealtimeContent = () => {
       viewport={SLIDE_IN_LEFT.viewport}
       transition={SLIDE_IN_LEFT.transition}
     >
-      <span className="text-sm font-semibold text-primary uppercase tracking-wider">
-        Real-time
-      </span>
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+        <Activity className="h-4 w-4 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Realtime Collaboration
+        </span>
+      </div>
       <h2 className="text-heading mt-4 mb-6">
         See every edit. Work together like you&apos;re{" "}
         <span className="gradient-text">in the same room</span>

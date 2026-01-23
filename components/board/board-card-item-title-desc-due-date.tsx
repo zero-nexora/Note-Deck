@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,14 +28,12 @@ import { Calendar as CalendarIcon, Edit2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Loading } from "../common/loading";
 import { Card } from "../ui/card";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardCardItemTitleDescDueDateProps {
   cardId: string;
   title: string;
   description: string | null;
   dueDate: Date | null;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemTitleDescDueDate = ({
@@ -43,29 +41,14 @@ export const BoardCardItemTitleDescDueDate = ({
   title: initialTitle,
   description: initialDescription,
   dueDate: initialDueDate,
-  realtimeUtils,
 }: BoardCardItemTitleDescDueDateProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [displayTitle, setDisplayTitle] = useState(initialTitle);
+  const [displayDescription, setDisplayDescription] =
+    useState(initialDescription);
+  const [displayDueDate, setDisplayDueDate] = useState(initialDueDate);
+
   const { updateCard } = useCard();
-
-  const displayTitle = useMemo(() => {
-    return (
-      realtimeUtils?.getCardOptimisticValue(cardId, "title") ?? initialTitle
-    );
-  }, [cardId, initialTitle, realtimeUtils]);
-
-  const displayDescription = useMemo(() => {
-    return (
-      realtimeUtils?.getCardOptimisticValue(cardId, "description") ??
-      initialDescription
-    );
-  }, [cardId, initialDescription, realtimeUtils]);
-
-  const displayDueDate = useMemo(() => {
-    return (
-      realtimeUtils?.getCardOptimisticValue(cardId, "dueDate") ?? initialDueDate
-    );
-  }, [cardId, initialDueDate, realtimeUtils]);
 
   const form = useForm<UpdateCardInput>({
     resolver: zodResolver(UpdateCardSchema),
@@ -77,6 +60,16 @@ export const BoardCardItemTitleDescDueDate = ({
   });
 
   useEffect(() => {
+    const handleSetDisplayTitle = () => setDisplayTitle(initialTitle);
+    const handleSetDisplayDescription = () => setDisplayDescription(initialDescription);
+    const handleSetDisplayDueDate = () => setDisplayDueDate(initialDueDate);
+
+    handleSetDisplayTitle();
+    handleSetDisplayDescription();
+    handleSetDisplayDueDate();
+  }, [initialTitle, initialDescription, initialDueDate]);
+
+  useEffect(() => {
     form.reset({
       title: displayTitle,
       description: displayDescription ?? "",
@@ -85,37 +78,35 @@ export const BoardCardItemTitleDescDueDate = ({
   }, [displayTitle, displayDescription, displayDueDate, form]);
 
   const handleSubmit = async (values: UpdateCardInput) => {
-    const updateData: UpdateCardInput = {};
+    const updates: {
+      title?: string;
+      description?: string | undefined;
+      dueDate?: Date | undefined;
+      coverImage?: string | undefined;
+    } = {};
 
-    if (values.title !== displayTitle) updateData.title = values.title;
-    if (values.description !== (displayDescription ?? "")) {
-      updateData.description = values.description || undefined;
+    if (values.title !== displayTitle) {
+      updates.title = values.title;
     }
-    if (values.dueDate !== displayDueDate) updateData.dueDate = values.dueDate;
+    if (values.description !== (displayDescription ?? "")) {
+      updates.description = values.description || undefined;
+    }
+    if (values.dueDate !== displayDueDate) {
+      updates.dueDate = values.dueDate ?? undefined;
+    }
 
-    if (Object.keys(updateData).length > 0) {
-      const card = await updateCard(cardId, updateData);
+    if (Object.keys(updates).length > 0) {
+      const card = await updateCard(cardId, updates);
 
       if (card) {
+        setDisplayTitle(card.title);
+        setDisplayDescription(card.description ?? null);
+        setDisplayDueDate(card.dueDate ?? null);
+
         form.reset({
-          title: card.title ?? displayTitle,
+          title: card.title,
           description: card.description ?? undefined,
           dueDate: card.dueDate ?? undefined,
-        });
-
-        Object.entries(updateData).forEach(([field, value]) => {
-          if (
-            field === "title" ||
-            field === "description" ||
-            field === "dueDate"
-          ) {
-            realtimeUtils.broadcastCardUpdated({
-              cardId,
-              listId: card.listId,
-              field: field as "title" | "description" | "dueDate",
-              value,
-            });
-          }
         });
       }
     }

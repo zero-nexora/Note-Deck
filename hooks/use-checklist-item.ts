@@ -39,6 +39,7 @@ export function useChecklistItem() {
     }
     toast.success(result.message);
     router.refresh();
+    return result.data
   };
 
   const updateChecklistItem = async (

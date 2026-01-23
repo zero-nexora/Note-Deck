@@ -9,12 +9,14 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useList } from "./use-list";
 import { useCard } from "./use-card";
+import { useBroadcastEvent } from "@/lib/liveblocks";
+import { useBoardRealtimePresence } from "./use-board-realtime-presence";
+import { User } from "@/domain/types/user.type";
 
 interface UseBoardDragDropRealtimeProps {
   board: BoardWithListLabelsAndMembers;
-  realtimeUtils: ReturnType<
-    (typeof import("./use-board-realtime"))["useBoardRealtime"]
-  >;
+  realtimeUtils: ReturnType<typeof useBoardRealtimePresence>;
+  user: User;
 }
 
 type DragType = "list" | "card" | null;
@@ -22,9 +24,11 @@ type DragType = "list" | "card" | null;
 export function useBoardDragDropRealtime({
   board,
   realtimeUtils,
+  user,
 }: UseBoardDragDropRealtimeProps) {
   const { reorderLists } = useList();
   const { reorderCards, moveCard } = useCard();
+  const broadcast = useBroadcastEvent();
 
   const [lists, setLists] = useState(board.lists);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -34,8 +38,10 @@ export function useBoardDragDropRealtime({
   >(null);
 
   useEffect(() => {
-    const handleSetBoardLists = () => setLists(board.lists);
-    handleSetBoardLists();
+    const updateLists = () => {
+      setLists(board.lists);
+    };
+    board.lists && updateLists();
   }, [board.lists]);
 
   const activeCard = useMemo(() => {
@@ -222,10 +228,10 @@ export function useBoardDragDropRealtime({
           });
 
           if (result) {
-            realtimeUtils.broadcastListMoved({
-              listId: active.id as string,
-              oldPosition: oldIndex + 1,
-              newPosition: newIndex + 1,
+            broadcast({
+              type: "LIST_REORDERED",
+              userId: user.id,
+              timestamp: Date.now(),
             });
           } else {
             setLists(board.lists);
@@ -241,13 +247,11 @@ export function useBoardDragDropRealtime({
       }
 
       let currentDestListId = "";
-      let finalPosition = 0;
 
       for (const list of lists) {
         const cardIndex = list.cards.findIndex((c) => c.id === active.id);
         if (cardIndex !== -1) {
           currentDestListId = list.id;
-          finalPosition = list.cards[cardIndex].position;
           break;
         }
       }
@@ -276,11 +280,10 @@ export function useBoardDragDropRealtime({
           });
 
           if (result) {
-            realtimeUtils.broadcastCardReordered({
-              listId: currentDestListId,
-              cardId: active.id as string,
-              oldPosition: 0,
-              newPosition: finalPosition,
+            broadcast({
+              type: "CARD_REORDERED",
+              userId: user.id,
+              timestamp: Date.now(),
             });
           } else {
             setLists(board.lists);
@@ -310,12 +313,10 @@ export function useBoardDragDropRealtime({
           });
 
           if (result) {
-            realtimeUtils.broadcastCardMoved({
-              cardId: active.id as string,
-              sourceListId: originalSourceListId,
-              destinationListId: currentDestListId,
-              sourcePosition: 0,
-              destinationPosition: finalPosition,
+            broadcast({
+              type: "CARD_MOVED",
+              userId: user.id,
+              timestamp: Date.now(),
             });
           } else {
             setLists(board.lists);
@@ -336,6 +337,8 @@ export function useBoardDragDropRealtime({
       reorderCards,
       reorderLists,
       realtimeUtils,
+      broadcast,
+      user.id,
     ],
   );
 

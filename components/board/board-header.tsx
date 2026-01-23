@@ -9,21 +9,21 @@ import { BoardHeaderLabels } from "./board-header-labels";
 import { BoardHeaderMembers } from "./board-header-members";
 import { BoardInviteMember } from "./board-invite-member";
 import { Button } from "../ui/button";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { LimitCardsPerBoard } from "@/domain/types/card.type";
+import { User } from "@/domain/types/user.type";
 
 interface BoardHeaderProps {
   board: BoardWithListLabelsAndMembers;
   workspaceMembers: WorkspaceWithOwnerMembers["members"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
   limitCardsPerBoard: LimitCardsPerBoard | null;
+  user: User;
 }
 
 export const BoardHeader = ({
   board,
   workspaceMembers,
-  realtimeUtils,
   limitCardsPerBoard,
+  user,
 }: BoardHeaderProps) => {
   return (
     <header className="shrink-0 border-b border-border bg-card">
@@ -34,18 +34,18 @@ export const BoardHeader = ({
             boardId={board.id}
             boardName={board.name}
             boardDescription={board.description}
-            realtimeUtils={realtimeUtils}
+            user={user}
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <BoardHeaderLabels
-            boardId={board.id}
-            boardLabels={board.labels}
-            realtimeUtils={realtimeUtils}
-          />
+          <BoardHeaderLabels boardId={board.id} boardLabels={board.labels} />
 
-          <BoardHeaderMembers boardMembers={board.members} boardId={board.id} />
+          <BoardHeaderMembers
+            user={user}
+            boardMembers={board.members}
+            boardId={board.id}
+          />
 
           <BoardInviteMember
             boardId={board.id}

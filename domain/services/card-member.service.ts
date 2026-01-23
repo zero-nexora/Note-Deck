@@ -44,7 +44,7 @@ export const cardMemberService = {
       throw new Error("User is already assigned to this card");
     }
 
-    const member = await cardMemberRepository.add(data);
+    const member = await cardMemberRepository.addWithUser(data);
 
     await activityRepository.create({
       boardId: card.boardId,

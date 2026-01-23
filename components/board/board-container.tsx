@@ -7,11 +7,13 @@ import { BoardHeader } from "./board-header";
 import { WorkspaceWithOwnerMembers } from "@/domain/types/workspace.type";
 import { useRouter } from "next/navigation";
 import { ClientSideSuspense } from "@liveblocks/react";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { LiveCursors } from "./live-cursors";
 import { generateUserColor, RoomProvider } from "@/lib/liveblocks";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { LimitCardsPerBoard } from "@/domain/types/card.type";
+import { useBoardRealtimeRefresh } from "@/hooks/use-board-realtime-refresh";
+import { useBoardRealtimeLists } from "@/hooks/use-board-realtime-lists";
+import { useBoardRealtimeCards } from "@/hooks/use-board-realtime-cards";
 
 interface BoardContainerProps {
   board: BoardWithListLabelsAndMembers;
@@ -27,35 +29,104 @@ const BoardContainerInner = ({
   limitCardsPerBoard,
 }: BoardContainerProps) => {
   const router = useRouter();
-
-  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
-  const lastRefreshRef = useRef<number>(0);
-  const REFRESH_DEBOUNCE = 300;
+  const { getNewLists, isListDeleted, getListValue } = useBoardRealtimeLists({
+    user,
+  });
+  const { getNewCards, isCardDeleted, getCardValue } = useBoardRealtimeCards({
+    user,
+  });
 
   const handleBoardUpdate = useCallback(() => {
-    const now = Date.now();
-    const timeSinceLastRefresh = now - lastRefreshRef.current;
-
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-    }
-
-    if (timeSinceLastRefresh < REFRESH_DEBOUNCE) {
-      refreshTimeoutRef.current = setTimeout(() => {
-        lastRefreshRef.current = Date.now();
-        router.refresh();
-      }, REFRESH_DEBOUNCE);
-    } else {
-      lastRefreshRef.current = now;
-      router.refresh();
-    }
+    router.refresh();
   }, [router]);
 
-  const realtimeUtils = useBoardRealtime({
-    board,
-    user,
-    onBoardUpdate: handleBoardUpdate,
+  useBoardRealtimeRefresh({
+    onRefresh: handleBoardUpdate,
   });
+
+  const displayBoard = useMemo(() => {
+    const newListsFromRealtime = getNewLists();
+    const newCardsFromRealtime = getNewCards();
+
+    const updatedLists = board.lists
+      .filter((list) => !isListDeleted(list.id))
+      .map((list) => {
+        const listName = getListValue(list.id, "name");
+
+        const newCardsForThisList = newCardsFromRealtime
+          .filter((c) => c.listId === list.id)
+          .map((newCard) => ({
+            ...newCard,
+            members: newCard.members.map((m) => ({
+              ...m,
+              user: {
+                ...m.user,
+                emailVerified: null,
+                password: null,
+              },
+            })),
+          }));
+
+        const updatedExistingCards = list.cards
+          .filter((card) => !isCardDeleted(card.id))
+          .map((card) => {
+            const title = getCardValue(card.id, "title");
+            const description = getCardValue(card.id, "description");
+            const dueDate = getCardValue(card.id, "dueDate");
+            const coverImage = getCardValue(card.id, "coverImage");
+
+            return {
+              ...card,
+              title: title ?? card.title,
+              description:
+                description !== undefined ? description : card.description,
+              dueDate: dueDate !== undefined ? dueDate : card.dueDate,
+              coverImage:
+                coverImage !== undefined ? coverImage : card.coverImage,
+            };
+          });
+
+        return {
+          ...list,
+          name: listName ?? list.name,
+          cards: [...updatedExistingCards, ...newCardsForThisList],
+        };
+      });
+
+    const newListsWithCards = newListsFromRealtime.map((newList) => {
+      const cardsForNewList = newCardsFromRealtime
+        .filter((c) => c.listId === newList.id)
+        .map((newCard) => ({
+          ...newCard,
+          members: newCard.members.map((m) => ({
+            ...m,
+            user: {
+              ...m.user,
+              emailVerified: null,
+              password: null,
+            },
+          })),
+        }));
+
+      return {
+        ...newList,
+        cards: [...newList.cards, ...cardsForNewList],
+      };
+    });
+
+    return {
+      ...board,
+      lists: [...updatedLists, ...newListsWithCards],
+    };
+  }, [
+    board,
+    getNewLists,
+    getNewCards,
+    isListDeleted,
+    isCardDeleted,
+    getListValue,
+    getCardValue,
+  ]);
 
   return (
     <div className="relative h-screen bg-background">
@@ -63,11 +134,11 @@ const BoardContainerInner = ({
       <div className="flex flex-col h-full gap-4">
         <BoardHeader
           limitCardsPerBoard={limitCardsPerBoard}
-          board={board}
+          board={displayBoard}
           workspaceMembers={workspaceMembers}
-          realtimeUtils={realtimeUtils}
+          user={user}
         />
-        <BoardContent board={board} realtimeUtils={realtimeUtils} />
+        <BoardContent board={displayBoard} user={user} />
       </div>
     </div>
   );

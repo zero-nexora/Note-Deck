@@ -5,24 +5,23 @@ import { Card } from "@/components/ui/card";
 import { Tag, Plus, X } from "lucide-react";
 import { useCardLabel } from "@/hooks/use-card-label";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
+import { useConfirm } from "@/stores/confirm-store";
 
 interface BoardCardItemLabelsProps {
   cardId: string;
   cardLabels: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["cardLabels"];
   boardLabels: BoardWithListLabelsAndMembers["labels"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemLabels = ({
   cardId,
   cardLabels: initialCardLabels = [],
   boardLabels = [],
-  realtimeUtils,
 }: BoardCardItemLabelsProps) => {
-  const [cardLabels, setCardLabels] = useState(initialCardLabels);
+  const { open } = useConfirm();
   const [isAdding, setIsAdding] = useState(false);
+  const [cardLabels, setCardLabels] = useState(initialCardLabels);
   const { addCardLabel, removeCardLabel } = useCardLabel();
 
   useEffect(() => {
@@ -34,43 +33,44 @@ export const BoardCardItemLabels = ({
   const handleToggleLabel = async (labelId: string) => {
     const isAssigned = assignedLabelIds.has(labelId);
 
-    if (isAssigned) {
-      await removeCardLabel({ cardId, labelId });
-      setCardLabels((prev) => prev.filter((cl) => cl.label.id !== labelId));
+    open({
+      title: isAssigned ? "Remove label from card?" : "Add label to card?",
+      description: isAssigned
+        ? `Are you sure you want to remove this label from this card?`
+        : `Do you want to add this label to this card?`,
+      onConfirm: async () => {
+        if (isAssigned) {
+          await removeCardLabel({ cardId, labelId });
 
-      realtimeUtils.broadcastLabelRemoved({
-        cardId,
-        labelId,
-      });
-    } else {
-      const newCardLabel = await addCardLabel({ cardId, labelId });
-      if (newCardLabel) {
-        const boardLabel = boardLabels.find((l) => l.id === labelId);
-        if (boardLabel) {
-          setCardLabels((prev) => [
-            ...prev,
-            {
-              id: newCardLabel.id,
-              cardId: newCardLabel.cardId,
-              labelId: newCardLabel.labelId,
-              label: {
-                name: boardLabel.name,
-                id: boardLabel.id,
-                createdAt: boardLabel.createdAt,
-                boardId: boardLabel.boardId,
-                color: boardLabel.color,
-              },
-            },
-          ]);
+          setCardLabels((prev) => prev.filter((cl) => cl.label.id !== labelId));
+        } else {
+          const newCardLabel = await addCardLabel({ cardId, labelId });
 
-          realtimeUtils.broadcastLabelAdded({
-            cardId,
-            labelId,
-          });
+          if (newCardLabel) {
+            const boardLabel = boardLabels.find((l) => l.id === labelId);
+
+            if (boardLabel) {
+              const cardLabel = {
+                id: newCardLabel.id,
+                cardId: newCardLabel.cardId,
+                labelId: newCardLabel.labelId,
+                label: {
+                  name: boardLabel.name,
+                  id: boardLabel.id,
+                  createdAt: boardLabel.createdAt,
+                  boardId: boardLabel.boardId,
+                  color: boardLabel.color,
+                },
+              };
+
+              setCardLabels((prev) => [...prev, cardLabel]);
+            }
+          }
+
+          setIsAdding(false);
         }
-      }
-      setIsAdding(false);
-    }
+      },
+    });
   };
 
   return (

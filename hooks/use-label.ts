@@ -42,10 +42,11 @@ export function useLabel() {
     const result = await deleteLabelAction(input);
     if (!result.success) {
       toast.error(result.message);
-      return null;
+      return false;
     }
     toast.success(result.message);
     router.refresh();
+    return true;
   };
 
   return {

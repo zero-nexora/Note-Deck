@@ -79,12 +79,14 @@ export const cardService = {
 
     const maxPosition = await cardRepository.getMaxPosition(data.listId);
 
-    const card = await cardRepository.create({
+    const card = await cardRepository.createWithMembersCardLabels({
       ...data,
       title: trimmedTitle,
       boardId: list.boardId,
       position: maxPosition + 1,
     });
+
+    if (!card) throw new Error("Failed to create card")
 
     await activityRepository.create({
       boardId: list.boardId,
@@ -498,7 +500,7 @@ export const cardService = {
       originalCard.listId,
     );
 
-    const newCard = await cardRepository.create({
+    const newCard = await cardRepository.createWithMembersCardLabels({
       listId: originalCard.listId,
       boardId: originalCard.boardId,
       title: `${originalCard.title} (Copy)`,
@@ -507,6 +509,8 @@ export const cardService = {
       dueDate: originalCard.dueDate,
       coverImage: originalCard.coverImage,
     });
+
+    if (!newCard) throw new Error("Failed to duplicate card");
 
     for (const cardLabel of originalCard.cardLabels) {
       await cardLabelRepository.add({

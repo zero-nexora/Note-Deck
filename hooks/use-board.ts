@@ -39,6 +39,7 @@ export function useBoard() {
     }
     toast.success(result.message);
     router.refresh();
+    return result.data;
   };
 
   const archiveBoard = async (input: ArchiveBoardInput) => {

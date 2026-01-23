@@ -5,25 +5,23 @@ import { BoardCardItemChecklists } from "./board-card-item-checklist";
 import { BoardCardItemAttachments } from "./board-card-item-attachment";
 import { BoardCardItemComments } from "./board-card-item-comment";
 import { BoardCardItemTitleDescDueDate } from "./board-card-item-title-desc-due-date";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { BoardCardItemCoverImage } from "./board-card-item-cover-image";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { useCard } from "@/hooks/use-card";
 import { BoardCardItemActivities } from "./board-card-item-activities";
+import { User } from "@/domain/types/user.type";
 
 interface BoardCardItemDetailProps {
   cardId: BoardWithListLabelsAndMembers["lists"][number]["cards"][number]["id"];
   boardMembers: BoardWithListLabelsAndMembers["members"];
   boardLabels: BoardWithListLabelsAndMembers["labels"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemDetail = ({
   cardId,
   boardMembers = [],
   boardLabels = [],
-  realtimeUtils,
 }: BoardCardItemDetailProps) => {
   const [card, setCard] =
     useState<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers | null>(
@@ -34,97 +32,65 @@ export const BoardCardItemDetail = ({
   useEffect(() => {
     const fetchCard = async (cardId: string) => {
       const card = await findCardById(cardId);
-      if (card) setCard(card);
-      else setCard(null);
+      if (card) {
+        setCard(card);
+      } else {
+        setCard(null);
+      }
     };
     if (cardId) {
       fetchCard(cardId);
     }
-  }, [cardId]);
+  }, [cardId, findCardById]);
 
-  const displayCard = useMemo(() => {
-    if (!card) return null;
-
-    const optimisticTitle = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "title",
+  if (!card) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="h-8 w-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+      </div>
     );
-    const optimisticDescription = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "description",
-    );
-    const optimisticDueDate = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "dueDate",
-    );
-    const optimisticCoverImage = realtimeUtils?.getCardOptimisticValue(
-      card.id,
-      "coverImage",
-    );
-
-    return {
-      ...card,
-      title: optimisticTitle ?? card.title,
-      description: optimisticDescription ?? card.description,
-      dueDate: optimisticDueDate ?? card.dueDate,
-      coverImage: optimisticCoverImage ?? card.coverImage,
-    };
-  }, [card, realtimeUtils]);
-
-  if (!displayCard) return null;
+  }
 
   return (
     <div className="space-y-6 pb-6">
       <div className="space-y-4">
         <BoardCardItemTitleDescDueDate
-          cardId={displayCard.id}
-          title={displayCard.title}
-          description={displayCard.description}
-          dueDate={displayCard.dueDate}
-          realtimeUtils={realtimeUtils}
+          cardId={card.id}
+          title={card.title}
+          description={card.description}
+          dueDate={card.dueDate}
         />
 
         <BoardCardItemCoverImage
-          cardId={displayCard.id}
-          coverImage={displayCard.coverImage}
-          realtimeUtils={realtimeUtils}
+          cardId={card.id}
+          coverImage={card.coverImage}
         />
 
         <BoardCardItemMembers
-          cardId={displayCard.id}
-          cardMembers={displayCard.members}
+          cardId={card.id}
+          cardMembers={card.members}
           boardMembers={boardMembers}
-          realtimeUtils={realtimeUtils}
         />
 
         <BoardCardItemLabels
-          cardId={displayCard.id}
-          cardLabels={displayCard.cardLabels}
+          cardId={card.id}
+          cardLabels={card.cardLabels}
           boardLabels={boardLabels}
-          realtimeUtils={realtimeUtils}
         />
 
         <BoardCardItemAttachments
-          cardId={displayCard.id}
-          attachments={displayCard.attachments}
-          realtimeUtils={realtimeUtils}
+          cardId={card.id}
+          attachments={card.attachments}
         />
 
         <BoardCardItemChecklists
-          cardId={displayCard.id}
-          cardChecklists={displayCard.checklists}
-          realtimeUtils={realtimeUtils}
+          cardId={card.id}
+          cardChecklists={card.checklists}
         />
 
-        <BoardCardItemComments
-          cardId={displayCard.id}
-          comments={displayCard.comments}
-          realtimeUtils={realtimeUtils}
-        />
+        <BoardCardItemComments cardId={card.id} comments={card.comments} />
 
-        <BoardCardItemActivities
-          activities={displayCard.activities}
-        />
+        <BoardCardItemActivities activities={card.activities} />
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import {
   DuplicateCardInput,
 } from "@/domain/schemas/card.schema";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
 export function useCard() {
@@ -38,14 +39,14 @@ export function useCard() {
     return result.data;
   };
 
-  const findCardById = async (cardId: string) => {
+  const findCardById = useCallback(async (cardId: string) => {
     const result = await findCardByIdAction(cardId);
     if (!result.success) {
       toast.error(result.message);
       return null;
     }
     return result.data;
-  };
+  }, []);
 
   const updateCard = async (id: string, input: UpdateCardInput) => {
     const result = await updateCardAction(id, input);

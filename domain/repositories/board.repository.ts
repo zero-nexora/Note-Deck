@@ -20,7 +20,7 @@ export const boardRepository = {
 
   findById: async (boardId: string) => {
     return db.query.boards.findFirst({
-      where: and(eq(boards.id, boardId), eq(boards.isArchived, false)),
+      where: eq(boards.id, boardId),
     });
   },
 
@@ -114,7 +114,7 @@ export const boardRepository = {
 
   findByWorkspaceIdWithMembers: async (
     workspaceId: string,
-    includeArchived = false
+    includeArchived = false,
   ) => {
     const query = includeArchived
       ? eq(boards.workspaceId, workspaceId)
@@ -155,7 +155,7 @@ export const boardRepository = {
       .select({ count: count() })
       .from(boards)
       .where(
-        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false))
+        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false)),
       );
     return result.count;
   },
@@ -168,7 +168,7 @@ export const boardRepository = {
       })
       .from(boards)
       .where(
-        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false))
+        and(eq(boards.workspaceId, workspaceId), eq(boards.isArchived, false)),
       );
   },
 };

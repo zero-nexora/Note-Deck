@@ -18,20 +18,22 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Loading } from "../common/loading";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 
 interface BoardHeaderNameDescriptionFormProps {
   boardId: string;
   boardName: string;
   boardDescription: string | null;
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  onBoardUpdated: (updates: {
+    name: string | undefined;
+    description: string | undefined;
+  }) => void;
 }
 
 export const BoardHeaderNameDescriptionForm = ({
   boardId,
   boardName,
   boardDescription,
-  realtimeUtils,
+  onBoardUpdated,
 }: BoardHeaderNameDescriptionFormProps) => {
   const { updateBoard } = useBoard();
   const { close } = useModal();
@@ -39,30 +41,33 @@ export const BoardHeaderNameDescriptionForm = ({
   const form = useForm<UpdateBoardInput>({
     resolver: zodResolver(UpdateBoardSchema),
     defaultValues: {
-      name: boardName,
-      description: boardDescription || "",
+      name: boardName || undefined,
+      description: boardDescription || undefined,
     },
   });
 
   const handleSubmit = async (values: UpdateBoardInput) => {
-    // Update server
-    await updateBoard(boardId, values);
+    const result = await updateBoard(boardId, values);
 
-    // Broadcast updates
-    if (values.name !== undefined && values.name !== boardName) {
-      realtimeUtils?.broadcastBoardUpdated({
-        field: "title",
-        value: values.name,
-      });
-    }
-    if (
-      values.description !== undefined &&
-      values.description !== boardDescription
-    ) {
-      realtimeUtils?.broadcastBoardUpdated({
-        field: "description",
-        value: values.description,
-      });
+    if (result !== null) {
+      const updates: {
+        name: string | undefined;
+        description: string | undefined;
+      } = { name: undefined, description: undefined };
+
+      if (values.name !== undefined && values.name !== boardName) {
+        updates.name = values.name;
+      }
+      if (
+        values.description !== undefined &&
+        values.description !== boardDescription
+      ) {
+        updates.description = values.description;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        onBoardUpdated(updates);
+      }
     }
 
     close();

@@ -2,13 +2,13 @@
 
 import { easeInOut, motion } from "framer-motion";
 import {
-  Zap,
   ArrowRight,
   Bell,
   UserPlus,
   Tag,
   Move,
   LucideIcon,
+  Workflow,
 } from "lucide-react";
 
 interface AutomationStep {
@@ -73,7 +73,7 @@ const FADE_IN_RIGHT = {
 export const AutomationSection = () => {
   return (
     <section className="section-padding px-4 relative">
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-primary/5 via-transparent to-transparent" />
 
       <div className="container-custom relative">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -84,12 +84,14 @@ export const AutomationSection = () => {
             transition={SLIDE_IN_LEFT.transition}
             className="order-2 lg:order-1"
           >
-            <div className="glass-card p-6 shadow-glow">
-              <div className="flex items-center gap-2 mb-6">
-                <Zap className="w-5 h-5 text-primary" />
-                <span className="font-semibold">Automation Builder</span>
-              </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Workflow className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                Powerful Automation
+              </span>
+            </div>
 
+            <div className="glass-card p-6 shadow-glow mt-6">
               <div className="space-y-6">
                 {AUTOMATION_EXAMPLES.map((automation, index) => (
                   <AutomationFlow

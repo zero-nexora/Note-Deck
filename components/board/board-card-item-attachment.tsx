@@ -8,20 +8,17 @@ import {
   AttachmentInput,
   ImageAttachmentPicker,
 } from "../common/image-attachment-picker";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import Image from "next/image";
 
 interface BoardCardItemAttachmentsProps {
   cardId: string;
   attachments: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["attachments"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemAttachments = ({
   cardId,
   attachments: initialAttachments = [],
-  realtimeUtils,
 }: BoardCardItemAttachmentsProps) => {
   const [attachments, setAttachments] = useState(initialAttachments);
   const [isAdding, setIsAdding] = useState(false);
@@ -41,11 +38,6 @@ export const BoardCardItemAttachments = ({
 
     if (newAttachment) {
       setAttachments((prev) => [...prev, { ...newAttachment }]);
-
-      realtimeUtils.broadcastAttachmentCreated({
-        cardId,
-        attachmentId: newAttachment.id,
-      });
     }
 
     setIsAdding(false);
@@ -55,10 +47,6 @@ export const BoardCardItemAttachments = ({
     setAttachments((prev) => prev.filter((a) => a.id !== id));
 
     await deleteAttachment({ id });
-
-    realtimeUtils.broadcastAttachmentDeleted({
-      attachmentId: id,
-    });
   };
 
   const formatFileSize = (bytes: number) => {

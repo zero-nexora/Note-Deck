@@ -1,12 +1,64 @@
 import { db } from "@/db";
 import { ListOrder, NewList, UpdateList } from "../types/list.type";
-import { lists } from "@/db/schema";
-import { and, asc, eq } from "drizzle-orm";
+import { cards, lists } from "@/db/schema";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 export const listRepository = {
   create: async (data: NewList) => {
-    const [list] = await db.insert(lists).values(data).returning();
-    return list;
+    const [newList] = await db.insert(lists).values(data).returning();
+    return newList;
+  },
+  createWithCard: async (data: NewList) => {
+    const [insert] = await db
+      .insert(lists)
+      .values(data)
+      .returning({ id: lists.id });
+
+    return db.query.lists.findFirst({
+      where: eq(lists.id, insert.id),
+      with: {
+        cards: {
+          orderBy: (cards, { asc }) => [asc(cards.position)],
+          extras: {
+            attachmentsCount: sql<number>`
+            (
+              select count(*) 
+              from attachments 
+              where attachments.card_id = ${cards.id}
+            )
+          `.as("attachmentsCount"),
+            commentsCount: sql<number>`
+            (
+              select count(*) 
+              from comments 
+              where comments.card_id = ${cards.id}
+                and comments.parent_id is null
+            )
+          `.as("commentsCount"),
+            checklistsCount: sql<number>`
+            (
+              select count(*) 
+              from checklists
+              where checklists.card_id = ${cards.id}
+            )
+          `.as("checklistsCount"),
+          },
+          with: {
+            members: {
+              with: {
+                user: true,
+              },
+            },
+
+            cardLabels: {
+              with: {
+                label: true,
+              },
+            },
+          },
+        },
+      },
+    });
   },
 
   findByIdWithBoard: async (listId: string) => {
@@ -25,6 +77,54 @@ export const listRepository = {
   findById: async (listId: string) => {
     return db.query.lists.findFirst({
       where: eq(lists.id, listId),
+    });
+  },
+
+  findByIdWithCards: async (listId: string) => {
+    return db.query.lists.findFirst({
+      where: eq(lists.id, listId),
+      with: {
+        cards: {
+          orderBy: (cards, { asc }) => [asc(cards.position)],
+          extras: {
+            attachmentsCount: sql<number>`
+            (
+              select count(*) 
+              from attachments 
+              where attachments.card_id = ${cards.id}
+            )
+          `.as("attachmentsCount"),
+            commentsCount: sql<number>`
+            (
+              select count(*) 
+              from comments 
+              where comments.card_id = ${cards.id}
+                and comments.parent_id is null
+            )
+          `.as("commentsCount"),
+            checklistsCount: sql<number>`
+            (
+              select count(*) 
+              from checklists
+              where checklists.card_id = ${cards.id}
+            )
+          `.as("checklistsCount"),
+          },
+          with: {
+            members: {
+              with: {
+                user: true,
+              },
+            },
+
+            cardLabels: {
+              with: {
+                label: true,
+              },
+            },
+          },
+        },
+      },
     });
   },
 

@@ -18,17 +18,18 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Loading } from "../common/loading";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
+import { useBoardRealtimeCards } from "@/hooks/use-board-realtime-cards";
+import { User } from "@/domain/types/user.type";
 
 interface CreateCardProps {
   list: BoardWithListLabelsAndMembers["lists"][number];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
+  user: User;
 }
 
-export const CreateCard = ({ list, realtimeUtils }: CreateCardProps) => {
+export const CreateCard = ({ list, user }: CreateCardProps) => {
   const [isAdding, setIsAdding] = useState(false);
-
   const { createCard } = useCard();
+  const { broadcastCardCreated } = useBoardRealtimeCards({ user });
 
   const form = useForm<CreateCardInput>({
     resolver: zodResolver(CreateCardSchema),
@@ -40,11 +41,9 @@ export const CreateCard = ({ list, realtimeUtils }: CreateCardProps) => {
 
   const handleSubmit = async (values: CreateCardInput) => {
     const result = await createCard(values);
-    if (result)
-      realtimeUtils?.broadcastCardCreated({
-        cardId: result.id,
-        listId: list.id,
-      });
+    if (result) {
+      broadcastCardCreated(result);
+    }
     setIsAdding(false);
     form.reset();
   };

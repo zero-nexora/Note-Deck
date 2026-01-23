@@ -46,7 +46,7 @@ export const cardLabelService = {
       throw new Error("Label is already added to this card");
     }
 
-    const cardLabel = await cardLabelRepository.add(data);
+    const cardLabel = await cardLabelRepository.addWithLabel(data);
 
     await activityRepository.create({
       boardId: card.boardId,

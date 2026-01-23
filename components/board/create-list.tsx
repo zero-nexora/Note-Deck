@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Plus, X } from "lucide-react";
@@ -18,15 +20,18 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Loading } from "../common/loading";
+import { useBoardRealtimeLists } from "@/hooks/use-board-realtime-lists";
+import { User } from "@/domain/types/user.type";
 
 interface CreateListProps {
   board: BoardWithListLabelsAndMembers;
+  user: User;
 }
 
-export const CreateList = ({ board }: CreateListProps) => {
+export const CreateList = ({ board, user }: CreateListProps) => {
+  const [isAdding, setIsAdding] = useState(false);
   const { createList } = useList();
-
-  const [isAddingList, setIsAddingList] = useState(false);
+  const { broadcastListCreated } = useBoardRealtimeLists({ user });
 
   const form = useForm<CreateListInput>({
     resolver: zodResolver(CreateListSchema),
@@ -37,8 +42,11 @@ export const CreateList = ({ board }: CreateListProps) => {
   });
 
   const handleSubmit = async (values: CreateListInput) => {
-    await createList(values);
-    setIsAddingList(false);
+    const result = await createList(values);
+    if (result) {
+      broadcastListCreated(result);
+    }
+    setIsAdding(false);
     form.reset();
   };
 
@@ -46,8 +54,8 @@ export const CreateList = ({ board }: CreateListProps) => {
 
   return (
     <div className="w-[320px] shrink-0">
-      {isAddingList ? (
-        <div className="rounded-lg bg-card border border-border p-3 shadow-sm">
+      {isAdding ? (
+        <div className="rounded-lg bg-card border shadow-sm p-3">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
@@ -62,8 +70,8 @@ export const CreateList = ({ board }: CreateListProps) => {
                       <Input
                         {...field}
                         placeholder="Enter list title..."
-                        disabled={isLoading}
                         autoFocus
+                        disabled={isLoading}
                         className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50"
                       />
                     </FormControl>
@@ -73,7 +81,6 @@ export const CreateList = ({ board }: CreateListProps) => {
               />
               <div className="flex items-center gap-2">
                 <Button
-                  type="submit"
                   size="sm"
                   disabled={isLoading}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
@@ -84,7 +91,7 @@ export const CreateList = ({ board }: CreateListProps) => {
                   size="sm"
                   variant="ghost"
                   type="button"
-                  onClick={() => setIsAddingList(false)}
+                  onClick={() => setIsAdding(false)}
                   disabled={isLoading}
                   className="text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                 >
@@ -97,11 +104,11 @@ export const CreateList = ({ board }: CreateListProps) => {
       ) : (
         <Button
           variant="ghost"
-          onClick={() => setIsAddingList(true)}
-          className="w-full justify-start h-auto py-3 px-4 rounded-lg bg-card/50 hover:bg-card border border-dashed border-border hover:border-primary/50 text-muted-foreground hover:text-foreground transition-all"
+          onClick={() => setIsAdding(true)}
+          className="w-full justify-start text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add another list
+          Add a list
         </Button>
       )}
     </div>

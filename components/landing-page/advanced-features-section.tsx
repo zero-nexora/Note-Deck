@@ -89,9 +89,12 @@ export function AdvancedFeaturesSection() {
           transition={HEADER_ANIMATION.transition}
           className="text-center mb-20"
         >
-          <span className="badge badge-primary mb-6 text-sm">
-            Advanced Features
-          </span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              Advanced Capabilities
+            </span>
+          </div>
           <h2 className="landing-showcase-title mb-6">Built for the Future</h2>
           <p className="landing-showcase-subtitle">
             Cutting-edge technology that empowers teams to achieve more.

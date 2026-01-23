@@ -25,12 +25,14 @@ interface BoardHeaderMembersFormProps {
     color: string;
   }[];
   boardId: string;
+  currentUserRole?: "admin" | "normal" | "observer";
 }
 
 export const BoardHeaderMembersForm = ({
   boardMembers: initialBoardMembers = [],
   membersOnline = [],
   boardId,
+  currentUserRole,
 }: BoardHeaderMembersFormProps) => {
   const { changeBoardMemberRole, removeBoardMember } = useBoardMember();
   const [boardMembers, setBoardMembers] = useState(initialBoardMembers);
@@ -41,10 +43,11 @@ export const BoardHeaderMembersForm = ({
   }, [initialBoardMembers]);
 
   const onlineUserIds = new Set(membersOnline.map((m) => m.id));
+  const isAdmin = currentUserRole === "admin";
 
   const handleChangeRole = async (
     memberId: string,
-    newRole: "admin" | "normal" | "observer"
+    newRole: "admin" | "normal" | "observer",
   ) => {
     open({
       title: "Change role",
@@ -58,8 +61,8 @@ export const BoardHeaderMembersForm = ({
         if (member) {
           setBoardMembers((prev) =>
             prev.map((m) =>
-              m.userId === member.userId ? { ...m, role: member.role } : m
-            )
+              m.userId === member.userId ? { ...m, role: member.role } : m,
+            ),
           );
         }
       },
@@ -190,50 +193,52 @@ export const BoardHeaderMembersForm = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={member.role}
-                      onValueChange={(value) =>
-                        handleChangeRole(
-                          member.userId,
-                          value as "admin" | "normal" | "observer"
-                        )
-                      }
-                    >
-                      <SelectTrigger className="w-[130px] bg-input border-border text-foreground focus:ring-ring">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover text-popover-foreground border-border">
-                        <SelectItem
-                          value="admin"
-                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                        >
-                          Admin
-                        </SelectItem>
-                        <SelectItem
-                          value="normal"
-                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                        >
-                          Member
-                        </SelectItem>
-                        <SelectItem
-                          value="observer"
-                          className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
-                        >
-                          Observer
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {isAdmin && (
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={member.role}
+                        onValueChange={(value) =>
+                          handleChangeRole(
+                            member.userId,
+                            value as "admin" | "normal" | "observer",
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-[130px] bg-input border-border text-foreground focus:ring-ring">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover text-popover-foreground border-border">
+                          <SelectItem
+                            value="admin"
+                            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                          >
+                            Admin
+                          </SelectItem>
+                          <SelectItem
+                            value="normal"
+                            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                          >
+                            Member
+                          </SelectItem>
+                          <SelectItem
+                            value="observer"
+                            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                          >
+                            Observer
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveMember(member.userId)}
-                      className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveMember(member.userId)}
+                        className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             );

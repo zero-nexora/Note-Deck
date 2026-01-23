@@ -4,39 +4,45 @@ import { Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { BoardHeaderMembersForm } from "./board-header-members-form";
-import { useOthers, useSelf } from "@/lib/liveblocks";
 import { useModal } from "@/stores/modal-store";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
+import { User } from "@/domain/types/user.type";
+import { useBoardRealtimePresence } from "@/hooks/use-board-realtime-presence";
+import { generateUserColor } from "@/lib/liveblocks";
 
 interface BoardHeaderMembersProps {
   boardId: string;
   boardMembers: BoardWithListLabelsAndMembers["members"];
+  user: User;
 }
 
 export const BoardHeaderMembers = ({
   boardId,
   boardMembers,
+  user,
 }: BoardHeaderMembersProps) => {
   const { open: openModal } = useModal();
-  const others = useOthers();
-  const self = useSelf();
+  const { otherUsers } = useBoardRealtimePresence();
 
   const allUsers = [
-    ...(self
-      ? [
-          {
-            connectionId: self.connectionId,
-            user: self.presence.user,
-            isMe: true,
-          },
-        ]
-      : []),
-    ...others.map((other) => ({
-      connectionId: other.connectionId,
-      user: other.presence.user,
+    {
+      id: user.id,
+      name: user.name || "You",
+      image: user.image,
+      color: generateUserColor(user.id) || "#000000",
+      isMe: true,
+    },
+    ...otherUsers.map((other) => ({
+      id: other.user.id,
+      name: other.user.name,
+      image: other.user.image,
+      color: other.user.color,
       isMe: false,
     })),
   ];
+
+  const currentUserMember = boardMembers.find((m) => m.userId === user.id);
+  const currentUserRole = currentUserMember?.role;
 
   if (allUsers.length === 0) return null;
 
@@ -48,7 +54,8 @@ export const BoardHeaderMembers = ({
         <BoardHeaderMembersForm
           boardId={boardId}
           boardMembers={boardMembers}
-          membersOnline={allUsers.map((u) => u.user)}
+          membersOnline={allUsers}
+          currentUserRole={currentUserRole}
         />
       ),
     });
@@ -62,16 +69,14 @@ export const BoardHeaderMembers = ({
       className="hover:bg-accent hover:text-accent-foreground gap-2"
     >
       <div className="flex -space-x-2">
-        {allUsers.slice(0, 5).map(({ connectionId, user }) => (
-          <Avatar key={connectionId} className="h-7 w-7 ring-2 ring-card">
-            {user.image ? (
-              <AvatarImage src={user.image} alt={user.name || ""} />
-            ) : null}
+        {allUsers.slice(0, 5).map((u) => (
+          <Avatar key={u.id} className="h-7 w-7 ring-2 ring-card">
+            {u.image ? <AvatarImage src={u.image} alt={u.name || ""} /> : null}
             <AvatarFallback
-              className="text-xs font-medium"
-              style={{ backgroundColor: user.color }}
+              className="text-xs font-medium text-white"
+              style={{ backgroundColor: u.color }}
             >
-              {(user.name || "U").charAt(0).toUpperCase()}
+              {(u.name || "U").charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         ))}

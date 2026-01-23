@@ -23,19 +23,16 @@ import { useCommentReaction } from "@/hooks/use-comment-reaction";
 import { format } from "date-fns";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
-import { useBoardRealtime } from "@/hooks/use-board-realtime";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 
 interface BoardCardItemCommentsProps {
   cardId: string;
   comments: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["comments"];
-  realtimeUtils: ReturnType<typeof useBoardRealtime>;
 }
 
 export const BoardCardItemComments = ({
   cardId,
   comments: initialComments = [],
-  realtimeUtils,
 }: BoardCardItemCommentsProps) => {
   const [comments, setComments] = useState(initialComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -61,15 +58,8 @@ export const BoardCardItemComments = ({
     });
 
     if (createdComment) {
-      setComments((prev) => [
-        ...prev,
-        { ...createdComment, reactions: [], replies: [] },
-      ]);
-
-      realtimeUtils?.broadcastCommentAdded({
-        cardId,
-        commentId: createdComment.id,
-      });
+      const comment = { ...createdComment, reactions: [], replies: [] };
+      setComments((prev) => [...prev, comment]);
     }
 
     setNewComment("");
@@ -86,15 +76,8 @@ export const BoardCardItemComments = ({
     });
 
     if (createdReply) {
-      setComments((prev) => [
-        ...prev,
-        { ...createdReply, reactions: [], replies: [] },
-      ]);
-
-      realtimeUtils?.broadcastCommentAdded({
-        cardId,
-        commentId: createdReply.id,
-      });
+      const comment = { ...createdReply, reactions: [], replies: [] };
+      setComments((prev) => [...prev, comment]);
     }
 
     setReplyTexts((prev) => ({ ...prev, [parentId]: "" }));
@@ -113,15 +96,7 @@ export const BoardCardItemComments = ({
       prev.map((c) => (c.id === id ? { ...c, content: editText.trim() } : c)),
     );
 
-    const updated = await updateComment(id, { content: editText.trim() });
-
-    if (updated) {
-      realtimeUtils?.broadcastCommentUpdated({
-        cardId,
-        commentId: id,
-        content: editText.trim(),
-      });
-    }
+    await updateComment(id, { content: editText.trim() });
 
     setEditingId(null);
     setEditText("");
@@ -131,11 +106,6 @@ export const BoardCardItemComments = ({
     setComments((prev) => prev.filter((c) => c.id !== id));
 
     await deleteComment({ id });
-
-    realtimeUtils?.broadcastCommentDeleted({
-      cardId,
-      commentId: id,
-    });
   };
 
   const handleToggleReaction = async (commentId: string, emoji: string) => {
@@ -157,11 +127,6 @@ export const BoardCardItemComments = ({
       );
 
       await removeReaction({ commentId, emoji });
-
-      realtimeUtils?.broadcastCommentReactionRemoved({
-        commentId,
-        reaction: emoji,
-      });
     } else {
       const newReaction = await addReaction({ commentId, emoji });
       if (newReaction) {
@@ -170,19 +135,11 @@ export const BoardCardItemComments = ({
             c.id === commentId
               ? {
                   ...c,
-                  reactions: [
-                    ...(c.reactions || []),
-                    { ...newReaction, emoji },
-                  ],
+                  reactions: [...(c.reactions || []), newReaction],
                 }
               : c,
           ),
         );
-
-        realtimeUtils?.broadcastCommentReactionAdded({
-          commentId,
-          reaction: emoji,
-        });
       }
     }
 
