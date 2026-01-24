@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemCommentsProps {
   cardId: string;
@@ -438,6 +439,47 @@ export const BoardCardItemComments = ({
             >
               Send
             </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+export const BoardCardItemCommentsSkeleton = () => {
+  return (
+    <Card className="px-5 bg-card border-border">
+      <div className="space-y-5">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-6 rounded-full" />
+        </div>
+
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <Skeleton className="h-20 w-full rounded-lg" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-7 w-12 rounded-md" />
+                  <Skeleton className="h-7 w-12 rounded-md" />
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-4 border-t border-border">
+          <div className="flex gap-3">
+            <Skeleton className="h-24 flex-1 rounded-md" />
+            <Skeleton className="h-10 w-16 rounded-md self-end" />
           </div>
         </div>
       </div>

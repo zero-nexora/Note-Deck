@@ -10,6 +10,7 @@ import {
 } from "../common/image-attachment-picker";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import Image from "next/image";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemAttachmentsProps {
   cardId: string;
@@ -244,6 +245,44 @@ export const BoardCardItemAttachments = ({
           </p>
         </div>
       )}
+    </Card>
+  );
+};
+
+export const BoardCardItemAttachmentsSkeleton = () => {
+  return (
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-6 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-20 rounded-md" />
+      </div>
+
+      <div className="p-4 space-y-3">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 p-4 rounded-lg border border-border"
+          >
+            <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Skeleton className="h-8 w-8 rounded-md" />
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
     </Card>
   );
 };

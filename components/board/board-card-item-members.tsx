@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { useConfirm } from "@/stores/confirm-store";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemMembersProps {
   cardId: string;
@@ -164,6 +165,34 @@ export const BoardCardItemMembers = ({
           </p>
         </div>
       )}
+    </Card>
+  );
+};
+
+export const BoardCardItemMembersSkeleton = () => {
+  return (
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-6 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded-md" />
+      </div>
+
+      <div className="p-4 space-y-2">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 p-3 rounded-lg border border-border"
+          >
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-5 flex-1" />
+            <Skeleton className="h-8 w-8 rounded-lg" />
+          </div>
+        ))}
+      </div>
     </Card>
   );
 };

@@ -97,10 +97,16 @@ export const BoardCardItem = ({
   };
 
   const handleDuplicate = async () => {
-    const result = await duplicateCard({ id: card.id });
-    if (result) {
-      broadcastCardDuplicated(result);
-    }
+    openConfirm({
+      title: "Duplicate card",
+      description: "Are you sure you want to duplicate this card?",
+      onConfirm: async () => {
+        const result = await duplicateCard({ id: card.id });
+        if (result) {
+          broadcastCardDuplicated(result);
+        }
+      },
+    });
   };
 
   const handleDelete = () => {
@@ -118,17 +124,29 @@ export const BoardCardItem = ({
   };
 
   const handleArchive = async () => {
-    const result = await archiveCard({ id: card.id });
-    if (result) {
-      broadcastCardArchived(card.id, card.listId);
-    }
+    openConfirm({
+      title: "Archive card",
+      description: "Are you sure you want to archive this card?",
+      onConfirm: async () => {
+        const result = await archiveCard({ id: card.id });
+        if (result) {
+          broadcastCardArchived(card.id, card.listId);
+        }
+      },
+    });
   };
 
   const handleRestore = async () => {
-    const result = await restoreCard({ id: card.id });
-    if (result) {
-      broadcastCardRestored(card.id, card.listId);
-    }
+    openConfirm({
+      title: "Restore card",
+      description: "Are you sure you want to restore this card?",
+      onConfirm: async () => {
+        const result = await restoreCard({ id: card.id });
+        if (result) {
+          broadcastCardRestored(card.id, card.listId);
+        }
+      },
+    });
   };
 
   const actions = [

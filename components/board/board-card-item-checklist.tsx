@@ -17,6 +17,7 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemChecklistsProps {
   cardId: string;
@@ -324,6 +325,55 @@ export const BoardCardItemChecklists = ({
           </p>
         </div>
       )}
+    </Card>
+  );
+};
+
+export const BoardCardItemChecklistsSkeleton = () => {
+  return (
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-6 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded-md" />
+      </div>
+
+      <div className="p-4 space-y-6">
+        {[1, 2].map((i) => (
+          <div key={i} className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+
+            <div className="space-y-2">
+              {[1, 2, 3].map((j) => (
+                <div key={j} className="flex items-center gap-3 p-3 rounded-lg">
+                  <Skeleton className="h-5 w-5 rounded-sm" />
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="h-7 w-7 rounded-md" />
+                </div>
+              ))}
+            </div>
+
+            <Skeleton className="h-8 w-32 rounded-md" />
+          </div>
+        ))}
+      </div>
     </Card>
   );
 };

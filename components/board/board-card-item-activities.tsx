@@ -18,6 +18,7 @@ import {
 import { format, formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemActivitiesProps {
   activities: NonNullable<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers>["activities"];
@@ -326,6 +327,47 @@ export const BoardCardItemActivities = ({
             </Button>
           </div>
         )}
+      </div>
+    </Card>
+  );
+};
+
+export const BoardCardItemActivitiesSkeleton = () => {
+  return (
+    <Card className="p-5 bg-card border-border">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-5 w-8 rounded-full" />
+        </div>
+
+        <div className="relative space-y-4">
+          <div className="absolute left-5 top-3 bottom-3 w-px bg-border" />
+
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="relative flex gap-4">
+              <Skeleton className="w-10 h-10 rounded-full shrink-0 z-10" />
+
+              <div className="flex-1 pb-4">
+                <div className="flex items-start gap-3 mb-2">
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-32" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-3" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </Card>
   );

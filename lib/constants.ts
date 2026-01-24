@@ -1,10 +1,18 @@
-import { Clipboard, FileText, LayoutGrid, Settings, Users } from "lucide-react";
+import {
+  Archive,
+  Clipboard,
+  FileText,
+  LayoutGrid,
+  Settings,
+  Users,
+} from "lucide-react";
 
 export const sidebarLinks = [
   { icon: LayoutGrid, label: "Overview", path: "overview" },
+  { icon: Clipboard, label: "Boards", path: "boards" },
+  { icon: Archive, label: "Archived", path: "archived" },
   { icon: FileText, label: "Audit Logs", path: "audit-logs" },
   { icon: Users, label: "User Groups", path: "user-groups" },
-  { icon: Clipboard, label: "Boards", path: "boards" },
   { icon: Settings, label: "Settings", path: "settings" },
 ];
 

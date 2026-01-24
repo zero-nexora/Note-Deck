@@ -7,6 +7,7 @@ import { useCardLabel } from "@/hooks/use-card-label";
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { useConfirm } from "@/stores/confirm-store";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemLabelsProps {
   cardId: string;
@@ -153,6 +154,27 @@ export const BoardCardItemLabels = ({
           <p className="text-sm text-muted-foreground">No labels added yet</p>
         </div>
       )}
+    </Card>
+  );
+};
+
+export const BoardCardItemLabelsSkeleton = () => {
+  return (
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-6 rounded-full" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded-md" />
+      </div>
+
+      <div className="p-4 flex flex-wrap gap-2">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-7 w-20 rounded-full" />
+        ))}
+      </div>
     </Card>
   );
 };

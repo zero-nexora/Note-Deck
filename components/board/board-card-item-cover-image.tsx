@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCard } from "@/hooks/use-card";
 import { ImageAttachmentPicker } from "../common/image-attachment-picker";
 import Image from "next/image";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemCoverImageProps {
   cardId: string;
@@ -162,6 +163,26 @@ export const BoardCardItemCoverImage = ({
           </p>
         </div>
       )}
+    </Card>
+  );
+};
+
+export const BoardCardItemCoverImageSkeleton = () => {
+  return (
+    <Card className="overflow-hidden bg-card border-border">
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-5 w-28" />
+        </div>
+        <Skeleton className="h-8 w-16 rounded-md" />
+      </div>
+
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <Skeleton className="h-16 w-16 rounded-full mb-3" />
+        <Skeleton className="h-5 w-32 mb-1" />
+        <Skeleton className="h-4 w-48" />
+      </div>
     </Card>
   );
 };

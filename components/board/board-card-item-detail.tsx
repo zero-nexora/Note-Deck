@@ -1,16 +1,15 @@
 import { BoardWithListLabelsAndMembers } from "@/domain/types/board.type";
-import { BoardCardItemMembers } from "./board-card-item-members";
-import { BoardCardItemLabels } from "./board-card-item-labels";
-import { BoardCardItemChecklists } from "./board-card-item-checklist";
-import { BoardCardItemAttachments } from "./board-card-item-attachment";
-import { BoardCardItemComments } from "./board-card-item-comment";
-import { BoardCardItemTitleDescDueDate } from "./board-card-item-title-desc-due-date";
-import { BoardCardItemCoverImage } from "./board-card-item-cover-image";
+import { BoardCardItemMembers, BoardCardItemMembersSkeleton } from "./board-card-item-members";
+import { BoardCardItemLabels, BoardCardItemLabelsSkeleton } from "./board-card-item-labels";
+import { BoardCardItemChecklists, BoardCardItemChecklistsSkeleton } from "./board-card-item-checklist";
+import { BoardCardItemAttachments, BoardCardItemAttachmentsSkeleton } from "./board-card-item-attachment";
+import { BoardCardItemComments, BoardCardItemCommentsSkeleton } from "./board-card-item-comment";
+import { BoardCardItemTitleDescDueDate, BoardCardItemTitleDescDueDateSkeleton } from "./board-card-item-title-desc-due-date";
+import { BoardCardItemCoverImage, BoardCardItemCoverImageSkeleton } from "./board-card-item-cover-image";
 import { useEffect, useState } from "react";
 import { CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers } from "@/domain/types/card.type";
 import { useCard } from "@/hooks/use-card";
-import { BoardCardItemActivities } from "./board-card-item-activities";
-import { User } from "@/domain/types/user.type";
+import { BoardCardItemActivities, BoardCardItemActivitiesSkeleton } from "./board-card-item-activities";
 
 interface BoardCardItemDetailProps {
   cardId: BoardWithListLabelsAndMembers["lists"][number]["cards"][number]["id"];
@@ -27,26 +26,50 @@ export const BoardCardItemDetail = ({
     useState<CardWithCardLabelsChecklistsCommentsAttachmentsActivitiesMembers | null>(
       null,
     );
+  const [isLoading, setIsLoading] = useState(true);
   const { findCardById } = useCard();
 
   useEffect(() => {
     const fetchCard = async (cardId: string) => {
-      const card = await findCardById(cardId);
-      if (card) {
-        setCard(card);
-      } else {
-        setCard(null);
+      setIsLoading(true);
+      try {
+        const card = await findCardById(cardId);
+        if (card) {
+          setCard(card);
+        } else {
+          setCard(null);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
+
     if (cardId) {
       fetchCard(cardId);
     }
   }, [cardId, findCardById]);
 
+  if (!isLoading) {
+    return (
+      <div className="space-y-6 pb-6">
+        <div className="space-y-4">
+          <BoardCardItemTitleDescDueDateSkeleton />
+          <BoardCardItemCoverImageSkeleton />
+          <BoardCardItemMembersSkeleton />
+          <BoardCardItemLabelsSkeleton />
+          <BoardCardItemAttachmentsSkeleton />
+          <BoardCardItemChecklistsSkeleton />
+          <BoardCardItemCommentsSkeleton />
+          <BoardCardItemActivitiesSkeleton />
+        </div>
+      </div>
+    );
+  }
+
   if (!card) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="h-8 w-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <p className="text-muted-foreground">Card not found</p>
       </div>
     );
   }

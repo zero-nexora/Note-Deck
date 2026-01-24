@@ -28,6 +28,7 @@ import { Calendar as CalendarIcon, Edit2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Loading } from "../common/loading";
 import { Card } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
 
 interface BoardCardItemTitleDescDueDateProps {
   cardId: string;
@@ -61,7 +62,8 @@ export const BoardCardItemTitleDescDueDate = ({
 
   useEffect(() => {
     const handleSetDisplayTitle = () => setDisplayTitle(initialTitle);
-    const handleSetDisplayDescription = () => setDisplayDescription(initialDescription);
+    const handleSetDisplayDescription = () =>
+      setDisplayDescription(initialDescription);
     const handleSetDisplayDueDate = () => setDisplayDueDate(initialDueDate);
 
     handleSetDisplayTitle();
@@ -307,5 +309,37 @@ export const BoardCardItemTitleDescDueDate = ({
         </form>
       </Form>
     </Card>
+  );
+};
+
+export const BoardCardItemTitleDescDueDateSkeleton = () => {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-10 w-10 rounded-md" />
+      </div>
+
+      <Card className="px-4 bg-card border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+      </Card>
+
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-24" />
+        <Card className="px-4 bg-card border-border">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/6" />
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 };

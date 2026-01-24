@@ -78,25 +78,43 @@ export const BoardListItem = ({
     });
   };
 
-  const handleDuplicateList = async () => {
-    const result = await duplicateList({ id: list.id });
-    if (result) {
-      broadcastListDuplicated(result);
-    }
+  const handleDuplicateList = () => {
+    openConfirm({
+      title: "Duplicate list",
+      description: "Are you sure you want to duplicate this list?",
+      onConfirm: async () => {
+        const result = await duplicateList({ id: list.id });
+        if (result) {
+          broadcastListDuplicated(result);
+        }
+      },
+    });
   };
 
-  const handleArchiveList = async () => {
-    const result = await archiveList({ id: list.id });
-    if (result) {
-      broadcastListArchived(list.id);
-    }
+  const handleArchiveList = () => {
+    openConfirm({
+      title: "Archive list",
+      description: "Are you sure you want to archive this list?",
+      onConfirm: async () => {
+        const result = await archiveList({ id: list.id });
+        if (result) {
+          broadcastListArchived(list.id);
+        }
+      },
+    });
   };
 
-  const handleRestoreList = async () => {
-    const result = await restoreList({ id: list.id });
-    if (result) {
-      broadcastListRestored(list.id);
-    }
+  const handleRestoreList = () => {
+    openConfirm({
+      title: "Restore list",
+      description: "Are you sure you want to restore this list?",
+      onConfirm: async () => {
+        const result = await restoreList({ id: list.id });
+        if (result) {
+          broadcastListRestored(list.id);
+        }
+      },
+    });
   };
 
   const handleBroadcastListUpdated = (

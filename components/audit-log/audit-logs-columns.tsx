@@ -6,17 +6,70 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { AuditLogWithUserWorkspacePagination } from "@/domain/types/audit-log.type";
 
-const getActionBadgeVariant = (action: string) => {
-  const variants: Record<
-    string,
-    "default" | "secondary" | "destructive" | "outline"
-  > = {
-    CREATE: "default",
-    UPDATE: "secondary",
-    DELETE: "destructive",
-    READ: "outline",
-  };
-  return variants[action.toUpperCase()] || "default";
+const getActionBadgeColor = (action: string) => {
+  // Workspace actions
+  if (action.startsWith("workspace.")) {
+    if (action.includes("deleted")) return "destructive";
+    if (action.includes("created")) return "default";
+    return "secondary";
+  }
+
+  // Member actions
+  if (action.includes("member")) {
+    if (action.includes("removed") || action.includes("left"))
+      return "destructive";
+    if (action.includes("added")) return "default";
+    return "secondary";
+  }
+
+  // Invite actions
+  if (action.includes("invite")) {
+    if (action.includes("revoked") || action.includes("expired"))
+      return "destructive";
+    if (action.includes("created") || action.includes("accepted"))
+      return "default";
+    return "outline";
+  }
+
+  // Board/List/Card actions
+  if (
+    action.startsWith("board.") ||
+    action.startsWith("list.") ||
+    action.startsWith("card.")
+  ) {
+    if (action.includes("deleted")) return "destructive";
+    if (action.includes("created")) return "default";
+    if (action.includes("archived")) return "outline";
+    return "secondary";
+  }
+
+  // Comment/Reaction actions
+  if (action.includes("comment") || action.includes("reaction")) {
+    if (action.includes("removed") || action.includes("deleted"))
+      return "destructive";
+    return "default";
+  }
+
+  return "outline";
+};
+
+const formatActionLabel = (action: string) => {
+  return action
+    .split(".")
+    .map((part) =>
+      part
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
+    )
+    .join(" - ");
+};
+
+const formatEntityType = (entityType: string) => {
+  return entityType
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 export const columns: ColumnDef<
@@ -55,7 +108,7 @@ export const columns: ColumnDef<
     header: "User",
     cell: ({ row }) => {
       const user = row.getValue(
-        "user"
+        "user",
       ) as AuditLogWithUserWorkspacePagination["data"][number]["user"];
       return (
         <div className="space-y-1">
@@ -70,12 +123,13 @@ export const columns: ColumnDef<
     },
     filterFn: (row, id, value) => {
       const user = row.getValue(
-        id
+        id,
       ) as AuditLogWithUserWorkspacePagination["data"][number]["user"];
       const searchValue = value.toLowerCase();
-      return user.email
-        ? user.email.toLowerCase().includes(searchValue)
-        : user.name?.toLowerCase().includes(searchValue) ?? false;
+      const nameMatch = user.name?.toLowerCase().includes(searchValue) ?? false;
+      const emailMatch =
+        user.email?.toLowerCase().includes(searchValue) ?? false;
+      return nameMatch || emailMatch;
     },
   },
   {
@@ -95,8 +149,8 @@ export const columns: ColumnDef<
     cell: ({ row }) => {
       const action = row.getValue("action") as string;
       return (
-        <Badge variant={getActionBadgeVariant(action)} className="font-medium">
-          {action.toUpperCase()}
+        <Badge variant={getActionBadgeColor(action)} className="font-medium">
+          {formatActionLabel(action)}
         </Badge>
       );
     },
@@ -111,7 +165,7 @@ export const columns: ColumnDef<
           variant="outline"
           className="bg-muted text-foreground border-border"
         >
-          {entityType.toUpperCase()}
+          {formatEntityType(entityType)}
         </Badge>
       );
     },
@@ -133,7 +187,7 @@ export const columns: ColumnDef<
     header: "Workspace",
     cell: ({ row }) => {
       const workspace = row.getValue(
-        "workspace"
+        "workspace",
       ) as AuditLogWithUserWorkspacePagination["data"][number]["workspace"];
       return (
         <div className="flex items-center gap-2">

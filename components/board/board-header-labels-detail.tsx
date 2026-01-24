@@ -17,6 +17,7 @@ import { Button } from "../ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,6 +25,7 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Loading } from "../common/loading";
+import { useConfirm } from "@/stores/confirm-store";
 
 type Label = BoardWithListLabelsAndMembers["labels"][0];
 
@@ -36,6 +38,8 @@ export const BoardHeaderLabelsDetail = ({
   boardId,
   initialLabels,
 }: BoardHeaderLabelsDetailProps) => {
+  const { open } = useConfirm();
+
   const [labels, setLabels] = useState<Label[]>(initialLabels);
   const [editingLabel, setEditingLabel] = useState<Label | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -115,16 +119,18 @@ export const BoardHeaderLabelsDetail = ({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const success = await deleteLabel({ id });
-      if (success) {
-        setLabels((prev) => prev.filter((label) => label.id !== id));
-        if (editingLabel?.id === id) cancelEditing();
-      }
-    } catch (error) {
-      console.error("Error deleting label:", error);
-    }
+  const handleDelete = (id: string) => {
+    open({
+      title: "Delete Label",
+      description: "Are you sure you want to delete this label?",
+      onConfirm: async () => {
+        const success = await deleteLabel({ id });
+        if (success) {
+          setLabels((prev) => prev.filter((label) => label.id !== id));
+          if (editingLabel?.id === id) cancelEditing();
+        }
+      },
+    });
   };
 
   const isCreatingLoading = createForm.formState.isSubmitting;
@@ -192,6 +198,10 @@ export const BoardHeaderLabelsDetail = ({
                                 className="bg-input border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-ring disabled:opacity-50"
                               />
                             </FormControl>
+                            <FormDescription>
+                              Update the label name or color. Changes will apply
+                              to all cards using this label.
+                            </FormDescription>
                             <FormMessage className="text-destructive" />
                           </FormItem>
                         )}

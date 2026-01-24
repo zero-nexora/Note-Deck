@@ -69,6 +69,26 @@ export const findBoardsByWorkspaceIdAction = async (
   }
 };
 
+export const findArchivedBoardsByWorkspaceIdAction = async (
+  input: FindBoardsByWorkspaceIdInput,
+) => {
+  try {
+    const user = await requireAuth();
+
+    const parsed = FindBoardsByWorkspaceIdSchema.safeParse(input);
+    if (!parsed.success) return error("Invalid workspace id");
+
+    const boards = await boardService.findArchivedByWorkspaceId(
+      user.id,
+      parsed.data,
+    );
+
+    return success("", boards);
+  } catch (err: any) {
+    return error(err.message ?? "Something went wrong");
+  }
+};
+
 export const updateBoardAction = async (
   boardId: string,
   input: UpdateBoardInput,

@@ -127,7 +127,6 @@ export const boardService = {
 
     const boards = await boardRepository.findByWorkspaceIdWithMembers(
       workspace.id,
-      true,
     );
 
     const result = [];
@@ -136,6 +135,36 @@ export const boardService = {
         workspaceId: board.workspaceId,
         boardId: board.id,
         workspaceRole: ROLE.OBSERVER,
+      });
+
+      if (allowed) {
+        result.push(board);
+      }
+    }
+
+    return result;
+  },
+
+  findArchivedByWorkspaceId: async (
+    userId: string,
+    data: FindBoardsByWorkspaceIdInput,
+  ) => {
+    const workspace = await workspaceRepository.findById(data.workspaceId);
+    if (!workspace) {
+      throw new Error("Workspace not found");
+    }
+
+    const boards = await boardRepository.findByWorkspaceIdWithMembers(
+      workspace.id,
+      true,
+    );
+
+    const result = [];
+    for (const board of boards) {
+      const allowed = await canUser(userId, {
+        workspaceId: board.workspaceId,
+        boardId: board.id,
+        workspaceRole: ROLE.ADMIN,
       });
 
       if (allowed) {
